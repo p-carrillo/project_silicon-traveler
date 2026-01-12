@@ -1,11 +1,14 @@
 import { Module } from "@nestjs/common";
+import { ScheduleModule } from "@nestjs/schedule";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { PostModule } from "./modules/post/post.module";
+import { JourneyModule } from "./modules/journey/journey.module";
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     TypeOrmModule.forRoot({
       type: 'mysql',
       host: process.env.DB_HOST || 'localhost',
@@ -17,6 +20,7 @@ import { PostModule } from "./modules/post/post.module";
       synchronize: false,
     }),
     PostModule,
+    JourneyModule,
   ],
   controllers: [AppController],
   providers: [AppService]
