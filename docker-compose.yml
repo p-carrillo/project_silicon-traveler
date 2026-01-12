@@ -1,0 +1,72 @@
+services:
+  mariadb:
+    image: mariadb:11
+    environment:
+      - MYSQL_ROOT_PASSWORD=rootpassword
+      - MYSQL_DATABASE=app
+      - MYSQL_USER=user
+      - MYSQL_PASSWORD=password
+    ports:
+      - "${DB_PORT:-3316}:3306"
+    volumes:
+      - mariadb_data:/var/lib/mysql
+      - ./server/fixtures:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile.dev
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - DB_HOST=mariadb
+      - DB_PORT=3306
+      - DB_USERNAME=user
+      - DB_PASSWORD=password
+      - DB_DATABASE=app
+      - CHOKIDAR_USEPOLLING=true
+    ports:
+      - "${SERVER_PORT:-3011}:3001"
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3001/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile.dev
+    environment:
+      - NODE_ENV=development
+      - API_URL=http://server:3001
+      - WATCHPACK_POLLING=true
+    ports:
+      - "${CLIENT_PORT:-8010}:3000"
+    depends_on:
+      server:
+        condition: service_healthy
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  mariadb_data:

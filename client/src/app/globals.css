@@ -1,0 +1,88 @@
+:root {
+  color-scheme: light;
+  --bg-start: #f6f2ec;
+  --bg-end: #e6f2ff;
+  --text: #1b1f24;
+  --muted: #5f6b7a;
+  --accent: #155eef;
+  --card: #ffffff;
+  --border: #d7e1ef;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "IBM Plex Mono", "Courier New", monospace;
+  background: linear-gradient(135deg, var(--bg-start), var(--bg-end));
+  color: var(--text);
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 96px 24px 120px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.8);
+}
+
+h1 {
+  font-size: 48px;
+  margin: 16px 0 12px;
+}
+
+.lead {
+  font-size: 18px;
+  color: var(--muted);
+  margin: 0 0 32px;
+}
+
+.card {
+  padding: 24px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(21, 94, 239, 0.12);
+}
+
+.card-title {
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.card-value {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.card-error {
+  margin-top: 8px;
+  color: #b42318;
+  font-size: 14px;
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 64px 20px 80px;
+  }
+
+  h1 {
+    font-size: 36px;
+  }
+}

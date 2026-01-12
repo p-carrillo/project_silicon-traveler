@@ -1,0 +1,15 @@
+{
+  "name": "nest-next-monorepo",
+  "private": true,
+  "packageManager": "pnpm@9.12.0",
+  "scripts": {
+    "dev": "concurrently \"pnpm -C server dev\" \"pnpm -C client dev\"",
+    "build": "pnpm -C server build && pnpm -C client build",
+    "start": "concurrently \"pnpm -C server start:prod\" \"pnpm -C client start\"",
+    "lint": "pnpm -C server lint && pnpm -C client lint",
+    "test": "pnpm -C server test && pnpm -C client test"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
