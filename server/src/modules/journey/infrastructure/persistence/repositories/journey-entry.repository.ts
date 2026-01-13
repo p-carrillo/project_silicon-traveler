@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { FindOptionsWhere, Like, Repository } from 'typeorm';
 import { IJourneyEntryRepository } from '../../../domain/repositories/journey-entry.repository.interface';
 import { JourneyEntry } from '../../../domain/entities/journey-entry.entity';
 import { JourneyEntryEntity } from '../entities/journey-entry.typeorm-entity';
@@ -19,8 +19,12 @@ export class JourneyEntryRepository implements IJourneyEntryRepository {
       journeyStopId: entry.journeyStopId,
       travelDate: entry.travelDate,
       stageIndex: entry.stageIndex,
-      imageUrl: entry.imageUrl,
-      imageStorageKey: entry.imageStorageKey,
+      imageUrlFull: entry.imageUrlFull,
+      imageUrlWeb: entry.imageUrlWeb,
+      imageUrlThumb: entry.imageUrlThumb,
+      imageStorageKeyFull: entry.imageStorageKeyFull,
+      imageStorageKeyWeb: entry.imageStorageKeyWeb,
+      imageStorageKeyThumb: entry.imageStorageKeyThumb,
       textBody: entry.textBody,
       imagePromptId: entry.imagePromptId,
       textPromptId: entry.textPromptId,
@@ -44,6 +48,30 @@ export class JourneyEntryRepository implements IJourneyEntryRepository {
     return entity ? this.toDomain(entity) : null;
   }
 
+  async findByJourneyId(
+    journeyId: string,
+    options?: {
+      month?: string;
+      limit?: number;
+      offset?: number;
+    },
+  ): Promise<JourneyEntry[]> {
+    const where: FindOptionsWhere<JourneyEntryEntity> = { journeyId };
+
+    if (options?.month) {
+      where.travelDate = Like(`${options.month}-%`);
+    }
+
+    const entities = await this.repository.find({
+      where,
+      order: { travelDate: 'DESC', createdAt: 'DESC' },
+      take: options?.limit,
+      skip: options?.offset,
+    });
+
+    return entities.map((entity) => this.toDomain(entity));
+  }
+
   async findLatestByJourneyId(journeyId: string): Promise<JourneyEntry | null> {
     const entity = await this.repository.findOne({
       where: { journeyId },
@@ -64,8 +92,12 @@ export class JourneyEntryRepository implements IJourneyEntryRepository {
       entity.journeyStopId,
       entity.travelDate,
       entity.stageIndex,
-      entity.imageUrl,
-      entity.imageStorageKey,
+      entity.imageUrlFull,
+      entity.imageUrlWeb,
+      entity.imageUrlThumb,
+      entity.imageStorageKeyFull,
+      entity.imageStorageKeyWeb,
+      entity.imageStorageKeyThumb,
       entity.textBody,
       entity.imagePromptId,
       entity.textPromptId,

@@ -17,11 +17,23 @@ export class JourneyEntryEntity {
   @Column({ type: 'int', name: 'stage_index' })
   stageIndex: number;
 
-  @Column({ type: 'varchar', length: 512, name: 'image_url' })
-  imageUrl: string;
+  @Column({ type: 'varchar', length: 512, name: 'image_url_full' })
+  imageUrlFull: string;
 
-  @Column({ type: 'varchar', length: 256, name: 'image_storage_key' })
-  imageStorageKey: string;
+  @Column({ type: 'varchar', length: 512, name: 'image_url_web' })
+  imageUrlWeb: string;
+
+  @Column({ type: 'varchar', length: 512, name: 'image_url_thumb' })
+  imageUrlThumb: string;
+
+  @Column({ type: 'varchar', length: 256, name: 'image_storage_key_full' })
+  imageStorageKeyFull: string;
+
+  @Column({ type: 'varchar', length: 256, name: 'image_storage_key_web' })
+  imageStorageKeyWeb: string;
+
+  @Column({ type: 'varchar', length: 256, name: 'image_storage_key_thumb' })
+  imageStorageKeyThumb: string;
 
   @Column({ type: 'text', name: 'text_body' })
   textBody: string;

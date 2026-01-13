@@ -8,7 +8,7 @@ export class JourneyResponseDto {
     name: string;
     description: string | null;
     status: JourneyStatus;
-    startDate: string | null;
+    start_date: string | null;
     timezone: string;
     stops: JourneyStopResponseDto[];
   };
@@ -19,7 +19,7 @@ export class JourneyResponseDto {
       name: journey.name,
       description: journey.description,
       status: journey.status,
-      startDate: journey.startDate,
+      start_date: journey.startDate,
       timezone: journey.timezone,
       stops: stops.map((stop) => new JourneyStopResponseDto(stop)),
     };

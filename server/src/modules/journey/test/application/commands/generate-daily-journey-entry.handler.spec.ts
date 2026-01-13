@@ -39,6 +39,7 @@ describe('GenerateDailyJourneyEntryHandler', () => {
     entryRepository = {
       create: jest.fn(),
       findByJourneyIdAndDate: jest.fn(),
+      findByJourneyId: jest.fn(),
       findLatestByJourneyId: jest.fn(),
       countByJourneyId: jest.fn(),
     };
@@ -83,8 +84,12 @@ describe('GenerateDailyJourneyEntryHandler', () => {
       'stop-id',
       '2024-01-01',
       1,
-      'https://images.local/entry.png',
-      'journeys/journey-id/entry.png',
+      'https://images.local/entry-full.png',
+      'https://images.local/entry-web.png',
+      'https://images.local/entry-thumb.png',
+      'journeys/journey-id/entry-full.png',
+      'journeys/journey-id/entry-web.png',
+      'journeys/journey-id/entry-thumb.png',
       'Text body',
       'image-template-id',
       'text-template-id',
@@ -156,10 +161,19 @@ describe('GenerateDailyJourneyEntryHandler', () => {
       contentType: 'image/png',
       model: 'gpt-image-1',
     });
-    imageStorage.saveImage.mockResolvedValue({
-      url: 'https://storage.local/journeys/journey-id/2024-01-01/stage-1.png',
-      storageKey: 'journeys/journey-id/2024-01-01/stage-1.png',
-    });
+    imageStorage.saveImage
+      .mockResolvedValueOnce({
+        url: 'https://storage.local/journeys/journey-id/2024-01-01/stage-1-full.png',
+        storageKey: 'journeys/journey-id/2024-01-01/stage-1-full.png',
+      })
+      .mockResolvedValueOnce({
+        url: 'https://storage.local/journeys/journey-id/2024-01-01/stage-1-web.png',
+        storageKey: 'journeys/journey-id/2024-01-01/stage-1-web.png',
+      })
+      .mockResolvedValueOnce({
+        url: 'https://storage.local/journeys/journey-id/2024-01-01/stage-1-thumb.png',
+        storageKey: 'journeys/journey-id/2024-01-01/stage-1-thumb.png',
+      });
     textGenerator.generateText.mockResolvedValue({
       text: 'A story about Lisbon.',
       model: 'gpt-4o-mini',
@@ -171,8 +185,12 @@ describe('GenerateDailyJourneyEntryHandler', () => {
       stop.id,
       '2024-01-01',
       1,
-      'https://storage.local/journeys/journey-id/2024-01-01/stage-1.png',
-      'journeys/journey-id/2024-01-01/stage-1.png',
+      'https://storage.local/journeys/journey-id/2024-01-01/stage-1-full.png',
+      'https://storage.local/journeys/journey-id/2024-01-01/stage-1-web.png',
+      'https://storage.local/journeys/journey-id/2024-01-01/stage-1-thumb.png',
+      'journeys/journey-id/2024-01-01/stage-1-full.png',
+      'journeys/journey-id/2024-01-01/stage-1-web.png',
+      'journeys/journey-id/2024-01-01/stage-1-thumb.png',
       'A story about Lisbon.',
       imageTemplate.id,
       textTemplate.id,
@@ -194,6 +212,25 @@ describe('GenerateDailyJourneyEntryHandler', () => {
     expect(textGenerator.generateText).toHaveBeenCalledWith(
       'Story about Lisbon, Portugal',
       expect.any(String),
+    );
+    expect(imageStorage.saveImage).toHaveBeenCalledTimes(3);
+    expect(imageStorage.saveImage).toHaveBeenNthCalledWith(
+      1,
+      expect.any(Buffer),
+      'image/png',
+      'journeys/journey-id/2024-01-01/stage-1-full.png',
+    );
+    expect(imageStorage.saveImage).toHaveBeenNthCalledWith(
+      2,
+      expect.any(Buffer),
+      'image/png',
+      'journeys/journey-id/2024-01-01/stage-1-web.png',
+    );
+    expect(imageStorage.saveImage).toHaveBeenNthCalledWith(
+      3,
+      expect.any(Buffer),
+      'image/png',
+      'journeys/journey-id/2024-01-01/stage-1-thumb.png',
     );
     expect(entryRepository.create).toHaveBeenCalledWith(
       expect.objectContaining({

@@ -1,18 +1,18 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { GetLatestJourneyEntryHandler } from '../../../application/queries/get-latest-journey-entry.handler';
-import { GetLatestJourneyEntryQuery } from '../../../application/queries/get-latest-journey-entry.query';
+import { ListJourneyEntriesHandler } from '../../../application/queries/list-journey-entries.handler';
+import { ListJourneyEntriesQuery } from '../../../application/queries/list-journey-entries.query';
 import { IJourneyEntryRepository } from '../../../domain/repositories/journey-entry.repository.interface';
-import { JourneyEntry } from '../../../domain/entities/journey-entry.entity';
 import { IJourneyStopRepository } from '../../../domain/repositories/journey-stop.repository.interface';
+import { JourneyEntry } from '../../../domain/entities/journey-entry.entity';
 import { JourneyStop } from '../../../domain/entities/journey-stop.entity';
 
-describe('GetLatestJourneyEntryHandler', () => {
-  let handler: GetLatestJourneyEntryHandler;
-  let repository: jest.Mocked<IJourneyEntryRepository>;
+describe('ListJourneyEntriesHandler', () => {
+  let handler: ListJourneyEntriesHandler;
+  let entryRepository: jest.Mocked<IJourneyEntryRepository>;
   let stopRepository: jest.Mocked<IJourneyStopRepository>;
 
   beforeEach(async () => {
-    repository = {
+    entryRepository = {
       create: jest.fn(),
       findByJourneyIdAndDate: jest.fn(),
       findByJourneyId: jest.fn(),
@@ -28,10 +28,10 @@ describe('GetLatestJourneyEntryHandler', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        GetLatestJourneyEntryHandler,
+        ListJourneyEntriesHandler,
         {
           provide: 'IJourneyEntryRepository',
-          useValue: repository,
+          useValue: entryRepository,
         },
         {
           provide: 'IJourneyStopRepository',
@@ -40,10 +40,10 @@ describe('GetLatestJourneyEntryHandler', () => {
       ],
     }).compile();
 
-    handler = module.get(GetLatestJourneyEntryHandler);
+    handler = module.get(ListJourneyEntriesHandler);
   });
 
-  it('should return latest entry', async () => {
+  it('should return entries with stop data', async () => {
     const now = new Date();
     const entry = new JourneyEntry(
       'entry-id',
@@ -75,13 +75,20 @@ describe('GetLatestJourneyEntryHandler', () => {
       now,
       now,
     );
-    repository.findLatestByJourneyId.mockResolvedValue(entry);
+    entryRepository.findByJourneyId.mockResolvedValue([entry]);
     stopRepository.findByJourneyId.mockResolvedValue([stop]);
 
-    const result = await handler.execute(new GetLatestJourneyEntryQuery('journey-id'));
+    const result = await handler.execute(
+      new ListJourneyEntriesQuery('journey-id', '2024-01', 10, 0),
+    );
 
-    expect(result?.entry).toBe(entry);
-    expect(result?.stop?.id).toBe('stop-id');
-    expect(repository.findLatestByJourneyId).toHaveBeenCalledWith('journey-id');
+    expect(result).toHaveLength(1);
+    expect(result[0].entry.id).toBe('entry-id');
+    expect(result[0].stop?.id).toBe('stop-id');
+    expect(entryRepository.findByJourneyId).toHaveBeenCalledWith('journey-id', {
+      month: '2024-01',
+      limit: 10,
+      offset: 0,
+    });
   });
 });

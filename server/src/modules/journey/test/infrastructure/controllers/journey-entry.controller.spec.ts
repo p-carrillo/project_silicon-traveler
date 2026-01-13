@@ -3,6 +3,7 @@ import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { NotFoundException } from '@nestjs/common';
 import { JourneyEntryController } from '../../../infrastructure/controllers/journey-entry.controller';
 import { JourneyEntry } from '../../../domain/entities/journey-entry.entity';
+import { JourneyStop } from '../../../domain/entities/journey-stop.entity';
 
 describe('JourneyEntryController', () => {
   let controller: JourneyEntryController;
@@ -32,8 +33,12 @@ describe('JourneyEntryController', () => {
       'stop-id',
       '2024-01-01',
       1,
-      'https://images.local/entry.png',
-      'journeys/journey-id/entry.png',
+      'https://images.local/entry-full.png',
+      'https://images.local/entry-web.png',
+      'https://images.local/entry-thumb.png',
+      'journeys/journey-id/entry-full.png',
+      'journeys/journey-id/entry-web.png',
+      'journeys/journey-id/entry-thumb.png',
       'Text body',
       'image-template-id',
       'text-template-id',
@@ -41,11 +46,23 @@ describe('JourneyEntryController', () => {
       'gpt-4o-mini',
       now,
     );
-    queryBus.execute.mockResolvedValue(entry);
+    const stop = new JourneyStop(
+      'stop-id',
+      'journey-id',
+      'Lisbon',
+      'Lisbon',
+      'Portugal',
+      null,
+      1,
+      now,
+      now,
+    );
+    queryBus.execute.mockResolvedValue({ entry, stop });
 
     const result = await controller.getLatestEntry('journey-id');
 
     expect(result.entry.id).toBe('entry-id');
+    expect(result.entry.image_url_web).toBe('https://images.local/entry-web.png');
     expect(queryBus.execute).toHaveBeenCalled();
   });
 
@@ -65,8 +82,12 @@ describe('JourneyEntryController', () => {
       'stop-id',
       '2024-01-01',
       1,
-      'https://images.local/entry.png',
-      'journeys/journey-id/entry.png',
+      'https://images.local/entry-full.png',
+      'https://images.local/entry-web.png',
+      'https://images.local/entry-thumb.png',
+      'journeys/journey-id/entry-full.png',
+      'journeys/journey-id/entry-web.png',
+      'journeys/journey-id/entry-thumb.png',
       'Text body',
       'image-template-id',
       'text-template-id',
@@ -82,6 +103,88 @@ describe('JourneyEntryController', () => {
 
     expect(result.entry.id).toBe('entry-id');
     expect(commandBus.execute).toHaveBeenCalled();
+  });
+
+  it('should list entries', async () => {
+    const now = new Date();
+    const entry = new JourneyEntry(
+      'entry-id',
+      'journey-id',
+      'stop-id',
+      '2024-01-01',
+      1,
+      'https://images.local/entry-full.png',
+      'https://images.local/entry-web.png',
+      'https://images.local/entry-thumb.png',
+      'journeys/journey-id/entry-full.png',
+      'journeys/journey-id/entry-web.png',
+      'journeys/journey-id/entry-thumb.png',
+      'Text body',
+      'image-template-id',
+      'text-template-id',
+      'gpt-image-1',
+      'gpt-4o-mini',
+      now,
+    );
+    const stop = new JourneyStop(
+      'stop-id',
+      'journey-id',
+      'Lisbon',
+      'Lisbon',
+      'Portugal',
+      null,
+      1,
+      now,
+      now,
+    );
+    queryBus.execute.mockResolvedValue([{ entry, stop }]);
+
+    const result = await controller.listEntries('journey-id', {
+      month: '2024-01',
+    });
+
+    expect(result.entries).toHaveLength(1);
+    expect(result.entries[0].id).toBe('entry-id');
+  });
+
+  it('should return entry by date', async () => {
+    const now = new Date();
+    const entry = new JourneyEntry(
+      'entry-id',
+      'journey-id',
+      'stop-id',
+      '2024-01-01',
+      1,
+      'https://images.local/entry-full.png',
+      'https://images.local/entry-web.png',
+      'https://images.local/entry-thumb.png',
+      'journeys/journey-id/entry-full.png',
+      'journeys/journey-id/entry-web.png',
+      'journeys/journey-id/entry-thumb.png',
+      'Text body',
+      'image-template-id',
+      'text-template-id',
+      'gpt-image-1',
+      'gpt-4o-mini',
+      now,
+    );
+    const stop = new JourneyStop(
+      'stop-id',
+      'journey-id',
+      'Lisbon',
+      'Lisbon',
+      'Portugal',
+      null,
+      1,
+      now,
+      now,
+    );
+    queryBus.execute.mockResolvedValue({ entry, stop });
+
+    const result = await controller.getEntryByDate('journey-id', '2024-01-01');
+
+    expect(result.entry.id).toBe('entry-id');
+    expect(result.entry.location?.city).toBe('Lisbon');
   });
 
   it('should throw NotFoundException when generation returns null', async () => {

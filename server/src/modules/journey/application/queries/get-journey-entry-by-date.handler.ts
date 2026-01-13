@@ -1,13 +1,13 @@
 import { Inject } from '@nestjs/common';
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
-import { GetLatestJourneyEntryQuery } from './get-latest-journey-entry.query';
+import { GetJourneyEntryByDateQuery } from './get-journey-entry-by-date.query';
 import { IJourneyEntryRepository } from '../../domain/repositories/journey-entry.repository.interface';
 import { IJourneyStopRepository } from '../../domain/repositories/journey-stop.repository.interface';
 import { JourneyEntryDetails } from './journey-entry-details.type';
 
-@QueryHandler(GetLatestJourneyEntryQuery)
-export class GetLatestJourneyEntryHandler
-  implements IQueryHandler<GetLatestJourneyEntryQuery>
+@QueryHandler(GetJourneyEntryByDateQuery)
+export class GetJourneyEntryByDateHandler
+  implements IQueryHandler<GetJourneyEntryByDateQuery>
 {
   constructor(
     @Inject('IJourneyEntryRepository')
@@ -17,10 +17,11 @@ export class GetLatestJourneyEntryHandler
   ) {}
 
   async execute(
-    query: GetLatestJourneyEntryQuery,
+    query: GetJourneyEntryByDateQuery,
   ): Promise<JourneyEntryDetails | null> {
-    const entry = await this.entryRepository.findLatestByJourneyId(
+    const entry = await this.entryRepository.findByJourneyIdAndDate(
       query.journeyId,
+      query.travelDate,
     );
 
     if (!entry) {

@@ -1,13 +1,13 @@
 import { Inject } from '@nestjs/common';
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
-import { GetLatestJourneyEntryQuery } from './get-latest-journey-entry.query';
+import { ListJourneyEntriesQuery } from './list-journey-entries.query';
 import { IJourneyEntryRepository } from '../../domain/repositories/journey-entry.repository.interface';
 import { IJourneyStopRepository } from '../../domain/repositories/journey-stop.repository.interface';
 import { JourneyEntryDetails } from './journey-entry-details.type';
 
-@QueryHandler(GetLatestJourneyEntryQuery)
-export class GetLatestJourneyEntryHandler
-  implements IQueryHandler<GetLatestJourneyEntryQuery>
+@QueryHandler(ListJourneyEntriesQuery)
+export class ListJourneyEntriesHandler
+  implements IQueryHandler<ListJourneyEntriesQuery>
 {
   constructor(
     @Inject('IJourneyEntryRepository')
@@ -17,19 +17,27 @@ export class GetLatestJourneyEntryHandler
   ) {}
 
   async execute(
-    query: GetLatestJourneyEntryQuery,
-  ): Promise<JourneyEntryDetails | null> {
-    const entry = await this.entryRepository.findLatestByJourneyId(
+    query: ListJourneyEntriesQuery,
+  ): Promise<JourneyEntryDetails[]> {
+    const entries = await this.entryRepository.findByJourneyId(
       query.journeyId,
+      {
+        month: query.month,
+        limit: query.limit,
+        offset: query.offset,
+      },
     );
 
-    if (!entry) {
-      return null;
+    if (entries.length === 0) {
+      return [];
     }
 
     const stops = await this.stopRepository.findByJourneyId(query.journeyId);
-    const stop = stops.find((item) => item.id === entry.journeyStopId) ?? null;
+    const stopMap = new Map(stops.map((stop) => [stop.id, stop]));
 
-    return { entry, stop };
+    return entries.map((entry) => ({
+      entry,
+      stop: stopMap.get(entry.journeyStopId) ?? null,
+    }));
   }
 }

@@ -105,15 +105,39 @@ export class GenerateDailyJourneyEntryHandler
 
     const imageResult = await this.generateImageSafely(imagePrompt, imageModel);
     const imageBuffer = Buffer.from(imageResult.base64Data, 'base64');
-    const storageKey = this.buildStorageKey(
+    const storageKeyFull = this.buildStorageKey(
       journey.id,
       travelDate,
       stageIndex,
+      'full',
     );
-    const storedImage = await this.imageStorage.saveImage(
+    const storageKeyWeb = this.buildStorageKey(
+      journey.id,
+      travelDate,
+      stageIndex,
+      'web',
+    );
+    const storageKeyThumb = this.buildStorageKey(
+      journey.id,
+      travelDate,
+      stageIndex,
+      'thumb',
+    );
+
+    const storedFull = await this.imageStorage.saveImage(
       imageBuffer,
       imageResult.contentType,
-      storageKey,
+      storageKeyFull,
+    );
+    const storedWeb = await this.imageStorage.saveImage(
+      imageBuffer,
+      imageResult.contentType,
+      storageKeyWeb,
+    );
+    const storedThumb = await this.imageStorage.saveImage(
+      imageBuffer,
+      imageResult.contentType,
+      storageKeyThumb,
     );
 
     const textResult = await this.generateTextSafely(textPrompt, textModel);
@@ -124,8 +148,12 @@ export class GenerateDailyJourneyEntryHandler
       stop.id,
       travelDate,
       stageIndex,
-      storedImage.url,
-      storedImage.storageKey,
+      storedFull.url,
+      storedWeb.url,
+      storedThumb.url,
+      storedFull.storageKey,
+      storedWeb.storageKey,
+      storedThumb.storageKey,
       textResult.text.trim(),
       imagePromptTemplate.id,
       textPromptTemplate.id,
@@ -216,8 +244,9 @@ export class GenerateDailyJourneyEntryHandler
     journeyId: string,
     travelDate: string,
     stageIndex: number,
+    variant: 'full' | 'web' | 'thumb',
   ): string {
-    return `journeys/${journeyId}/${travelDate}/stage-${stageIndex}.png`;
+    return `journeys/${journeyId}/${travelDate}/stage-${stageIndex}-${variant}.png`;
   }
 
   private async generateImageSafely(

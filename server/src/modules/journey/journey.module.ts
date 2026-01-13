@@ -25,6 +25,8 @@ import { UpdatePromptTemplateHandler } from './application/commands/update-promp
 import { GetJourneyHandler } from './application/queries/get-journey.handler';
 import { GetLatestJourneyEntryHandler } from './application/queries/get-latest-journey-entry.handler';
 import { ListPromptTemplatesHandler } from './application/queries/list-prompt-templates.handler';
+import { GetJourneyEntryByDateHandler } from './application/queries/get-journey-entry-by-date.handler';
+import { ListJourneyEntriesHandler } from './application/queries/list-journey-entries.handler';
 
 const commandHandlers = [
   CreateJourneyHandler,
@@ -38,6 +40,8 @@ const commandHandlers = [
 const queryHandlers = [
   GetJourneyHandler,
   GetLatestJourneyEntryHandler,
+  GetJourneyEntryByDateHandler,
+  ListJourneyEntriesHandler,
   ListPromptTemplatesHandler,
 ];
 

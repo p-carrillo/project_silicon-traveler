@@ -1,9 +1,20 @@
-import { Body, Controller, Get, NotFoundException, Param, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  NotFoundException,
+  Param,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { GetLatestJourneyEntryQuery } from '../../application/queries/get-latest-journey-entry.query';
+import { GetJourneyEntryByDateQuery } from '../../application/queries/get-journey-entry-by-date.query';
+import { ListJourneyEntriesQuery } from '../../application/queries/list-journey-entries.query';
 import { GenerateDailyJourneyEntryCommand } from '../../application/commands/generate-daily-journey-entry.command';
 import { JourneyEntryResponseDto } from '../dto/journey-entry-response.dto';
 import { GenerateJourneyEntryRequestDto } from '../dto/generate-journey-entry-request.dto';
+import { JourneyEntryListResponseDto } from '../dto/journey-entry-list-response.dto';
 
 @Controller('journeys')
 export class JourneyEntryController {
@@ -16,15 +27,52 @@ export class JourneyEntryController {
   async getLatestEntry(
     @Param('id') journeyId: string,
   ): Promise<JourneyEntryResponseDto> {
-    const entry = await this.queryBus.execute(
+    const result = await this.queryBus.execute(
       new GetLatestJourneyEntryQuery(journeyId),
     );
 
-    if (!entry) {
+    if (!result) {
       throw new NotFoundException('Journey entry not found');
     }
 
-    return new JourneyEntryResponseDto(entry);
+    return new JourneyEntryResponseDto(result.entry, result.stop);
+  }
+
+  @Get(':id/entries')
+  async listEntries(
+    @Param('id') journeyId: string,
+    @Query()
+    query: { month?: string; limit?: string; offset?: string },
+  ): Promise<JourneyEntryListResponseDto> {
+    const limit = this.parseOptionalNumber(query.limit);
+    const offset = this.parseOptionalNumber(query.offset);
+
+    const entries = await this.queryBus.execute(
+      new ListJourneyEntriesQuery(
+        journeyId,
+        query.month,
+        limit,
+        offset,
+      ),
+    );
+
+    return new JourneyEntryListResponseDto(entries);
+  }
+
+  @Get(':id/entries/:date')
+  async getEntryByDate(
+    @Param('id') journeyId: string,
+    @Param('date') travelDate: string,
+  ): Promise<JourneyEntryResponseDto> {
+    const result = await this.queryBus.execute(
+      new GetJourneyEntryByDateQuery(journeyId, travelDate),
+    );
+
+    if (!result) {
+      throw new NotFoundException('Journey entry not found');
+    }
+
+    return new JourneyEntryResponseDto(result.entry, result.stop);
   }
 
   @Post(':id/entries/generate')
@@ -46,5 +94,14 @@ export class JourneyEntryController {
     }
 
     return new JourneyEntryResponseDto(entry);
+  }
+
+  private parseOptionalNumber(value?: string): number | undefined {
+    if (!value) {
+      return undefined;
+    }
+
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : undefined;
   }
 }

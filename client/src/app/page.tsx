@@ -1,77 +1,89 @@
-type HealthResult = {
-  status: string;
-  error?: string;
-};
-
-type PostResult = {
-  value?: string;
-  error?: string;
-};
-
-const defaultApiUrl = "http://localhost:3001";
-
-async function fetchHealth(): Promise<HealthResult> {
-  const apiUrl = process.env.API_URL ?? defaultApiUrl;
-
-  try {
-    const response = await fetch(`${apiUrl}/health`, { cache: "no-store" });
-
-    if (!response.ok) {
-      return { status: "unhealthy", error: `HTTP ${response.status}` };
-    }
-
-    const data = (await response.json()) as { status?: string };
-    return { status: data.status ?? "ok" };
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "unknown error";
-    return { status: "unreachable", error: message };
-  }
-}
-
-async function fetchFirstPost(): Promise<PostResult> {
-  const apiUrl = process.env.API_URL ?? defaultApiUrl;
-
-  try {
-    const response = await fetch(`${apiUrl}/posts/first`, { cache: "no-store" });
-
-    if (!response.ok) {
-      return { error: `HTTP ${response.status}` };
-    }
-
-    const data = (await response.json()) as { value?: string };
-    return { value: data.value ?? "No data" };
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "unknown error";
-    return { error: message };
-  }
-}
+import Link from "next/link";
+import { StatusMessage } from "@/app/components/status-message";
+import {
+  buildEntryPath,
+  formatTravelDate,
+  parseTravelDateParts,
+} from "@/lib/date-helpers";
+import { formatEntryLocation, resolveEntryImage } from "@/lib/entry-helpers";
+import { fetchLatestEntry, getJourneyId } from "@/lib/journey-api";
 
 export default async function Home() {
-  const health = await fetchHealth();
-  const post = await fetchFirstPost();
+  const journeyId = getJourneyId();
+
+  if (!journeyId) {
+    return (
+      <div className="page">
+        <StatusMessage
+          tone="error"
+          title="Journey not configured"
+          description="Set JOURNEY_ID to show the latest travel entry."
+        />
+      </div>
+    );
+  }
+
+  const latestResult = await fetchLatestEntry(journeyId);
+
+  if (latestResult.error) {
+    return (
+      <div className="page">
+        <StatusMessage
+          tone="error"
+          title="Unable to load the latest entry"
+          description="Please try again soon."
+        />
+      </div>
+    );
+  }
+
+  if (!latestResult.data) {
+    return (
+      <div className="page">
+        <StatusMessage
+          tone="empty"
+          title="No entries yet."
+          description="The journey will appear here once the first photo is ready."
+        />
+      </div>
+    );
+  }
+
+  const entry = latestResult.data;
+  const image = resolveEntryImage(entry, "web");
+  const locationLabel = formatEntryLocation(entry);
+  const dateLabel = formatTravelDate(entry.travel_date);
+  const dateParts = parseTravelDateParts(entry.travel_date);
+  const entryPath = dateParts
+    ? buildEntryPath(dateParts.year, dateParts.month, dateParts.day)
+    : null;
 
   return (
-    <main className="container">
-      <div className="badge">Nest + Next</div>
-      <h1>It works</h1>
-      <p className="lead">
-        Your monorepo is running. Frontend and backend are wired together.
-      </p>
-      <div className="card">
-        <div className="card-title">Backend health</div>
-        <div className="card-value">{health.status}</div>
-        {health.error ? (
-          <div className="card-error">{health.error}</div>
+    <div className="page">
+      <section className="hero full-bleed">
+        {image.url ? (
+          <img
+            src={image.url}
+            alt={locationLabel}
+            className="hero-image"
+          />
         ) : null}
-      </div>
-      <div className="card" style={{ marginTop: '24px' }}>
-        <div className="card-title">DB check</div>
-        {post.value ? (
-          <div className="card-value">{post.value}</div>
-        ) : (
-          <div className="card-error">{post.error ?? "No data"}</div>
-        )}
-      </div>
-    </main>
+        <div className="hero-overlay">
+          <div className="hero-meta">
+            {locationLabel} · {dateLabel}
+          </div>
+          <h1 className="hero-title">Latest Journey</h1>
+          <p className="hero-text">{entry.text_body}</p>
+          {entryPath ? (
+            <Link href={entryPath} className="cta-button">
+              Read the day
+            </Link>
+          ) : null}
+          {image.fallback ? (
+            <p className="hero-note">Using full-resolution image.</p>
+          ) : null}
+        </div>
+      </section>
+    </div>
   );
 }

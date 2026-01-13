@@ -32,6 +32,7 @@ describe('JourneyResponseDto', () => {
     expect(dto.journey.id).toBe('journey-id');
     expect(dto.journey.name).toBe('Journey');
     expect(dto.journey.status).toBe('active');
+    expect(dto.journey.start_date).toBeNull();
     expect(dto.journey.stops).toHaveLength(1);
   });
 });
