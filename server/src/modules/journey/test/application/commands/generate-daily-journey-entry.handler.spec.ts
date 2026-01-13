@@ -26,14 +26,18 @@ describe('GenerateDailyJourneyEntryHandler', () => {
   beforeEach(async () => {
     journeyRepository = {
       create: jest.fn(),
+      findAll: jest.fn(),
       findById: jest.fn(),
       findActive: jest.fn(),
+      update: jest.fn(),
       updateStatus: jest.fn(),
     };
     stopRepository = {
       create: jest.fn(),
+      findById: jest.fn(),
       findByJourneyId: jest.fn(),
       findByJourneyIdAndSequence: jest.fn(),
+      update: jest.fn(),
       updateSequences: jest.fn(),
     };
     entryRepository = {

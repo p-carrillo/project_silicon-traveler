@@ -28,6 +28,14 @@ export class JourneyRepository implements IJourneyRepository {
     return this.toDomain(saved);
   }
 
+  async findAll(): Promise<Journey[]> {
+    const entities = await this.repository.find({
+      order: { createdAt: 'DESC' },
+    });
+
+    return entities.map((entity) => this.toDomain(entity));
+  }
+
   async findById(id: string): Promise<Journey | null> {
     const entity = await this.repository.findOne({ where: { id } });
 
@@ -51,6 +59,21 @@ export class JourneyRepository implements IJourneyRepository {
         updatedAt: new Date(),
       },
     );
+  }
+
+  async update(journey: Journey): Promise<Journey> {
+    const entity = await this.repository.save({
+      id: journey.id,
+      name: journey.name,
+      description: journey.description,
+      status: journey.status,
+      startDate: journey.startDate,
+      timezone: journey.timezone,
+      createdAt: journey.createdAt,
+      updatedAt: journey.updatedAt,
+    });
+
+    return this.toDomain(entity);
   }
 
   private toDomain(entity: JourneyEntity): Journey {

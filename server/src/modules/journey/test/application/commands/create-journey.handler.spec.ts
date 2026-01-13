@@ -11,8 +11,10 @@ describe('CreateJourneyHandler', () => {
   beforeEach(async () => {
     const mockRepository: jest.Mocked<IJourneyRepository> = {
       create: jest.fn(),
+      findAll: jest.fn(),
       findById: jest.fn(),
       findActive: jest.fn(),
+      update: jest.fn(),
       updateStatus: jest.fn(),
     };
 

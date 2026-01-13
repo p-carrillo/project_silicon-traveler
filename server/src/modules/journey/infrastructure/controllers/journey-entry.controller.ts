@@ -6,6 +6,7 @@ import {
   Param,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { GetLatestJourneyEntryQuery } from '../../application/queries/get-latest-journey-entry.query';
@@ -15,6 +16,7 @@ import { GenerateDailyJourneyEntryCommand } from '../../application/commands/gen
 import { JourneyEntryResponseDto } from '../dto/journey-entry-response.dto';
 import { GenerateJourneyEntryRequestDto } from '../dto/generate-journey-entry-request.dto';
 import { JourneyEntryListResponseDto } from '../dto/journey-entry-list-response.dto';
+import { AdminAuthGuard } from '../../../admin/infrastructure/guards/admin-auth.guard';
 
 @Controller('journeys')
 export class JourneyEntryController {
@@ -76,6 +78,7 @@ export class JourneyEntryController {
   }
 
   @Post(':id/entries/generate')
+  @UseGuards(AdminAuthGuard)
   async generateEntry(
     @Param('id') journeyId: string,
     @Body() body: GenerateJourneyEntryRequestDto,

@@ -62,6 +62,26 @@ describe('JourneyController', () => {
     expect(result.journey.stops).toHaveLength(1);
   });
 
+  it('should list journeys', async () => {
+    const now = new Date();
+    const journey = new Journey(
+      'journey-id',
+      'Journey',
+      null,
+      'active',
+      null,
+      'UTC',
+      now,
+      now,
+    );
+    queryBus.execute.mockResolvedValue([journey]);
+
+    const result = await controller.listJourneys();
+
+    expect(result.journeys).toHaveLength(1);
+    expect(result.journeys[0].id).toBe('journey-id');
+  });
+
   it('should throw NotFoundException when journey is missing', async () => {
     queryBus.execute.mockResolvedValue(null);
 
@@ -85,6 +105,54 @@ describe('JourneyController', () => {
     await expect(
       controller.addStop('missing-id', { title: 'Lisbon' }),
     ).rejects.toThrow(NotFoundException);
+  });
+
+  it('should update a journey', async () => {
+    const now = new Date();
+    const journey = new Journey(
+      'journey-id',
+      'Journey',
+      null,
+      'active',
+      null,
+      'UTC',
+      now,
+      now,
+    );
+    const stops = [
+      new JourneyStop('stop-id', journey.id, 'Lisbon', null, null, null, 1, now, now),
+    ];
+    commandBus.execute.mockResolvedValue(journey);
+    queryBus.execute.mockResolvedValue({ journey, stops });
+
+    const result = await controller.updateJourney('journey-id', {
+      name: 'Updated',
+    });
+
+    expect(result.journey.id).toBe('journey-id');
+    expect(commandBus.execute).toHaveBeenCalled();
+  });
+
+  it('should update a stop', async () => {
+    const now = new Date();
+    const stop = new JourneyStop(
+      'stop-id',
+      'journey-id',
+      'Lisbon',
+      null,
+      null,
+      null,
+      1,
+      now,
+      now,
+    );
+    commandBus.execute.mockResolvedValue(stop);
+
+    const result = await controller.updateStop('journey-id', 'stop-id', {
+      title: 'Lisbon',
+    });
+
+    expect(result.id).toBe('stop-id');
   });
 
   it('should throw BadRequestException when reorder fails', async () => {

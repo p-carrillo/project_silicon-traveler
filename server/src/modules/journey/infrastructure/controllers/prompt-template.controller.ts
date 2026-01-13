@@ -1,4 +1,4 @@
-import { Body, Controller, Get, NotFoundException, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Get, NotFoundException, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { ListPromptTemplatesQuery } from '../../application/queries/list-prompt-templates.query';
 import { CreatePromptTemplateCommand } from '../../application/commands/create-prompt-template.command';
@@ -7,6 +7,7 @@ import { PromptTemplateRequestDto } from '../dto/prompt-template-request.dto';
 import { UpdatePromptTemplateRequestDto } from '../dto/update-prompt-template-request.dto';
 import { PromptTemplateResponseDto } from '../dto/prompt-template-response.dto';
 import { PromptTemplateListResponseDto } from '../dto/prompt-template-list-response.dto';
+import { AdminAuthGuard } from '../../../admin/infrastructure/guards/admin-auth.guard';
 
 @Controller('prompt-templates')
 export class PromptTemplateController {
@@ -16,6 +17,7 @@ export class PromptTemplateController {
   ) {}
 
   @Get()
+  @UseGuards(AdminAuthGuard)
   async listTemplates(): Promise<PromptTemplateListResponseDto> {
     const templates = await this.queryBus.execute(new ListPromptTemplatesQuery());
 
@@ -23,6 +25,7 @@ export class PromptTemplateController {
   }
 
   @Post()
+  @UseGuards(AdminAuthGuard)
   async createTemplate(
     @Body() body: PromptTemplateRequestDto,
   ): Promise<PromptTemplateResponseDto> {
@@ -39,6 +42,7 @@ export class PromptTemplateController {
   }
 
   @Patch(':id')
+  @UseGuards(AdminAuthGuard)
   async updateTemplate(
     @Param('id') id: string,
     @Body() body: UpdatePromptTemplateRequestDto,

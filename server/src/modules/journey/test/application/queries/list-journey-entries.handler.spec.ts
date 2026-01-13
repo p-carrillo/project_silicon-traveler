@@ -21,8 +21,10 @@ describe('ListJourneyEntriesHandler', () => {
     };
     stopRepository = {
       create: jest.fn(),
+      findById: jest.fn(),
       findByJourneyId: jest.fn(),
       findByJourneyIdAndSequence: jest.fn(),
+      update: jest.fn(),
       updateSequences: jest.fn(),
     };
 

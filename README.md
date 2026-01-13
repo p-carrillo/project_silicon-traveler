@@ -56,6 +56,20 @@ You can override the host ports:
 CLIENT_PORT=8020 SERVER_PORT=3022 docker compose up --build
 ```
 
+## Admin panel
+Set admin credentials via environment variables before starting the stack:
+
+```bash
+export ADMIN_USERNAME=admin
+export ADMIN_PASSWORD_HASH=<bcrypt-hash>
+export ADMIN_SESSION_SECRET=<random-secret>
+```
+
+Generate a bcrypt hash (after dependencies are installed):
+```bash
+node -e "const bcrypt = require('bcryptjs'); console.log(bcrypt.hashSync('your-password', 10));"
+```
+
 ## Notes
 - See [docs/testing.md](docs/testing.md) for testing guide.
 - See [docs/architecture/](docs/architecture/) for architecture documentation.

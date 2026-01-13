@@ -29,6 +29,12 @@ export class JourneyStopRepository implements IJourneyStopRepository {
     return this.toDomain(saved);
   }
 
+  async findById(id: string): Promise<JourneyStop | null> {
+    const entity = await this.repository.findOne({ where: { id } });
+
+    return entity ? this.toDomain(entity) : null;
+  }
+
   async findByJourneyId(journeyId: string): Promise<JourneyStop[]> {
     const entities = await this.repository.find({
       where: { journeyId },
@@ -47,6 +53,22 @@ export class JourneyStopRepository implements IJourneyStopRepository {
     });
 
     return entity ? this.toDomain(entity) : null;
+  }
+
+  async update(stop: JourneyStop): Promise<JourneyStop> {
+    const entity = await this.repository.save({
+      id: stop.id,
+      journeyId: stop.journeyId,
+      title: stop.title,
+      city: stop.city,
+      country: stop.country,
+      description: stop.description,
+      sequence: stop.sequence,
+      createdAt: stop.createdAt,
+      updatedAt: stop.updatedAt,
+    });
+
+    return this.toDomain(entity);
   }
 
   async updateSequences(

@@ -22,11 +22,15 @@ import { ReorderJourneyStopsHandler } from './application/commands/reorder-journ
 import { GenerateDailyJourneyEntryHandler } from './application/commands/generate-daily-journey-entry.handler';
 import { CreatePromptTemplateHandler } from './application/commands/create-prompt-template.handler';
 import { UpdatePromptTemplateHandler } from './application/commands/update-prompt-template.handler';
+import { UpdateJourneyHandler } from './application/commands/update-journey.handler';
+import { UpdateJourneyStopHandler } from './application/commands/update-journey-stop.handler';
 import { GetJourneyHandler } from './application/queries/get-journey.handler';
 import { GetLatestJourneyEntryHandler } from './application/queries/get-latest-journey-entry.handler';
 import { ListPromptTemplatesHandler } from './application/queries/list-prompt-templates.handler';
 import { GetJourneyEntryByDateHandler } from './application/queries/get-journey-entry-by-date.handler';
 import { ListJourneyEntriesHandler } from './application/queries/list-journey-entries.handler';
+import { ListJourneysHandler } from './application/queries/list-journeys.handler';
+import { AdminModule } from '../admin/admin.module';
 
 const commandHandlers = [
   CreateJourneyHandler,
@@ -35,6 +39,8 @@ const commandHandlers = [
   GenerateDailyJourneyEntryHandler,
   CreatePromptTemplateHandler,
   UpdatePromptTemplateHandler,
+  UpdateJourneyHandler,
+  UpdateJourneyStopHandler,
 ];
 
 const queryHandlers = [
@@ -43,11 +49,13 @@ const queryHandlers = [
   GetJourneyEntryByDateHandler,
   ListJourneyEntriesHandler,
   ListPromptTemplatesHandler,
+  ListJourneysHandler,
 ];
 
 @Module({
   imports: [
     CqrsModule,
+    AdminModule,
     TypeOrmModule.forFeature([
       JourneyEntity,
       JourneyStopEntity,

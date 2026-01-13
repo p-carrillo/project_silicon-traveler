@@ -61,6 +61,64 @@ describe('JourneyStopRepository', () => {
     });
   });
 
+  it('should return a stop by id', async () => {
+    const entity = new JourneyStopEntity();
+    entity.id = 'stop-id';
+    entity.journeyId = 'journey-id';
+    entity.title = 'Lisbon';
+    entity.city = null;
+    entity.country = null;
+    entity.description = null;
+    entity.sequence = 1;
+    entity.createdAt = new Date();
+    entity.updatedAt = new Date();
+
+    typeormRepository.findOne.mockResolvedValue(entity);
+
+    const result = await repository.findById('stop-id');
+
+    expect(result).toBeInstanceOf(JourneyStop);
+    expect(result?.id).toBe('stop-id');
+    expect(typeormRepository.findOne).toHaveBeenCalledWith({
+      where: { id: 'stop-id' },
+    });
+  });
+
+  it('should update a journey stop', async () => {
+    const now = new Date();
+    const stop = new JourneyStop(
+      'stop-id',
+      'journey-id',
+      'Lisbon',
+      null,
+      null,
+      null,
+      1,
+      now,
+      now,
+    );
+    const entity = new JourneyStopEntity();
+    entity.id = stop.id;
+    entity.journeyId = stop.journeyId;
+    entity.title = stop.title;
+    entity.city = stop.city;
+    entity.country = stop.country;
+    entity.description = stop.description;
+    entity.sequence = stop.sequence;
+    entity.createdAt = stop.createdAt;
+    entity.updatedAt = stop.updatedAt;
+
+    typeormRepository.save.mockResolvedValue(entity);
+
+    const result = await repository.update(stop);
+
+    expect(result).toBeInstanceOf(JourneyStop);
+    expect(result?.id).toBe('stop-id');
+    expect(typeormRepository.save).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'stop-id' }),
+    );
+  });
+
   it('should update sequences in a transaction', async () => {
     const update = jest.fn();
     typeormRepository.manager.transaction.mockImplementation(async (callback) => {
