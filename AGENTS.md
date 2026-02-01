@@ -1,66 +1,22 @@
-# AGENTS.md
+# AGENTS
 
-## Project goal
-Minimal monorepo boilerplate with Next (client) and Nest (server). Shows an "It works" page and a basic health check.
+Este repo es un monorepo Node.js + TypeScript con arquitectura hexagonal por modulos y MariaDB sin ORM (SQL directo y conexiones). El codigo sigue el estandar mas asentado para TypeScript y aplica SOLID.
 
-## AI Context
-- Check `.ai/skills/` for specific workflows and conventions.
-- Check `.ai/specs/` for feature specifications.
-- Check `docs/architecture/` for architecture documentation.
-- Check `docs/adr/` for architectural decision records.
-- Check `docs/specs/` for spec templates and reusable agent prompts.
+## Skills disponibles y ubicacion
+Las skills viven en `.ai/skills/`:
+- `.ai/skills/architecture.md`
+- `.ai/skills/database.md`
+- `.ai/skills/coding.md`
+- `.ai/skills/readme.md`
 
-## Architecture
-- Monorepo: /client (Next) and /server (Nest)
-- Client fetches /health from the server
-- Docker Compose runs both services
+## Orquestacion
+Cuando un trabajo toque mas de un area, usa las skills en este orden:
+1) `.ai/skills/architecture.md`
+2) `.ai/skills/database.md`
+3) `.ai/skills/coding.md`
+4) `.ai/skills/readme.md`
 
-## Commands
-### Requirements
-- Docker
-
-### Setup
-- docker compose up --build
-
-### Dev
-- docker compose up --build
-
-### Build
-- docker compose build
-
-### Docker
-- docker compose up --build
-
-### Quality
-- docker compose exec server pnpm lint
-- docker compose exec server pnpm test
-- docker compose exec client pnpm lint
-- docker compose exec client pnpm test
-
-Note: lint and test are minimal placeholders; replace with real checks when you add features.
-
-## Fresh clone notes
-- The project is Docker-only for development and testing.
-- Use `docker compose up --build` for the full stack.
-- To re-apply DB fixtures: `docker compose exec server pnpm db:fixtures`.
-
-## Conventions
-- **All code MUST be in English**: Variable names, function names, comments, documentation, commit messages, etc. Even if the user communicates in another language, all code artifacts must be in English.
-- Server controllers should be thin; put logic in services.
-- Keep API changes in sync with client usage.
-- Tests must be located inside each module's `test/` folder, following the module's directory structure.
-- One `.spec.ts` file per class/file being tested.
-
-## Change workflow (SDD)
-- **Specification Driven Development**: All changes must align with specs in `.ai/specs/` and documentation in `docs/`
-- **Never silently override**: Do not modify specs/docs without explicit user approval
-- **Documentation sync**: After code changes, verify that relevant updates are reflected in `docs/` and `.ai/` (specs/skills). If not, synchronize the documentation/specs in the same change set.
-- Prefer small, focused changes.
-- Keep Docker healthy after updates.
-
-## Security
-- Do not commit secrets.
-- Avoid logging sensitive data.
-
-## If something is missing
-- Check README first, then ask for clarification.
+## Reglas globales
+- README: actualizar `README.md` siempre que el cambio afecte setup, arquitectura, uso, dependencias, configuracion o comandos.
+- ADR: cada decision tecnica o de arquitectura debe registrarse como ADR en la carpeta `.adr/` usando el template correspondiente.
+- Mantener consistencia con arquitectura hexagonal por modulos y sin ORM en MariaDB.

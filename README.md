@@ -73,4 +73,4 @@ node -e "const bcrypt = require('bcryptjs'); console.log(bcrypt.hashSync('your-p
 ## Notes
 - See [docs/testing.md](docs/testing.md) for testing guide.
 - See [docs/architecture/](docs/architecture/) for architecture documentation.
-- See [docs/adr/](docs/adr/) for architectural decisions.
+- See `.adr/` for architectural decisions.

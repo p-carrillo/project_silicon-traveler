@@ -10,7 +10,6 @@ services:
       - "${DB_PORT:-3316}:3306"
     volumes:
       - mariadb_data:/var/lib/mysql
-      - ./server/fixtures:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 10s
@@ -29,12 +28,6 @@ services:
       - DB_USERNAME=user
       - DB_PASSWORD=password
       - DB_DATABASE=app
-      - ADMIN_USERNAME=${ADMIN_USERNAME:-}
-      - ADMIN_PASSWORD_HASH=${ADMIN_PASSWORD_HASH:-}
-      - ADMIN_SESSION_SECRET=${ADMIN_SESSION_SECRET:-}
-      - ADMIN_SESSION_TTL_MINUTES=${ADMIN_SESSION_TTL_MINUTES:-120}
-      - ADMIN_LOGIN_MAX_ATTEMPTS=${ADMIN_LOGIN_MAX_ATTEMPTS:-5}
-      - ADMIN_LOGIN_WINDOW_MINUTES=${ADMIN_LOGIN_WINDOW_MINUTES:-15}
       - CHOKIDAR_USEPOLLING=true
     ports:
       - "${SERVER_PORT:-3011}:3001"
