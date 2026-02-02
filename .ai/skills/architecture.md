@@ -1,56 +1,56 @@
 # Skill: architecture.md
 
-## Objetivo
-Definir y mantener la arquitectura hexagonal por modulos en el monorepo, con limites claros, dependencias correctas y contratos estables.
+## Objective
+Define and maintain a modular hexagonal architecture in the monorepo, with clear boundaries, correct dependencies, and stable contracts.
 
-## Alcance
-- Estructura de carpetas y paquetes.
-- Separacion de capas (dominio, aplicacion, adaptadores).
-- Definicion de puertos y contratos publicos entre modulos.
-- Criterios de dependencia y acoplamiento.
+## Scope
+- Folder and package structure.
+- Layer separation (domain, application, adapters).
+- Definition of ports and public contracts between modules.
+- Dependency and coupling rules.
 
-## Entradas esperadas
-- Requisitos funcionales y no funcionales.
-- Lista de modulos y sus responsabilidades.
-- Integraciones externas (DB, colas, APIs, etc.).
+## Expected inputs
+- Functional and non-functional requirements.
+- List of modules and their responsibilities.
+- External integrations (DB, queues, APIs, etc.).
 
-## Salidas esperadas
-- Propuesta de estructura de monorepo y layout de modulos.
-- Puertos (interfaces) definidos para casos de uso e integraciones.
-- Reglas de dependencia entre capas.
-- ADR que documenta la decision arquitectonica.
+## Expected outputs
+- Proposed monorepo structure and module layout.
+- Ports (interfaces) defined for use cases and integrations.
+- Dependency rules between layers.
+- An ADR documenting the architectural decision.
 
-## Flujo de trabajo recomendado
-1) Identificar modulos (bounded contexts) y responsabilidades.
-2) Definir capas por modulo:
-   - Dominio (entidades, value objects, reglas).
-   - Aplicacion (casos de uso, servicios).
-   - Puertos (interfaces de entrada/salida).
-   - Adaptadores (infraestructura, controllers, repositorios).
-3) Establecer dependencias:
-   - Dominio no depende de infraestructura.
-   - Adaptadores dependen de puertos.
-4) Proponer estructura de monorepo. Ejemplo orientativo:
-   - apps/ (entradas: API, workers, CLI)
-   - packages/ (modulos de dominio)
-     - <modulo>/src/domain
-     - <modulo>/src/application
-     - <modulo>/src/ports
-     - <modulo>/src/adapters
-5) Definir contratos publicos entre modulos (DTOs y eventos).
-6) Documentar la decision en `.adr/`.
+## Recommended workflow
+1) Identify modules (bounded contexts) and responsibilities.
+2) Define layers per module:
+   - Domain (entities, value objects, rules).
+   - Application (use cases, services).
+   - Ports (input/output interfaces).
+   - Adapters (infrastructure, controllers, repositories).
+3) Set dependencies:
+   - Domain does not depend on infrastructure.
+   - Adapters depend on ports.
+4) Propose monorepo structure. Example layout:
+   - apps/ (entrypoints: API, workers, CLI)
+   - packages/ (domain modules)
+     - <module>/src/domain
+     - <module>/src/application
+     - <module>/src/ports
+     - <module>/src/adapters
+5) Define public contracts between modules (DTOs and events).
+6) Document the decision in `.adr/`.
 
-## Buenas practicas
-- Dominio puro: sin dependencias de framework o IO.
-- Casos de uso como unidad central de orquestacion.
-- Puertos como fronteras estables.
-- Evitar dependencias cruzadas; integrar via puertos.
-- Consistencia en nombres de capas y carpetas.
-- Documentar cambios estructurales con ADR.
+## Best practices
+- Keep the domain pure: no framework or IO dependencies.
+- Use cases as the central orchestration unit.
+- Ports as stable boundaries.
+- Avoid cross-module coupling; integrate via ports.
+- Consistent naming for layers and folders.
+- Document structural changes with ADRs.
 
-## Lista de comprobacion
-- [ ] Se identificaron modulos con limites claros.
-- [ ] Cada modulo separa dominio, aplicacion, puertos y adaptadores.
-- [ ] No hay dependencias desde dominio hacia infraestructura.
-- [ ] Contratos publicos entre modulos estan definidos.
-- [ ] La decision arquitectonica esta registrada en `.adr/`.
+## Checklist
+- [ ] Modules are identified with clear boundaries.
+- [ ] Each module separates domain, application, ports, and adapters.
+- [ ] No dependencies from domain to infrastructure.
+- [ ] Public contracts between modules are defined.
+- [ ] The architectural decision is recorded in `.adr/`.

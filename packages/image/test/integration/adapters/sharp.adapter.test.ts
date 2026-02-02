@@ -1,0 +1,27 @@
+import { describe, it, expect } from 'vitest';
+import sharp from 'sharp';
+import { SharpAdapter } from '../../../src/adapters/sharp.adapter';
+
+describe('SharpAdapter (integration)', () => {
+  it('generates thumbnails for provided sizes', async () => {
+    const sourceBuffer = await sharp({
+      create: {
+        width: 20,
+        height: 20,
+        channels: 3,
+        background: { r: 200, g: 200, b: 200 },
+      },
+    })
+      .jpeg()
+      .toBuffer();
+
+    const adapter = new SharpAdapter();
+    const thumbnails = await adapter.generate(sourceBuffer, [
+      { width: 10, height: 10, suffix: '_small' },
+      { width: 8, height: 8, suffix: '_tiny' },
+    ]);
+
+    expect(thumbnails.get('_small')).toBeInstanceOf(Buffer);
+    expect(thumbnails.get('_tiny')).toBeInstanceOf(Buffer);
+  });
+});

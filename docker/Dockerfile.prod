@@ -1,0 +1,70 @@
+# Production Dockerfile for Node.js services
+FROM node:20-alpine AS builder
+
+# Install pnpm
+RUN corepack enable && corepack prepare pnpm@9.12.0 --activate
+
+# Set working directory
+WORKDIR /app
+
+# Copy all package.json files for workspace
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY packages/*/package.json ./packages/
+COPY apps/*/package.json ./apps/
+
+# Copy full package structure
+COPY packages/shared/package.json ./packages/shared/
+COPY packages/journey/package.json ./packages/journey/
+COPY packages/route/package.json ./packages/route/
+COPY packages/photo/package.json ./packages/photo/
+COPY packages/storage/package.json ./packages/storage/
+COPY packages/image/package.json ./packages/image/
+COPY packages/content/package.json ./packages/content/
+COPY packages/research/package.json ./packages/research/
+COPY apps/api/package.json ./apps/api/
+COPY apps/web/package.json ./apps/web/
+COPY apps/cli/package.json ./apps/cli/
+COPY apps/scheduler/package.json ./apps/scheduler/
+
+# Install dependencies
+RUN pnpm install --frozen-lockfile --prod=false
+
+# Copy source code
+COPY . .
+
+# Build all packages and apps
+RUN pnpm --filter @silicon-traveler/shared build
+RUN pnpm --filter @silicon-traveler/journey build
+RUN pnpm --filter @silicon-traveler/route build
+RUN pnpm --filter @silicon-traveler/photo build
+RUN pnpm --filter @silicon-traveler/storage build
+RUN pnpm --filter @silicon-traveler/image build
+RUN pnpm --filter @silicon-traveler/content build
+RUN pnpm --filter @silicon-traveler/research build
+RUN pnpm --filter @silicon-traveler/api build
+RUN pnpm --filter @silicon-traveler/web build
+
+# Prune dev dependencies
+RUN pnpm prune --prod
+
+# Production stage
+FROM node:20-alpine
+
+# Install pnpm
+RUN corepack enable && corepack prepare pnpm@9.12.0 --activate
+
+WORKDIR /app
+
+# Copy from builder
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
+COPY --from=builder /app/packages ./packages
+COPY --from=builder /app/apps ./apps
+COPY --from=builder /app/migrations ./migrations
+COPY --from=builder /app/scripts ./scripts
+
+# Set NODE_ENV to production
+ENV NODE_ENV=production
+
+CMD ["tail", "-f", "/dev/null"]

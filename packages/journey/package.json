@@ -1,0 +1,19 @@
+{
+  "name": "@silicon-traveler/journey",
+  "version": "1.0.0",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "pnpm -w vitest -c vitest.workspace.ts run --project journey",
+    "test:unit": "pnpm -w vitest -c vitest.workspace.ts run --project journey --dir test/unit",
+    "test:integration": "pnpm -w vitest -c vitest.workspace.ts run --project journey --dir test/integration"
+  },
+  "dependencies": {
+    "@silicon-traveler/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.0"
+  }
+}

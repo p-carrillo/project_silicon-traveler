@@ -1,0 +1,19 @@
+{
+  "name": "@silicon-traveler/shared",
+  "version": "1.0.0",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "pnpm -w vitest -c vitest.workspace.ts run --project shared",
+    "test:unit": "pnpm -w vitest -c vitest.workspace.ts run --project shared --dir test/unit",
+    "test:integration": "pnpm -w vitest -c vitest.workspace.ts run --project shared --dir test/integration"
+  },
+  "dependencies": {
+    "mariadb": "^3.2.3"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.0"
+  }
+}

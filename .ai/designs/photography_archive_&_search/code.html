@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Photography Archive | Contact Sheet</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,700;1,400&amp;family=Inter:wght@300;400;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#000000",
+                        "background-light": "#ffffff",
+                        "grid-line": "#e5e5e5",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"],
+                        "serif": ["Crimson Pro", "serif"]
+                    },
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        @layer base {
+            body {
+                @apply bg-background-light text-black antialiased;
+            }
+        }
+        .contact-sheet-grid {
+            background-size: 100% 1px, 1px 100%;
+            background-image: linear-gradient(to right, #e5e5e5 1px, transparent 1px), linear-gradient(to bottom, #e5e5e5 1px, transparent 1px);
+        }
+        .photo-frame {
+            @apply relative border border-black p-2 bg-white transition-all duration-300;
+        }
+        .photo-frame:hover {
+            @apply shadow-2xl z-10 scale-[1.02];
+        }
+        .negative-strip-font {
+            font-family: 'Inter', sans-serif;
+            letter-spacing: 0.2em;
+            font-weight: 700;
+            font-size: 10px;
+        }
+        .img-bw {
+            filter: grayscale(100%) contrast(110%);
+        }
+        .img-bw:hover {
+            filter: grayscale(0%) contrast(100%);
+        }
+    </style>
+</head>
+<body class="font-display">
+<div class="layout-container flex h-full grow flex-col min-h-screen">
+<header class="flex items-center justify-between border-b border-black px-8 py-8 sticky top-0 bg-white/95 backdrop-blur-sm z-50">
+<div class="flex flex-col">
+<h1 class="text-2xl font-black uppercase tracking-tighter leading-none">The Archive</h1>
+<p class="text-[10px] uppercase tracking-widest font-bold mt-1 text-gray-500">Magnum Photographic Records</p>
+</div>
+<nav class="flex items-center gap-12">
+<div class="hidden md:flex items-center gap-10">
+<a class="text-black/50 hover:text-black text-xs font-bold uppercase tracking-widest transition-colors" href="#">Latest</a>
+<a class="text-black text-xs font-bold uppercase tracking-widest border-b-2 border-black pb-1" href="#">Archive</a>
+<a class="text-black/50 hover:text-black text-xs font-bold uppercase tracking-widest transition-colors" href="#">Exhibitions</a>
+<a class="text-black/50 hover:text-black text-xs font-bold uppercase tracking-widest transition-colors" href="#">Series</a>
+</div>
+<button class="text-black hover:opacity-60 transition-opacity">
+<span class="material-symbols-outlined text-2xl">menu</span>
+</button>
+</nav>
+</header>
+<main class="flex-1">
+<section class="border-b border-black">
+<div class="max-w-screen-2xl mx-auto flex flex-col md:flex-row">
+<div class="flex-1 border-r border-black p-8">
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-0 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-black transition-colors">search</span>
+<input class="w-full bg-transparent border-none focus:ring-0 pl-10 text-sm font-bold tracking-widest placeholder:text-gray-300 uppercase" placeholder="SEARCH BY LOCATION, DATE, OR KEYWORD" type="text"/>
+</div>
+</div>
+<div class="flex">
+<button class="px-10 py-8 border-r border-black hover:bg-black hover:text-white transition-all text-xs font-black uppercase tracking-widest">
+                        Date Range
+                    </button>
+<button class="px-10 py-8 border-r border-black hover:bg-black hover:text-white transition-all text-xs font-black uppercase tracking-widest">
+                        Geography
+                    </button>
+<div class="px-10 py-8 flex items-center gap-4 text-xs font-black uppercase tracking-widest bg-gray-50">
+<span class="text-gray-400">Layout:</span>
+<button class="text-black"><span class="material-symbols-outlined">grid_view</span></button>
+<button class="text-gray-300 hover:text-black"><span class="material-symbols-outlined">view_agenda</span></button>
+</div>
+</div>
+</div>
+</section>
+<section class="contact-sheet-grid min-h-screen p-8">
+<div class="max-w-screen-2xl mx-auto">
+<div class="flex items-end justify-between mb-12 border-b-2 border-black pb-4">
+<div class="flex items-baseline gap-4">
+<h2 class="text-6xl font-black uppercase tracking-tighter">Oct '23</h2>
+<span class="text-sm font-serif italic text-gray-500">Trans-Siberian Journal</span>
+</div>
+<div class="text-[10px] font-bold tracking-[0.3em] uppercase">Sheet 10 / 2023</div>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-12">
+<div class="photo-frame">
+<div class="flex justify-between items-center mb-2 negative-strip-font text-gray-400">
+<span>OCT 31</span>
+<span>ROLL 402 - 01</span>
+</div>
+<div class="aspect-square bg-gray-100 overflow-hidden">
+<img alt="Swiss Alps" class="w-full h-full object-cover img-bw transition-all duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCCn7wLieVIBOOpg51pkTTdSZvZZQB2wTEEUQqJAyn4T4E3OeXq6ry7iZ-Fxw5-GTVXqLZK7dWD6822Osmj0URx7FhYMsNDfuXAELyThnB9j-jMAu9cSc8qzKdvyclnzyujQtD3h0Dt13uJd4bR-8g4Z-mqlf8r5kZp9MuEWREBNvASWiWzX8o1cn4TJUr49B_M9ZOx2aDVN2zYQP2Wlm8XHCh91jG8_31sUseo2oSvM-XwZX_cRU7Fe5Pjju6aa9zl3qGKvFOda9A"/>
+</div>
+<div class="mt-4 flex justify-between items-start">
+<div>
+<h3 class="text-xs font-black uppercase tracking-widest">Swiss Alps</h3>
+<p class="text-[10px] text-gray-500 uppercase mt-1">Switzerland — 46.8182° N</p>
+</div>
+<span class="material-symbols-outlined text-sm">bookmark</span>
+</div>
+</div>
+<div class="photo-frame">
+<div class="flex justify-between items-center mb-2 negative-strip-font text-gray-400">
+<span>OCT 30</span>
+<span>ROLL 402 - 02</span>
+</div>
+<div class="aspect-square bg-gray-100 overflow-hidden">
+<img alt="Hong Kong" class="w-full h-full object-cover img-bw transition-all duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAOw298o3Wl_QoKRRr4SO2Pm5V35TWfvSaYKBlhyb1jCP6vMqx49X07VYVKVbUvyRLjw-E89HtYxwYQ-2FYkQA_qmu6cpdsopa2wGDiToY5bAjj8Khb1S3EV6CPFXVsDlKUDDnAlQqAVt-xviBjWpS9mS-j6urWc-4mg6ZuzyeTwsv-aKk3YfFBYYNmqhMZspYQOdN7tyP0TOUGLpH7RvkLRbc98mHBqoAobZsuGQBYi2HKRIry-rRG6mlSLT3lqGetWpdEb-nTzgA"/>
+</div>
+<div class="mt-4 flex justify-between items-start">
+<div>
+<h3 class="text-xs font-black uppercase tracking-widest">Hong Kong</h3>
+<p class="text-[10px] text-gray-500 uppercase mt-1">Kowloon District</p>
+</div>
+<span class="material-symbols-outlined text-sm">bookmark</span>
+</div>
+</div>
+<div class="photo-frame">
+<div class="flex justify-between items-center mb-2 negative-strip-font text-gray-400">
+<span>OCT 29</span>
+<span>ROLL 402 - 03</span>
+</div>
+<div class="aspect-square bg-gray-100 overflow-hidden">
+<img alt="New York" class="w-full h-full object-cover img-bw transition-all duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDBRkN5Cqp1V0vPBY2DlJYbrKzNfcGCJYgxXEBsvn6sfb1smLv1WFTRVI3wOszYvoe40DRLT-ZMLyHky64yjYLNnVAHmTlOUm5znxr7zffgNgyEhUjxowduZbnPBtH7tx1AIVCfrS-b4BWvs6C1LXAXx2Df41csuZBbHPAOViVK-s0FQD7hBEzQKOckQ_7BuA9TDvqqe8e2V0AsNRDYJEWsTnpB6a4cDxcgoHiK7kNJYEHGmGbiW25pgTpBllEHE9fdjbkymP9IyR4"/>
+</div>
+<div class="mt-4 flex justify-between items-start">
+<div>
+<h3 class="text-xs font-black uppercase tracking-widest">New York City</h3>
+<p class="text-[10px] text-gray-500 uppercase mt-1">Manhattan Bridge</p>
+</div>
+<span class="material-symbols-outlined text-sm">bookmark</span>
+</div>
+</div>
+<div class="photo-frame">
+<div class="flex justify-between items-center mb-2 negative-strip-font text-gray-400">
+<span>OCT 28</span>
+<span>ROLL 402 - 04</span>
+</div>
+<div class="aspect-square bg-gray-100 overflow-hidden">
+<img alt="Berlin" class="w-full h-full object-cover img-bw transition-all duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBjqxjWQrA0aOmSFEno1_j7f8uM2BxLMOCenh_NN6zhAc5APYaU8r2-UD8cR8IeOPzox4wvmjTFVejXKvuwdEP3jJuMY9nAdw7TGlRveHCc6gyLxp8ennxjgO_3pERdtqP3QFNiV2Yoh7z20RXgui2imXVY_Lw7x2QtSqMlh0i18QWymY2X1k4KkIcSBS9Saau9pzT4jz8bxK7xuLHW0eAYPLNJXQlhavqeJKFRNySXasGa_zM2oQq4hgG0qGGqYlOuYuTeylbFwLE"/>
+</div>
+<div class="mt-4 flex justify-between items-start">
+<div>
+<h3 class="text-xs font-black uppercase tracking-widest">Berlin</h3>
+<p class="text-[10px] text-gray-500 uppercase mt-1">Mitte District</p>
+</div>
+<span class="material-symbols-outlined text-sm">bookmark</span>
+</div>
+</div>
+</div>
+<div class="flex items-end justify-between mt-24 mb-12 border-b-2 border-black pb-4">
+<div class="flex items-baseline gap-4">
+<h2 class="text-6xl font-black uppercase tracking-tighter">Sep '23</h2>
+<span class="text-sm font-serif italic text-gray-500">Pacific Coastal Studies</span>
+</div>
+<div class="text-[10px] font-bold tracking-[0.3em] uppercase">Sheet 09 / 2023</div>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-12">
+<div class="photo-frame">
+<div class="flex justify-between items-center mb-2 negative-strip-font text-gray-400">
+<span>SEP 30</span>
+<span>ROLL 401 - 01</span>
+</div>
+<div class="aspect-square bg-gray-100 overflow-hidden">
+<img alt="Yosemite" class="w-full h-full object-cover img-bw transition-all duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDjqSfKuiDuFT6WNlEvusFaQCoONJ_1UN2iTQvauH_8jRtWHBzY2bLtL-a_5QSDCP6rnqxsDJrbWWQmJOjzqaMjdgSJZHw0eJ-TETMOCocOA5xoQOyYH48oMrpIxRM2g0lWqZzmdVEWfUliRwt97HZcOkEu4UUKTadBKn_26LeFKZYPIh-ePAOLkd0fjnh14e-CdVUxGSr7sPIZhtAlwuiO_g7HCDJ5g7_qt-llTDS_V0BWwQ6wBbW1Lw4AD3HnKrhwp-XCwPbpr2g"/>
+</div>
+<div class="mt-4 flex justify-between items-start">
+<div>
+<h3 class="text-xs font-black uppercase tracking-widest">Yosemite</h3>
+<p class="text-[10px] text-gray-500 uppercase mt-1">National Park, USA</p>
+</div>
+<span class="material-symbols-outlined text-sm">bookmark</span>
+</div>
+</div>
+<div class="photo-frame">
+<div class="flex justify-between items-center mb-2 negative-strip-font text-gray-400">
+<span>SEP 29</span>
+<span>ROLL 401 - 02</span>
+</div>
+<div class="aspect-square bg-gray-100 overflow-hidden">
+<img alt="San Francisco" class="w-full h-full object-cover img-bw transition-all duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDzU1JXVmzblv0JExxVVq0rVxmhOHjYotTlEDunkfHamsvqp35w_RaeLq4Pp2_TbWLaUng6vLdXYD0IlioH8vESpeZWt0sLRDCkqD-mD4_pmIu2cgXm51WCXTBYL1uAy7Z6RfuOayJ47v2qCA5t2oJlZR7fv-k1iFAe5zhfG4-iDuQ8js44DuB7uywUIjDW4ATs3dX4sYY8K9shos2sOvDjDtWf_nkaHg6xx9wC2E2XFC6_JxFaviFHsCAQVxhbR2n4Z9tGNGTzQa0"/>
+</div>
+<div class="mt-4 flex justify-between items-start">
+<div>
+<h3 class="text-xs font-black uppercase tracking-widest">San Francisco</h3>
+<p class="text-[10px] text-gray-500 uppercase mt-1">California, USA</p>
+</div>
+<span class="material-symbols-outlined text-sm">bookmark</span>
+</div>
+</div>
+<div class="photo-frame">
+<div class="flex justify-between items-center mb-2 negative-strip-font text-gray-400">
+<span>SEP 28</span>
+<span>ROLL 401 - 03</span>
+</div>
+<div class="aspect-square bg-gray-100 overflow-hidden">
+<img alt="Lisbon" class="w-full h-full object-cover img-bw transition-all duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB2ZWh3yLTmzDrii2vYCYaHpMUehKbBvEXVT6tfIwe190vgxUGh8tudhpNN1xyGLxencPnQGe0_HSSmxf2k8mH8nsOiRmE7Mja8Jev7phh9VAKmgKXkiS5KlYCqPYgjVSo5lmd1_cPt8loQRlW9PWRuiAaMtNdxGbzTAZ-2WHQOzRR5vKxBUzq9NyVqbA5nGC4KthSWblqOLJvmDT180An6Y28yNmDPoldrNqkOzjHadg8hM66DKh5UkUQty_NT8Ler4oQ91SjRDVc"/>
+</div>
+<div class="mt-4 flex justify-between items-start">
+<div>
+<h3 class="text-xs font-black uppercase tracking-widest">Lisbon</h3>
+<p class="text-[10px] text-gray-500 uppercase mt-1">Alfama District</p>
+</div>
+<span class="material-symbols-outlined text-sm">bookmark</span>
+</div>
+</div>
+<div class="photo-frame">
+<div class="flex justify-between items-center mb-2 negative-strip-font text-gray-400">
+<span>SEP 27</span>
+<span>ROLL 401 - 04</span>
+</div>
+<div class="aspect-square bg-gray-100 overflow-hidden">
+<img alt="Tokyo" class="w-full h-full object-cover img-bw transition-all duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBgJzithVEPb7vVJtjUQ8RxWTQH_ZVaGxWzdNdth20U8_Bk34mXzpDrG1dK1XPsfFpd7A7N-mZUUACx5a3r4d75u_hDY8ApNHBRqfqQi-frVHCGSQsaysc4-6E8iRHLNiedqPBcNjDeRiE5w9SImj9yLVkdro4uEKh51ZbFYwcY2Yx7cUAJHIiko5jhDA4F52vlOKarvNrHMvQxpV6vRqnndd04EDKyNkhuAd9iHbPJhIyX-TeQty_ZF3txjscMdBYvkxHk-qgFXks"/>
+</div>
+<div class="mt-4 flex justify-between items-start">
+<div>
+<h3 class="text-xs font-black uppercase tracking-widest">Tokyo</h3>
+<p class="text-[10px] text-gray-500 uppercase mt-1">Shinjuku Night</p>
+</div>
+<span class="material-symbols-outlined text-sm">bookmark</span>
+</div>
+</div>
+</div>
+<div class="mt-24 mb-20 flex flex-col items-center">
+<div class="flex items-center gap-1">
+<button class="w-12 h-12 flex items-center justify-center border border-black hover:bg-black hover:text-white transition-colors">
+<span class="material-symbols-outlined text-sm">chevron_left</span>
+</button>
+<button class="w-12 h-12 flex items-center justify-center border border-black bg-black text-white font-black text-xs">01</button>
+<button class="w-12 h-12 flex items-center justify-center border border-black hover:bg-black hover:text-white transition-colors font-black text-xs">02</button>
+<button class="w-12 h-12 flex items-center justify-center border border-black hover:bg-black hover:text-white transition-colors font-black text-xs">03</button>
+<div class="w-12 h-12 flex items-center justify-center border border-transparent font-black text-xs">...</div>
+<button class="w-12 h-12 flex items-center justify-center border border-black hover:bg-black hover:text-white transition-colors font-black text-xs">24</button>
+<button class="w-12 h-12 flex items-center justify-center border border-black hover:bg-black hover:text-white transition-colors">
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+</button>
+</div>
+<p class="mt-6 text-[10px] font-bold tracking-widest uppercase text-gray-400">Visualizing 8 of 720 frames</p>
+</div>
+</div>
+</section>
+</main>
+<footer class="border-t border-black p-8 bg-white">
+<div class="max-w-screen-2xl mx-auto flex flex-col md:flex-row justify-between items-start gap-12">
+<div class="max-w-md">
+<h4 class="text-xs font-black uppercase tracking-widest mb-4">The Magnum Archive Project</h4>
+<p class="text-sm font-serif leading-relaxed text-gray-600">
+                    A daily exercise in observation. One photograph, one reflection, every 24 hours. A lifetime of seeing, cataloged and preserved for the public record.
+                </p>
+</div>
+<div class="flex flex-col md:items-end gap-6">
+<div class="flex gap-8">
+<a class="text-xs font-black uppercase tracking-widest hover:underline" href="#">Instagram</a>
+<a class="text-xs font-black uppercase tracking-widest hover:underline" href="#">RSS Feed</a>
+<a class="text-xs font-black uppercase tracking-widest hover:underline" href="#">Contact</a>
+</div>
+<div class="text-[10px] font-bold tracking-widest text-gray-400 uppercase">
+                    © 2023 Photographers collective. All rights reserved.
+                </div>
+</div>
+</div>
+</footer>
+</div>
+
+</body></html>

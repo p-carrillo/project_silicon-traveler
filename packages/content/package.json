@@ -1,0 +1,19 @@
+{
+  "name": "@silicon-traveler/content",
+  "version": "1.0.0",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "pnpm -w vitest -c vitest.workspace.ts run --project content",
+    "test:unit": "pnpm -w vitest -c vitest.workspace.ts run --project content --dir test/unit",
+    "test:integration": "pnpm -w vitest -c vitest.workspace.ts run --project content --dir test/integration"
+  },
+  "dependencies": {
+    "openai": "^4.20.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.0"
+  }
+}

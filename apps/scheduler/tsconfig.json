@@ -1,0 +1,19 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "rootDir": "./src",
+    "outDir": "./dist"
+  },
+  "references": [
+    { "path": "../../packages/shared" },
+    { "path": "../../packages/journey" },
+    { "path": "../../packages/route" },
+    { "path": "../../packages/research" },
+    { "path": "../../packages/content" },
+    { "path": "../../packages/image" },
+    { "path": "../../packages/storage" },
+    { "path": "../../packages/photo" }
+  ],
+  "include": ["src/**/*"]
+}

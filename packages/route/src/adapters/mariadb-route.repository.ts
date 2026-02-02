@@ -1,0 +1,230 @@
+import { pool, Point, pointToWKT } from '@silicon-traveler/shared';
+import { IRouteRepository } from '../ports/route-repository.port';
+import { RoutePoint, RouteStatus } from '../domain/route-point.entity';
+
+export class MariaDBRouteRepository implements IRouteRepository {
+  async create(routePoint: Omit<RoutePoint, 'id' | 'createdAt' | 'updatedAt'>): Promise<RoutePoint> {
+    const conn = await pool.getConnection();
+    try {
+      const result = await conn.query(
+        `INSERT INTO route_points (
+          journey_id, sequence, place_name, coordinates, country, region,
+          is_ferry_crossing, distance_from_previous, osm_data, research_summary,
+          image_prompt, narrative_prompt, camera_metadata, status, error_message,
+          image_path, thumbnail_path, published_at
+        ) VALUES (?, ?, ?, ST_GeomFromText(?, 4326), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          routePoint.journeyId,
+          routePoint.sequence,
+          routePoint.placeName,
+          pointToWKT(routePoint.coordinates),
+          routePoint.country,
+          routePoint.region,
+          routePoint.isFferryCrossing,
+          routePoint.distanceFromPrevious,
+          routePoint.osmData ? JSON.stringify(routePoint.osmData) : null,
+          routePoint.researchSummary,
+          routePoint.imagePrompt,
+          routePoint.narrativePrompt,
+          routePoint.cameraMetadata ? JSON.stringify(routePoint.cameraMetadata) : null,
+          routePoint.status,
+          routePoint.errorMessage,
+          routePoint.imagePath,
+          routePoint.thumbnailPath,
+          routePoint.publishedAt,
+        ]
+      );
+
+      return new RoutePoint(
+        result.insertId,
+        routePoint.journeyId,
+        routePoint.sequence,
+        routePoint.placeName,
+        routePoint.coordinates,
+        routePoint.country,
+        routePoint.region,
+        routePoint.isFferryCrossing,
+        routePoint.distanceFromPrevious,
+        routePoint.osmData,
+        routePoint.researchSummary,
+        routePoint.imagePrompt,
+        routePoint.narrativePrompt,
+        routePoint.cameraMetadata,
+        routePoint.status,
+        routePoint.errorMessage,
+        routePoint.imagePath,
+        routePoint.thumbnailPath,
+        new Date(),
+        routePoint.publishedAt,
+        new Date()
+      );
+    } finally {
+      conn.release();
+    }
+  }
+
+  async findById(id: number): Promise<RoutePoint | null> {
+    const conn = await pool.getConnection();
+    try {
+      const rows = await conn.query(
+        `SELECT id, journey_id, sequence, place_name,
+                ST_AsText(coordinates) as coordinates,
+                country, region, is_ferry_crossing, distance_from_previous,
+                osm_data, research_summary, image_prompt, narrative_prompt,
+                camera_metadata, status, error_message, image_path, thumbnail_path,
+                created_at, published_at, updated_at
+         FROM route_points WHERE id = ?`,
+        [id]
+      );
+
+      if (rows.length === 0) return null;
+      return this.toDomain(rows[0]);
+    } finally {
+      conn.release();
+    }
+  }
+
+  async findByStatus(status: RouteStatus, limit: number = 10): Promise<RoutePoint[]> {
+    const conn = await pool.getConnection();
+    try {
+      const rows = await conn.query(
+        `SELECT id, journey_id, sequence, place_name,
+                ST_AsText(coordinates) as coordinates,
+                country, region, is_ferry_crossing, distance_from_previous,
+                osm_data, research_summary, image_prompt, narrative_prompt,
+                camera_metadata, status, error_message, image_path, thumbnail_path,
+                created_at, published_at, updated_at
+         FROM route_points
+         WHERE status = ?
+         ORDER BY sequence ASC
+         LIMIT ?`,
+        [status, limit]
+      );
+
+      return rows.map((row: any) => this.toDomain(row));
+    } finally {
+      conn.release();
+    }
+  }
+
+  async findNextBySequence(journeyId: number): Promise<RoutePoint | null> {
+    const conn = await pool.getConnection();
+    try {
+      const rows = await conn.query(
+        `SELECT id, journey_id, sequence, place_name,
+                ST_AsText(coordinates) as coordinates,
+                country, region, is_ferry_crossing, distance_from_previous,
+                osm_data, research_summary, image_prompt, narrative_prompt,
+                camera_metadata, status, error_message, image_path, thumbnail_path,
+                created_at, published_at, updated_at
+         FROM route_points
+         WHERE journey_id = ? AND status = 'image_ready'
+         ORDER BY sequence ASC
+         LIMIT 1`,
+        [journeyId]
+      );
+
+      if (rows.length === 0) return null;
+      return this.toDomain(rows[0]);
+    } finally {
+      conn.release();
+    }
+  }
+
+  async countByStatuses(statuses: RouteStatus[]): Promise<number> {
+    const conn = await pool.getConnection();
+    try {
+      const placeholders = statuses.map(() => '?').join(',');
+      const rows = await conn.query(
+        `SELECT COUNT(*) as count
+         FROM route_points
+         WHERE status IN (${placeholders})`,
+        statuses
+      );
+
+      return rows[0].count;
+    } finally {
+      conn.release();
+    }
+  }
+
+  async update(routePoint: RoutePoint): Promise<void> {
+    const conn = await pool.getConnection();
+    try {
+      await conn.query(
+        `UPDATE route_points
+         SET place_name = ?, country = ?, region = ?,
+             osm_data = ?, research_summary = ?,
+             image_prompt = ?, narrative_prompt = ?, camera_metadata = ?,
+             status = ?, error_message = ?,
+             image_path = ?, thumbnail_path = ?,
+             published_at = ?, updated_at = NOW()
+         WHERE id = ?`,
+        [
+          routePoint.placeName,
+          routePoint.country,
+          routePoint.region,
+          routePoint.osmData ? JSON.stringify(routePoint.osmData) : null,
+          routePoint.researchSummary,
+          routePoint.imagePrompt,
+          routePoint.narrativePrompt,
+          routePoint.cameraMetadata ? JSON.stringify(routePoint.cameraMetadata) : null,
+          routePoint.status,
+          routePoint.errorMessage,
+          routePoint.imagePath,
+          routePoint.thumbnailPath,
+          routePoint.publishedAt,
+          routePoint.id,
+        ]
+      );
+    } finally {
+      conn.release();
+    }
+  }
+
+  async getLastSequence(journeyId: number): Promise<number> {
+    const conn = await pool.getConnection();
+    try {
+      const rows = await conn.query(
+        `SELECT MAX(sequence) as max_seq FROM route_points WHERE journey_id = ?`,
+        [journeyId]
+      );
+
+      return rows[0].max_seq || 0;
+    } finally {
+      conn.release();
+    }
+  }
+
+  private toDomain(row: any): RoutePoint {
+    return new RoutePoint(
+      row.id,
+      row.journey_id,
+      row.sequence,
+      row.place_name,
+      this.parsePoint(row.coordinates),
+      row.country,
+      row.region,
+      Boolean(row.is_ferry_crossing),
+      row.distance_from_previous ? parseFloat(row.distance_from_previous) : null,
+      row.osm_data ? JSON.parse(row.osm_data) : null,
+      row.research_summary,
+      row.image_prompt,
+      row.narrative_prompt,
+      row.camera_metadata ? JSON.parse(row.camera_metadata) : null,
+      row.status as RouteStatus,
+      row.error_message,
+      row.image_path,
+      row.thumbnail_path,
+      new Date(row.created_at),
+      row.published_at ? new Date(row.published_at) : null,
+      new Date(row.updated_at)
+    );
+  }
+
+  private parsePoint(wkt: string): Point {
+    const match = wkt.match(/POINT\(([^ ]+) ([^ ]+)\)/);
+    if (!match) throw new Error(`Invalid WKT: ${wkt}`);
+    return { lng: parseFloat(match[1]), lat: parseFloat(match[2]) };
+  }
+}

@@ -1,45 +1,45 @@
 # Skill: database.md
 
-## Objetivo
-Definir el acceso a datos en MariaDB sin ORM, usando SQL directo y conexiones seguras y eficientes.
+## Objective
+Define data access for MariaDB without an ORM, using direct SQL and safe, efficient connections.
 
-## Alcance
-- Conexion y pooling.
-- Repositorios como adaptadores de persistencia.
-- Migraciones y seeds.
-- Transacciones y seguridad.
+## Scope
+- Connection and pooling.
+- Repositories as persistence adapters.
+- Migrations and seeds.
+- Transactions and security.
 
-## Entradas esperadas
-- Esquema de datos o requisitos de persistencia.
-- Reglas de negocio que impactan en consultas.
-- Volumen esperado y consultas criticas.
+## Expected inputs
+- Data schema or persistence requirements.
+- Business rules that affect queries.
+- Expected volume and critical queries.
 
-## Salidas esperadas
-- Configuracion de conexion y pool.
-- Estructura de repositorios por modulo.
-- Estrategia de migraciones versionadas.
-- ADR para decisiones de persistencia.
+## Expected outputs
+- Connection and pool configuration.
+- Repository structure per module.
+- Versioned migration strategy.
+- ADR for persistence decisions.
 
-## Flujo de trabajo recomendado
-1) Elegir driver compatible con MariaDB (por ejemplo `mariadb` o `mysql2`).
-2) Configurar pool con limites por entorno (dev/test/prod).
-3) Definir repositorios como adaptadores que implementan puertos de persistencia.
-4) Escribir SQL parametrizado y reusable.
-5) Diseñar migraciones versionadas e idempotentes.
-6) Definir transacciones para operaciones multi-paso.
-7) Documentar decisiones en `.adr/`.
+## Recommended workflow
+1) Choose a MariaDB-compatible driver (for example `mariadb` or `mysql2`).
+2) Configure the pool with per-environment limits (dev/test/prod).
+3) Define repositories as adapters implementing persistence ports.
+4) Write parameterized, reusable SQL.
+5) Design versioned, idempotent migrations.
+6) Define transactions for multi-step operations.
+7) Document decisions in `.adr/`.
 
-## Buenas practicas
-- Usar queries parametrizadas para prevenir SQL injection.
-- Mantener el SQL cercano al dominio (nombres de tablas y columnas coherentes).
-- Indexar segun consultas criticas reales.
-- Separar migraciones y seeds por entorno.
-- Evitar loggear datos sensibles.
+## Best practices
+- Use parameterized queries to prevent SQL injection.
+- Keep SQL close to the domain (consistent table/column naming).
+- Index based on real critical queries.
+- Separate migrations and seeds per environment.
+- Avoid logging sensitive data.
 
-## Lista de comprobacion
-- [ ] Hay pool de conexiones configurado por entorno.
-- [ ] Todas las queries son parametrizadas.
-- [ ] Los repositorios implementan puertos de persistencia.
-- [ ] Migraciones versionadas e idempotentes.
-- [ ] Transacciones definidas cuando aplica.
-- [ ] Decision de persistencia documentada en `.adr/`.
+## Checklist
+- [ ] A connection pool is configured per environment.
+- [ ] All queries are parameterized.
+- [ ] Repositories implement persistence ports.
+- [ ] Migrations are versioned and idempotent.
+- [ ] Transactions are defined where needed.
+- [ ] Persistence decisions are documented in `.adr/`.

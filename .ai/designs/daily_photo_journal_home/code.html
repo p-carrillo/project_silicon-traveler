@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Magnum Journal - Daily Photo</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&amp;family=Playfair+Display:ital,wght@0,400;0,700;1,400&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#ffffff",
+                        "background-dark": "#000000",
+                        "border-gray": "#333333",
+                    },
+                    fontFamily: {
+                        "sans": ["Inter", "sans-serif"],
+                        "serif": ["Playfair Display", "serif"]
+                    }
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        body {
+            @apply bg-background-dark text-white font-sans overflow-x-hidden;
+        }
+        .hero-image {
+            height: calc(100vh - 280px);
+            filter: grayscale(100%) contrast(110%);
+        }
+        .monochrome-ui {
+            @apply border-white/20;
+        }
+        .serif-text {
+            font-family: 'Playfair Display', serif;
+        }
+    </style>
+</head>
+<body class="bg-black text-white selection:bg-white selection:text-black">
+<div class="layout-container flex min-h-screen flex-col">
+<div class="px-6 md:px-12 lg:px-20 flex flex-1 justify-center py-8">
+<div class="layout-content-container flex flex-col w-full max-w-[1400px] flex-1">
+<header class="flex items-center justify-between border-b border-white/10 pb-10">
+<div class="flex items-center gap-6">
+<div class="size-8 text-white">
+<svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M4 4H44V44H4V4ZM24 36C30.6274 36 36 30.6274 36 24C36 17.3726 30.6274 12 24 12C17.3726 12 12 17.3726 12 24C12 30.6274 17.3726 36 24 36Z" fill="currentColor"></path>
+</svg>
+</div>
+<div class="flex flex-col">
+<h2 class="text-white text-2xl font-bold tracking-widest uppercase leading-none">Magnum Journal</h2>
+<span class="text-[10px] tracking-[0.4em] uppercase text-white/40 mt-1">Daily Documentary Observation</span>
+</div>
+</div>
+<div class="flex flex-1 justify-end gap-16 items-center">
+<nav class="hidden md:flex items-center gap-12">
+<a class="text-white/50 hover:text-white transition-colors text-xs font-medium uppercase tracking-[0.2em]" href="#">Archive</a>
+<a class="text-white/50 hover:text-white transition-colors text-xs font-medium uppercase tracking-[0.2em]" href="#">About</a>
+<a class="text-white/50 hover:text-white transition-colors text-xs font-medium uppercase tracking-[0.2em]" href="#">Contact</a>
+</nav>
+<div class="flex gap-2">
+<button class="flex items-center justify-center h-10 w-10 border border-white/10 hover:border-white text-white/60 hover:text-white transition-all">
+<span class="material-symbols-outlined text-[18px]">search</span>
+</button>
+<button class="flex items-center justify-center h-10 w-10 border border-white/10 hover:border-white text-white/60 hover:text-white transition-all">
+<span class="material-symbols-outlined text-[18px]">share</span>
+</button>
+</div>
+</div>
+</header>
+<main class="mt-12 flex flex-col lg:grid lg:grid-cols-12 gap-16">
+<div class="lg:col-span-8">
+<div class="w-full bg-zinc-900 overflow-hidden hero-image ring-1 ring-white/10">
+<img alt="Monochrome street scene" class="w-full h-full object-cover filter grayscale contrast-125 brightness-90" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCbtgvE3Hsos-iOs2Y9IKvAxFowhDZ2dcaHhHB1To-3XdvMy-Xai9fAVftj-eDmPRTmdAFuPhZgEtd9iqtR1SOemB0nIg3IZpKThsFvRAL_80m1_NsGMOc7OQW4K5qKcXlx6laqOWaFQpMdg_3h7juXAuVFXZqT1uoRJnw8nUaQqJ8W8R-HMvQL0pjqgWnMhHlmbpcPoZfp0rlqMvp9ExOQIR1Nv4Ipil-yrEDjGWxCSDFgufE2kJKCHr49LJFAdIMVOm0EXrPAvTE"/>
+</div>
+<div class="mt-6 flex justify-between items-start">
+<div class="flex flex-col gap-1">
+<span class="text-[10px] tracking-[0.3em] uppercase text-white/30">Technical Plate</span>
+<span class="text-xs font-medium text-white/60 tracking-wider">LEICA M11 · 35MM F/1.4 · ISO 800 · 1/125S</span>
+</div>
+<div class="flex gap-4">
+<span class="material-symbols-outlined text-white/20">crop_free</span>
+<span class="material-symbols-outlined text-white/20">info</span>
+</div>
+</div>
+</div>
+<div class="lg:col-span-4 flex flex-col h-full pt-4">
+<div class="sticky top-12">
+<div class="flex items-center gap-3 mb-4">
+<div class="h-px w-8 bg-white/40"></div>
+<p class="text-white/40 text-[10px] font-bold tracking-[0.3em] uppercase">October 24, 2023</p>
+</div>
+<h1 class="text-white tracking-tight text-5xl font-light mb-8">Kyoto, <br/><span class="italic">Japan</span></h1>
+<div class="mb-10">
+<p class="serif-text text-white/90 text-xl leading-relaxed italic">
+                                    "The blue hour settles over the Gion district. There is a specific silence that only comes when the stone pavement is still damp from afternoon rain, reflecting the first lanterns of the evening. In this moment, the city feels less like a destination and more like a memory unfolding in real-time."
+                                </p>
+</div>
+<div class="flex flex-col gap-8 border-t border-white/10 pt-10">
+<div class="flex items-start gap-4">
+<span class="material-symbols-outlined text-white/30 mt-1">location_on</span>
+<div class="flex flex-col">
+<span class="text-white/40 text-[9px] uppercase tracking-widest mb-1">Location</span>
+<span class="text-white/80 text-sm font-light tracking-wide">Higashiyama Ward, Southern Gion</span>
+</div>
+</div>
+<div class="mt-4">
+<button class="group relative inline-flex items-center gap-6 py-4 pr-12 text-white border-b border-white/20 hover:border-white transition-all">
+<span class="text-[10px] font-bold uppercase tracking-[0.4em]">Expand Archive</span>
+<span class="material-symbols-outlined absolute right-0 group-hover:translate-x-2 transition-transform text-xl">arrow_right_alt</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<footer class="mt-24 border-t border-white/10 py-12 flex flex-col md:flex-row justify-between items-center gap-8">
+<div class="text-white/30 text-[9px] uppercase tracking-[0.4em]">
+                        © 2023 Magnum Style Journal — All Rights Reserved
+                    </div>
+<div class="flex items-center gap-12">
+<div class="flex gap-8">
+<a class="text-white/30 hover:text-white transition-colors text-[9px] uppercase tracking-[0.3em]" href="#">Instagram</a>
+<a class="text-white/30 hover:text-white transition-colors text-[9px] uppercase tracking-[0.3em]" href="#">Journal</a>
+<a class="text-white/30 hover:text-white transition-colors text-[9px] uppercase tracking-[0.3em]" href="#">RSS</a>
+</div>
+<div class="h-8 w-px bg-white/10 hidden md:block"></div>
+<div class="flex items-center gap-2">
+<span class="text-white/30 text-[9px] uppercase tracking-[0.3em]">Volume</span>
+<span class="text-white text-[9px] font-bold">04 // 23</span>
+</div>
+</div>
+</footer>
+</div>
+</div>
+</div>
+
+</body></html>

@@ -1,0 +1,37 @@
+# Development Dockerfile for Node.js services
+FROM node:20-alpine
+
+# Install pnpm
+RUN corepack enable && corepack prepare pnpm@9.12.0 --activate
+
+# Set working directory
+WORKDIR /app
+
+# Copy all package.json files for workspace
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY packages/*/package.json ./packages/
+COPY apps/*/package.json ./apps/
+
+# Copy full package structure
+COPY packages/shared/package.json ./packages/shared/
+COPY packages/journey/package.json ./packages/journey/
+COPY packages/route/package.json ./packages/route/
+COPY packages/photo/package.json ./packages/photo/
+COPY packages/storage/package.json ./packages/storage/
+COPY packages/image/package.json ./packages/image/
+COPY packages/content/package.json ./packages/content/
+COPY packages/research/package.json ./packages/research/
+COPY apps/api/package.json ./apps/api/
+COPY apps/web/package.json ./apps/web/
+COPY apps/cli/package.json ./apps/cli/
+COPY apps/scheduler/package.json ./apps/scheduler/
+
+# Install dependencies with frozen lockfile
+RUN pnpm install --frozen-lockfile
+
+# Copy source code
+COPY . .
+
+# No compilamos en desarrollo - tsx ejecuta directamente el código TypeScript
+
+CMD ["tail", "-f", "/dev/null"]

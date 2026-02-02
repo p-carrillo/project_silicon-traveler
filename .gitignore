@@ -1,17 +1,21 @@
 node_modules
 .pnpm-store
+.venv
 .DS_Store
 .env
 .env.*
+!.env.example
 coverage
 *.log
 
-# Server
-server/dist
+# Build outputs
+dist
+.next
+out
+*.tsbuildinfo
 
-# Client
-client/.next
-client/out
+# Images
+/images
 
 # IDE
 .vscode

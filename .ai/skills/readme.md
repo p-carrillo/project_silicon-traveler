@@ -1,39 +1,39 @@
 # Skill: readme.md
 
-## Objetivo
-Mantener `README.md` actualizado y alineado con la arquitectura, setup y flujo de trabajo real del monorepo.
+## Objective
+Keep `README.md` up to date and aligned with the monorepo architecture, setup, and real workflow.
 
-## Alcance
-- Setup local y requisitos.
-- Comandos principales (build, test, lint, run).
-- Arquitectura y estructura de modulos.
-- Variables de entorno y servicios externos (MariaDB).
+## Scope
+- Local setup and requirements.
+- Main commands (build, test, lint, run).
+- Architecture and module structure.
+- Environment variables and external services (MariaDB).
 
-## Entradas esperadas
-- Cambios en arquitectura, dependencias o scripts.
-- Nuevos modulos o servicios.
-- Actualizaciones de configuracion o tooling.
+## Expected inputs
+- Changes to architecture, dependencies, or scripts.
+- New modules or services.
+- Updates to configuration or tooling.
 
-## Salidas esperadas
-- README actualizado con instrucciones precisas.
-- Secciones de arquitectura y operacion coherentes.
+## Expected outputs
+- Updated README with accurate instructions.
+- Architecture and operations sections aligned with reality.
 
-## Flujo de trabajo recomendado
-1) Identificar cambios que impactan en uso o setup.
-2) Actualizar requisitos (Node, MariaDB, etc.).
-3) Ajustar comandos y ejemplos reales.
-4) Resumir arquitectura y modulos relevantes.
-5) Referenciar ADRs importantes si aplica.
+## Recommended workflow
+1) Identify changes that affect usage or setup.
+2) Update requirements (Node, MariaDB, etc.).
+3) Adjust commands and real examples.
+4) Summarize architecture and relevant modules.
+5) Reference key ADRs if applicable.
 
-## Buenas practicas
-- Instrucciones claras y copy-paste.
-- Diferenciar dev/prod cuando corresponda.
-- Mantener ejemplos minimos y actuales.
-- Evitar informacion redundante o desactualizada.
+## Best practices
+- Clear, copy-paste instructions.
+- Separate dev/prod when appropriate.
+- Keep examples minimal and current.
+- Avoid redundant or outdated information.
 
-## Lista de comprobacion
-- [ ] Setup local documentado paso a paso.
-- [ ] Comandos de build/test/lint/run actualizados.
-- [ ] Resumen de arquitectura y modulos presente.
-- [ ] Requisitos de MariaDB claros.
-- [ ] Referencias a ADRs relevantes si aplica.
+## Checklist
+- [ ] Local setup documented step by step.
+- [ ] Build/test/lint/run commands updated.
+- [ ] Architecture and modules summary present.
+- [ ] MariaDB requirements are clear.
+- [ ] References to relevant ADRs if applicable.

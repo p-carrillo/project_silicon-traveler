@@ -1,15 +1,33 @@
 {
-  "name": "nest-next-monorepo",
+  "name": "@silicon-traveler/root",
+  "version": "1.0.0",
   "private": true,
   "packageManager": "pnpm@9.12.0",
   "scripts": {
-    "dev": "concurrently \"pnpm -C server dev\" \"pnpm -C client dev\"",
-    "build": "pnpm -C server build && pnpm -C client build",
-    "start": "concurrently \"pnpm -C server start:prod\" \"pnpm -C client start\"",
-    "lint": "pnpm -C server lint && pnpm -C client lint",
-    "test": "pnpm -C server test && pnpm -C client test"
+    "dev": "pnpm --filter \"./apps/*\" dev",
+    "build": "pnpm --filter \"./packages/*\" build && pnpm --filter \"./apps/*\" build",
+    "lint": "pnpm -r lint",
+    "test": "vitest -c scripts/vitest.config.mjs run",
+    "test:unit": "vitest -c scripts/vitest.config.mjs run --dir test/unit",
+    "test:integration": "vitest -c scripts/vitest.config.mjs run --dir test/integration",
+    "db:migrate": "pnpm --filter @silicon-traveler/cli migrate",
+    "db:seed": "pnpm --filter @silicon-traveler/cli seed",
+    "journey:init": "pnpm --filter @silicon-traveler/cli init-journey",
+    "script:docker": "./scripts/docker-run.sh",
+    "script:db:migrate": "./scripts/docker-run.sh node scripts/run-migrations.js",
+    "script:db:reset": "./scripts/docker-run.sh node scripts/reset-db.js",
+    "script:test:db": "./scripts/docker-run.sh node scripts/test-db.js",
+    "script:test": "./scripts/test.sh",
+    "script:test:journey": "./scripts/docker-run.sh node scripts/test-journey.js",
+    "script:test:route": "./scripts/docker-run.sh node scripts/test-route.js",
+    "script:test:api": "./scripts/docker-run.sh sh scripts/test-api.sh",
+    "script:journey:explore": "./scripts/docker-run.sh node scripts/explore-journey.js",
+    "script:seed:photos": "./scripts/docker-run.sh node scripts/seed-photos.js"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.0",
+    "tsx": "^4.7.0",
+    "vitest": "^2.1.8"
   }
 }
