@@ -22,8 +22,8 @@ describe('docker-compose configuration', () => {
     const composePath = path.join(repoRoot, 'docker-compose.yml');
     const compose = readFileSync(composePath, 'utf8');
 
-    expect(compose).toContain('command: tail -f /dev/null');
-    expect(compose).toContain('test: ["CMD", "test", "-d", "/app/node_modules"]');
+    expect(compose).toContain('command: sh /app/scripts/app-prepare.sh');
+    expect(compose).toContain('test: ["CMD", "test", "-f", "/app/.dev_ready"]');
   });
 
   it('shares a node_modules volume', () => {

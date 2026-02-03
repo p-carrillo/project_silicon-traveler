@@ -13,6 +13,11 @@ This application simulates a photographer walking around the world from Oleiros,
 
 The system maintains a buffer of 10 pre-generated photos and displays them in a Magnum Journal-style gallery.
 
+## Photographer Configuration
+
+- Camera and lens pool: `packages/content/src/config/photographer.json`
+- Editorial metadata defaults (series/volume/roll): `packages/photo/src/config/photo-metadata.json`
+
 ## Architecture
 
 - **Monorepo**: TypeScript packages organized by domain
@@ -29,6 +34,7 @@ The system maintains a buffer of 10 pre-generated photos and displays them in a 
 - `image` - Image generation (DALL-E 3) and thumbnail creation
 - `storage` - Abstract file storage (local/cloud)
 - `photo` - Photo publishing and management
+- `map` - Local map state and photo pin search (GeoJSON basemap + MariaDB)
 - `shared` - Database pool, geographic utilities, shared types
 
 ### Applications
@@ -37,6 +43,11 @@ The system maintains a buffer of 10 pre-generated photos and displays them in a 
 - `scheduler` - Cron jobs (generator every 6h, publisher daily 18-20h)
 - `api` - REST API server
 - `web` - Next.js frontend (daily journal & archive pages)
+
+### Map Basemap
+
+- The map uses a local basemap stored at `apps/web/public/map/world-110m.json`.
+- For higher detail, add `apps/web/public/map/world-50m.topo.json` (Natural Earth 1:50m TopoJSON). The app prefers 50m if present.
 
 ## Requirements
 
@@ -64,8 +75,8 @@ docker compose up -d
 ```
 
 Los servicios estarán disponibles en:
-- **API**: http://localhost:3000
-- **Web**: http://localhost:3001
+- **API**: http://localhost:3010
+- **Web**: http://localhost:3011
 - **MariaDB**: localhost:3316
 
 ### 3. Ver logs
@@ -104,7 +115,7 @@ Ver documentación completa en [.ai/DOCKER.md](.ai/DOCKER.md)
 
 ## Project Status
 
-### ✅ Completed Modules (7/7)
+### ✅ Completed Modules (8/8)
 
 All core domain modules implemented with hexagonal architecture:
 
@@ -115,8 +126,7 @@ All core domain modules implemented with hexagonal architecture:
 5. **Content** - GPT-4 integration for prompt/narrative generation
 6. **Image** - DALL-E 3 image generation, Sharp thumbnail processing
 7. **Photo** - Pipeline orchestration (prepare & publish use cases), MariaDB repository
-
-**Total:** 94 TypeScript files across 9 packages
+8. **Map** - Local basemap, map state persistence, photo pin search
 
 ### ✅ Completed Applications (4/4)
 
@@ -129,36 +139,41 @@ All core domain modules implemented with hexagonal architecture:
    - ✅ Generator job: Runs every 6 hours, maintains buffer of 10 `image_ready` photos
    - ✅ Publisher job: Runs daily 18-20h (randomized), publishes one photo per day
    - ✅ Orchestrates entire pipeline: route → research → content → image → storage
+   - ✅ Notifies map service on publish (`POST /api/map/refresh`)
    - Note: Requires `OPENAI_API_KEY` and `BRAVE_SEARCH_API_KEY` in `.env`
 
 3. **API app** - REST endpoints (Express, port 3000)
    - ✅ `GET /health` - Health check with database connection test
    - ✅ `GET /api/photos/latest` - Get most recent published photo
-   - ✅ `GET /api/photos` - List photos with pagination (limit/offset)
+   - ✅ `GET /api/photos` - List photos with pagination (limit/offset), optional `q` search, and optional `start_date`/`end_date` filters
    - ✅ `GET /api/photos/:id` - Get specific photo by ID
    - ✅ `GET /api/journey/stats` - Journey statistics (distance, route points by status, photos count)
    - ✅ `GET /api/journey/route` - List route points with filters (status, pagination)
    - ✅ `GET /api/journey/route/:id` - Get specific route point by ID
+   - ✅ `GET /api/map/state` - Get persisted map viewport state
+   - ✅ `PUT /api/map/state` - Persist map viewport state (bbox + zoom)
+   - ✅ `GET /api/map/pins` - Fetch photo pins within bbox (optional `q`)
+   - ✅ `POST /api/map/refresh` - Refresh map state after photo publish
    - ✅ Static files served from `/images` directory
    - ✅ API key required for `/api/*` (Authorization: Bearer `API_KEY`)
    - Features: CORS, Helmet security, rate limiting (100 req/15min), Morgan logging
 
 4. **Web app** - Next.js 14 frontend (port 3001)
    - ✅ Homepage (`/`) - Daily photo journal with dark theme, hero image, narrative, camera metadata
-   - ✅ Archive page (`/archive`) - Contact sheet grid (4-column responsive), light theme
+   - ✅ Photo detail page (`/photo/YYYY-MM-DD`) - Same journal layout for a specific published date
+   - ✅ Archive page (`/archive`) - Contact sheet grid with search (location, title, narrative, tags) plus date range filtering, light theme
+   - ✅ Map page (`/map`) - Local black & white basemap with photo pins (GeoJSON, no external calls)
+   - ✅ Shared layout components (`PageContainer`, `SectionTopBar`) standardize page width and top bar across sections
    - ✅ TypeScript + Tailwind CSS
    - ✅ Server-side rendering with API integration
    - ✅ Responsive design (mobile, tablet, desktop)
+   - ✅ UI copy is in English for consistency
    - Features: Navigation, journey stats, photo metadata display
 
 ### 📚 Documentation
 
-- **5 ADRs** documenting key architectural decisions:
-  - ADR 001: Module architecture and hexagonal design
-  - ADR 002: Database design (MariaDB, POINT type, status-based processing)
-  - ADR 003: AI content generation pipeline (OpenAI GPT-4 & DALL-E 3)
-  - ADR 004: Image storage and thumbnail strategy
-  - ADR 005: Photo generation pipeline and status flow
+- ADRs are stored in `.adr/` and track architecture decisions.
+- Latest: ADR 022 (Shared web layout and top bar).
 
 ## Getting Started
 
@@ -172,7 +187,9 @@ cp .env.example .env
 # DB_PASSWORD=change-me
 # DB_HOST=mariadb (for Docker; use localhost if running locally)
 # API_KEY=change-me
-# CORS_ORIGINS=http://localhost:3001
+# CORS_ORIGINS=http://localhost:3011
+# API_URL=http://api:3000
+# NEXT_PUBLIC_API_URL=http://localhost:3010
 # OPENAI_API_KEY=sk-proj-...
 # BRAVE_SEARCH_API_KEY=BSA...
 ```
@@ -186,8 +203,20 @@ docker compose up -d
 # Check services are healthy
 docker compose ps
 
-# First boot installs workspace dependencies inside the app container
+# First boot installs workspace dependencies and builds packages inside the app container
 docker compose logs -f app
+```
+
+If you update `pnpm-lock.yaml`, restart the app container to re-run installs:
+
+```bash
+docker compose restart app
+```
+
+If you change package source code and need a rebuild, run:
+
+```bash
+docker compose exec app pnpm --filter "./packages/*" build
 ```
 
 ### 2a. Dev Compose (defaults included)
@@ -227,12 +256,12 @@ docker compose exec app pnpm --filter @silicon-traveler/cli init-journey
 docker compose --profile scheduler up -d scheduler
 
 # Test endpoints
-curl http://localhost:3000/health
-curl -H "Authorization: Bearer $API_KEY" http://localhost:3000/api/journey/stats
+curl http://localhost:3010/health
+curl -H "Authorization: Bearer $API_KEY" http://localhost:3010/api/journey/stats
 
 # Open browser
-http://localhost:3001        # Web app homepage (daily journal)
-http://localhost:3001/archive # Archive page (photo grid)
+http://localhost:3011        # Web app homepage (daily journal)
+http://localhost:3011/archive # Archive page (photo grid)
 ```
 
 ### 4. Test Database Connection

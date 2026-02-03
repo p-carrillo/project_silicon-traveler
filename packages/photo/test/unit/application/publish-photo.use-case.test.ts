@@ -6,7 +6,15 @@ describe('PublishPhotoUseCase', () => {
     const routePoint = {
       id: 10,
       journeyId: 1,
+      sequence: 1,
       status: 'image_ready',
+      placeName: 'Porto',
+      region: 'Porto District',
+      country: 'Portugal',
+      coordinates: { lat: 41.15, lng: -8.61 },
+      osmData: { place: 'city' },
+      imagePrompt: 'Prompt',
+      isFferryCrossing: false,
       updateStatus: vi.fn(),
     };
 
@@ -36,12 +44,25 @@ describe('PublishPhotoUseCase', () => {
     const photoId = await useCase.execute(10, preparedPhoto);
 
     expect(photoId).toBe(99);
-    expect(photoRepo.create).toHaveBeenCalledWith(
+    const createdInput = photoRepo.create.mock.calls[0][0];
+    expect(createdInput).toEqual(
       expect.objectContaining({
-        journeyId: 1,
         routePointId: 10,
+        title: 'Porto',
+        location: 'Porto, Porto District, Portugal',
+        rollNumber: 'ROLL 01',
+        frameNumber: '01',
       })
     );
+    expect(createdInput.tags).toEqual(
+      expect.arrayContaining(['porto', 'porto district', 'portugal', 'city', 'documentary'])
+    );
+    expect(createdInput.metadata).toMatchObject({
+      aperture: 'f/2.8',
+      revisedPrompt: null,
+      imagePrompt: 'Prompt',
+      isFerryCrossing: false,
+    });
     expect(routePoint.updateStatus).toHaveBeenCalledWith('published');
     expect(routeRepo.update).toHaveBeenCalledWith(routePoint);
   });

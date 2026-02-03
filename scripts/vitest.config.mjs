@@ -14,6 +14,7 @@ const alias = {
   '@silicon-traveler/image': path.resolve(rootDir, 'packages/image/src'),
   '@silicon-traveler/storage': path.resolve(rootDir, 'packages/storage/src'),
   '@silicon-traveler/photo': path.resolve(rootDir, 'packages/photo/src'),
+  '@silicon-traveler/map': path.resolve(rootDir, 'packages/map/src'),
 };
 
 export default defineConfig({

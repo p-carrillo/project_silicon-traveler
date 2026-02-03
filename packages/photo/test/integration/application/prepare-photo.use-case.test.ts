@@ -19,8 +19,31 @@ describe('PreparePhotoUseCase (integration)', () => {
       country: 'Testland',
       region: 'Region',
       isFferryCrossing: false,
+      osmData: null,
+      researchSummary: null,
+      imagePrompt: null,
+      narrativePrompt: null,
+      cameraMetadata: null,
+      imagePath: null,
+      thumbnailPath: null,
       updateStatus(status: string) {
         this.status = status;
+      },
+      updateResearch(summary: string, osmData: any) {
+        this.researchSummary = summary;
+        this.osmData = osmData;
+        this.status = 'researched';
+      },
+      updateContent(imagePrompt: string, narrativePrompt: string, cameraMetadata: any) {
+        this.imagePrompt = imagePrompt;
+        this.narrativePrompt = narrativePrompt;
+        this.cameraMetadata = cameraMetadata;
+        this.status = 'content_generated';
+      },
+      updateImages(imagePath: string, thumbnailPath: string) {
+        this.imagePath = imagePath;
+        this.thumbnailPath = thumbnailPath;
+        this.status = 'image_ready';
       },
     };
 

@@ -1,7 +1,44 @@
 import { Router, type Request, type Response } from 'express';
 import { pool } from '@silicon-traveler/shared';
+import { buildPhotoSearchFilter, parseDateParam } from './photos.search';
 
 export const photosRouter: Router = Router();
+
+const parseTags = (raw: unknown): string[] => {
+  if (typeof raw !== 'string') return [];
+  return raw
+    .split(',')
+    .map((tag) => tag.trim())
+    .filter((tag) => tag.length > 0);
+};
+
+const parseMetadata = (raw: unknown): Record<string, unknown> | null => {
+  if (!raw) return null;
+  if (typeof raw === 'object') return raw as Record<string, unknown>;
+  if (typeof raw === 'string') {
+    try {
+      return JSON.parse(raw) as Record<string, unknown>;
+    } catch {
+      return null;
+    }
+  }
+  return null;
+};
+
+const buildPhotoResponse = (row: any) => {
+  const photo = {
+    ...row,
+    tags: parseTags(row.tags),
+    metadata: parseMetadata(row.metadata),
+    coordinates: {
+      x: row.longitude,
+      y: row.latitude,
+    },
+  };
+  delete photo.longitude;
+  delete photo.latitude;
+  return photo;
+};
 
 // GET /api/photos/latest - Get the most recent published photo
 photosRouter.get('/latest', async (_req: Request, res: Response) => {
@@ -12,6 +49,7 @@ photosRouter.get('/latest', async (_req: Request, res: Response) => {
         ST_X(coordinates) as longitude, ST_Y(coordinates) as latitude,
         camera_model, lens, iso, shutter_speed,
         roll_number, frame_number, series_name, volume_issue,
+        tags, metadata,
         image_path, thumbnail_path, published_at, created_at
       FROM photos 
       ORDER BY published_at DESC 
@@ -23,17 +61,7 @@ photosRouter.get('/latest', async (_req: Request, res: Response) => {
     }
 
     // Transform for web app format
-    const photo = {
-      ...rows[0],
-      coordinates: {
-        x: rows[0].longitude,
-        y: rows[0].latitude
-      }
-    };
-    delete photo.longitude;
-    delete photo.latitude;
-
-    return res.json(photo);
+    return res.json(buildPhotoResponse(rows[0]));
   } catch (error) {
     console.error('Error fetching latest photo:', error);
     return res.status(500).json({ error: 'Failed to fetch latest photo' });
@@ -54,9 +82,35 @@ photosRouter.get('/', async (req, res) => {
       return res.status(400).json({ error: 'Offset must be non-negative' });
     }
 
+    const startDateResult = parseDateParam(req.query.start_date, 'start_date');
+    if (startDateResult.error) {
+      return res.status(400).json({ error: startDateResult.error });
+    }
+
+    const endDateResult = parseDateParam(req.query.end_date, 'end_date');
+    if (endDateResult.error) {
+      return res.status(400).json({ error: endDateResult.error });
+    }
+
+    if (
+      startDateResult.value &&
+      endDateResult.value &&
+      startDateResult.value > endDateResult.value
+    ) {
+      return res.status(400).json({
+        error: 'start_date must be before or equal to end_date',
+      });
+    }
+
+    const searchFilter = buildPhotoSearchFilter(req.query.q, {
+      startDate: startDateResult.value,
+      endDate: endDateResult.value,
+    });
+
     // Get total count
     const countResult = await pool.query<any[]>(
-      `SELECT COUNT(*) as total FROM photos`
+      `SELECT COUNT(*) as total FROM photos ${searchFilter.whereClause}`,
+      searchFilter.params
     );
     const totalCount = Number(countResult[0].total);
 
@@ -66,25 +120,16 @@ photosRouter.get('/', async (req, res) => {
         ST_X(coordinates) as longitude, ST_Y(coordinates) as latitude,
         camera_model, lens, iso, shutter_speed,
         roll_number, frame_number, series_name, volume_issue,
+        tags, metadata,
         image_path, thumbnail_path, published_at, created_at
       FROM photos 
+      ${searchFilter.whereClause}
       ORDER BY published_at DESC 
       LIMIT ? OFFSET ?`,
-      [limit, offset]
+      [...searchFilter.params, limit, offset]
     );
 
-    const photos = rows.map((row) => {
-      const photo = {
-        ...row,
-        coordinates: {
-          x: row.longitude,
-          y: row.latitude,
-        },
-      };
-      delete photo.longitude;
-      delete photo.latitude;
-      return photo;
-    });
+    const photos = rows.map(buildPhotoResponse);
 
     return res.json({
       photos,
@@ -115,6 +160,7 @@ photosRouter.get('/:id', async (req, res) => {
         ST_X(coordinates) as longitude, ST_Y(coordinates) as latitude,
         camera_model, lens, iso, shutter_speed,
         roll_number, frame_number, series_name, volume_issue,
+        tags, metadata,
         image_path, thumbnail_path, published_at, created_at
       FROM photos 
       WHERE id = ?
@@ -126,17 +172,7 @@ photosRouter.get('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Photo not found' });
     }
 
-    const photo = {
-      ...rows[0],
-      coordinates: {
-        x: rows[0].longitude,
-        y: rows[0].latitude,
-      },
-    };
-    delete photo.longitude;
-    delete photo.latitude;
-
-    return res.json(photo);
+    return res.json(buildPhotoResponse(rows[0]));
   } catch (error) {
     console.error('Error fetching photo:', error);
     return res.status(500).json({ error: 'Failed to fetch photo' });

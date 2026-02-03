@@ -40,20 +40,16 @@ export class PreparePhotoUseCase {
     }
 
     try {
-      // 2. Update status: researched
-      routePoint.updateStatus('researched');
-      await this.routeRepository.update(routePoint);
-
-      // 3. Research place
+      // 2. Research place
       const query = `${routePoint.placeName || 'Unknown'} ${routePoint.country || ''} history culture tourism`;
       const searchResults = await this.braveSearch.search(query, 3);
       const researchSummary = searchResults.map((r) => r.description).join(' ');
 
-      // 4. Update status: content_generated
-      routePoint.updateStatus('content_generated');
+      // 3. Update status: researched + store summary
+      routePoint.updateResearch(researchSummary, routePoint.osmData);
       await this.routeRepository.update(routePoint);
 
-      // 5. Generate content
+      // 4. Generate content
       const content = await this.llm.generateContent({
         placeName: routePoint.placeName || 'Unknown Place',
         country: routePoint.country || 'Unknown Country',
@@ -61,6 +57,10 @@ export class PreparePhotoUseCase {
         researchSummary,
         isFferryCrossing: routePoint.isFferryCrossing,
       });
+
+      // 5. Update status: content_generated + store prompts/metadata
+      routePoint.updateContent(content.imagePrompt, content.narrative, content.cameraMetadata);
+      await this.routeRepository.update(routePoint);
 
       // 6. Generate image
       const image = await this.imageGenerator.generate(content.imagePrompt);
@@ -86,8 +86,8 @@ export class PreparePhotoUseCase {
         savedThumbnails.set(suffix, saved.url);
       }
 
-      // 10. Update status: image_ready
-      routePoint.updateStatus('image_ready');
+      // 10. Update status: image_ready + store image paths
+      routePoint.updateImages(savedImage.url, savedThumbnails.get('_grid')!);
       await this.routeRepository.update(routePoint);
 
       return {

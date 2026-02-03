@@ -1,24 +1,34 @@
 import Link from 'next/link';
 import { BookmarkIcon } from '@heroicons/react/24/outline';
 import { getPhotos, getJourneyStats } from '@/lib/api';
-import { ARCHIVE_NAV_ITEMS, getNavLinkClass } from '@/lib/navigation';
+import PageContainer from '@/components/layout/PageContainer';
+import SectionTopBar from '@/components/layout/SectionTopBar';
 import SearchBar from '@/components/SearchBar';
+import DateRangeAction from '@/components/DateRangeAction';
 
 export const dynamic = 'force-dynamic';
 
 interface PageProps {
-  searchParams: { page?: string };
+  searchParams: { page?: string; q?: string; start_date?: string; end_date?: string };
 }
 
 export default async function ArchivePage({ searchParams }: PageProps) {
   const currentPage = Number(searchParams.page) || 1;
   const limit = 8;
   const offset = (currentPage - 1) * limit;
+  const query = searchParams.q?.trim() ?? '';
+  const startDate = searchParams.start_date?.trim() ?? '';
+  const endDate = searchParams.end_date?.trim() ?? '';
   
-  const { photos, pagination } = await getPhotos(limit, offset);
+  const { photos, pagination } = await getPhotos(limit, offset, query, {
+    startDate: startDate || undefined,
+    endDate: endDate || undefined,
+  });
   const stats = await getJourneyStats();
   
   const totalPages = Math.ceil(pagination.count / limit);
+  const hasQuery = query.length > 0;
+  const hasFilters = hasQuery || startDate.length > 0 || endDate.length > 0;
 
   const groupedPhotos = Object.values(
     photos.reduce(
@@ -64,235 +74,268 @@ export default async function ArchivePage({ searchParams }: PageProps) {
     return label.toUpperCase();
   };
 
+  const formatPhotoDateSlug = (publishedAt: string) => {
+    const match = publishedAt.match(/^\d{4}-\d{2}-\d{2}/);
+    if (match) return match[0];
+
+    const parsed = new Date(publishedAt);
+    if (Number.isNaN(parsed.getTime())) return '';
+    return parsed.toISOString().slice(0, 10);
+  };
+
+  const buildPageHref = (page: number) => {
+    const params = new URLSearchParams();
+    params.set('page', String(page));
+    if (hasQuery) params.set('q', query);
+    if (startDate) params.set('start_date', startDate);
+    if (endDate) params.set('end_date', endDate);
+    return `/archive?${params.toString()}`;
+  };
+
   return (
     <div className="min-h-screen bg-white text-black">
-      <header className="flex items-center justify-between border-b border-black px-6 md:px-8 py-8 sticky top-0 bg-white/95 backdrop-blur-sm z-50">
-        <div className="flex flex-col">
-          <h1 className="text-2xl font-black uppercase tracking-tighter leading-none">
-            The Archive
-          </h1>
-          <p className="text-[10px] uppercase tracking-widest font-bold mt-1 text-gray-500">
-            Silicon Traveler Records
-          </p>
-        </div>
-        <nav className="hidden md:flex items-center gap-10">
-          {ARCHIVE_NAV_ITEMS.map((item) => (
-            <Link
-              key={item.href}
-              className={getNavLinkClass(item.href, '/archive', 'light')}
-              href={item.href}
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-      </header>
+      <SectionTopBar
+        title="Archive"
+        theme="light"
+        activeHref="/archive"
+        className="sticky top-0 z-50 border-b border-black bg-white/95 backdrop-blur-sm"
+      />
 
       <main className="flex-1">
         <section className="border-b border-black">
-          <div className="max-w-screen-2xl mx-auto flex flex-col md:flex-row">
+          <PageContainer className="flex flex-col md:flex-row">
             <div className="flex-1 border-b md:border-b-0 md:border-r border-black p-8">
-              <SearchBar />
+              <SearchBar
+                initialQuery={query}
+                extraParams={{
+                  start_date: startDate || undefined,
+                  end_date: endDate || undefined,
+                }}
+              />
             </div>
             <div className="flex flex-col sm:flex-row w-full md:w-auto">
-              <button className="px-10 py-6 sm:py-8 border-b sm:border-b-0 sm:border-r border-black hover:bg-black hover:text-white transition-all text-xs font-black uppercase tracking-widest">
-                Date Range
-              </button>
-              <button className="px-10 py-6 sm:py-8 border-b sm:border-b-0 sm:border-r border-black hover:bg-black hover:text-white transition-all text-xs font-black uppercase tracking-widest">
-                Geography
-              </button>
-              <div className="px-10 py-6 sm:py-8 flex items-center gap-4 text-xs font-black uppercase tracking-widest bg-gray-50">
-                <span className="text-gray-400">Layout:</span>
-                <button className="text-black">Grid</button>
-                <button className="text-gray-300 hover:text-black">Stack</button>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="contact-sheet-grid min-h-screen p-6 md:p-8 animate-fade-in">
-          {photos.length === 0 ? (
-            <div className="max-w-screen-2xl mx-auto text-center py-20">
-              <p className="text-gray-600 text-lg font-archive italic">
-                No photos published yet.
-              </p>
+              <DateRangeAction
+                initialStartDate={startDate}
+                initialEndDate={endDate}
+                buttonClassName="px-10 py-6 sm:py-8 border-b sm:border-b-0 sm:border-r border-black hover:bg-black hover:text-white transition-all text-xs font-black uppercase tracking-widest w-full"
+              />
               <Link
-                href="/"
-                className="text-xs font-black uppercase tracking-widest hover:underline mt-6 inline-block"
+                href="/map"
+                className="px-10 py-6 sm:py-8 border-b sm:border-b-0 border-black hover:bg-black hover:text-white transition-all text-xs font-black uppercase tracking-widest text-center"
               >
-                Return to Journal
+                Geography
               </Link>
             </div>
-          ) : (
-            <div className="max-w-screen-2xl mx-auto">
-              {groupedPhotos.map((group) => {
-                const seriesLabel =
-                  group.photos.find((photo) => photo.series_name)?.series_name ||
-                  'Silicon Traveler Journal';
-                return (
-                  <div key={group.date.toISOString()} className="mb-20">
-                    <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-12 border-b-2 border-black pb-4 gap-6">
-                      <div className="flex items-baseline gap-4">
-                        <h2 className="text-5xl md:text-6xl font-black uppercase tracking-tighter">
-                          {formatMonthLabel(group.date)}
-                        </h2>
-                        <span className="text-sm font-archive italic text-gray-500">
-                          {seriesLabel}
-                        </span>
-                      </div>
-                      <div className="text-[10px] font-bold tracking-[0.3em] uppercase">
-                        {formatSheetLabel(group.date)}
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-12">
-                      {group.photos.map((photo, index) => {
-                        const publishedDate = new Date(photo.published_at);
-                        const rollLabel = photo.roll_number
-                          ? photo.roll_number.toUpperCase()
-                          : `ROLL ${String(photo.id).padStart(3, '0')}`;
-                        const frameLabel = photo.frame_number
-                          ? String(photo.frame_number).padStart(2, '0')
-                          : String(index + 1).padStart(2, '0');
+          </PageContainer>
+        </section>
 
-                        return (
-                          <Link
-                            key={photo.id}
-                            href={`/photo/${photo.id}`}
-                            className="photo-frame group"
-                          >
-                            <div className="flex justify-between items-center mb-2 negative-strip-font text-gray-400">
-                              <span>{formatDayLabel(publishedDate)}</span>
-                              <span>
-                                {rollLabel} - {frameLabel}
-                              </span>
-                            </div>
-                            <div className="aspect-square bg-gray-100 overflow-hidden">
-                              <img
-                                alt={photo.title}
-                                className="w-full h-full object-cover img-bw transition-all duration-700"
-                                src={`/api/${photo.thumbnail_path}`}
-                              />
-                            </div>
-                            <div className="mt-4 flex justify-between items-start">
-                              <div>
-                                <h3 className="text-xs font-black uppercase tracking-widest">
-                                  {photo.title}
-                                </h3>
-                                <p className="text-[10px] text-gray-500 uppercase mt-1">
-                                  {photo.location || 'Unknown location'}
-                                </p>
+        <section className="contact-sheet-grid min-h-screen py-8 animate-fade-in">
+          <PageContainer>
+            {photos.length === 0 ? (
+              <div className="text-center py-20">
+                <p className="text-gray-600 text-lg font-archive italic">
+                  {hasFilters ? 'No results. Refine your search.' : 'No photos published yet.'}
+                </p>
+                {hasFilters ? (
+                  <Link
+                    href="/archive"
+                    className="text-xs font-medium normal-case tracking-widest hover:underline mt-6 inline-block"
+                  >
+                    View all photos
+                  </Link>
+                ) : (
+                  <Link
+                    href="/"
+                    className="text-xs font-black uppercase tracking-widest hover:underline mt-6 inline-block"
+                  >
+                    Return to Journal
+                  </Link>
+                )}
+              </div>
+            ) : (
+              <div>
+                {groupedPhotos.map((group) => {
+                  const seriesLabel =
+                    group.photos.find((photo) => photo.series_name)?.series_name ||
+                    'Silicon Traveler Journal';
+                  return (
+                    <div key={group.date.toISOString()} className="mb-20">
+                      <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-12 border-b-2 border-black pb-4 gap-6">
+                        <div className="flex items-baseline gap-4">
+                          <h2 className="text-5xl md:text-6xl font-black uppercase tracking-tighter">
+                            {formatMonthLabel(group.date)}
+                          </h2>
+                          <span className="text-sm font-archive italic text-gray-500">
+                            {seriesLabel}
+                          </span>
+                        </div>
+                        <div className="text-[10px] font-bold tracking-[0.3em] uppercase">
+                          {formatSheetLabel(group.date)}
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-12">
+                        {group.photos.map((photo, index) => {
+                          const publishedDate = new Date(photo.published_at);
+                          const rollLabel = photo.roll_number
+                            ? photo.roll_number.toUpperCase()
+                            : `ROLL ${String(photo.id).padStart(3, '0')}`;
+                          const frameLabel = photo.frame_number
+                            ? String(photo.frame_number).padStart(2, '0')
+                            : String(index + 1).padStart(2, '0');
+                          const dateSlug = formatPhotoDateSlug(photo.published_at);
+                          const photoHref = dateSlug ? `/photo/${dateSlug}` : `/photo/${photo.id}`;
+
+                          return (
+                            <Link
+                              key={photo.id}
+                              href={photoHref}
+                              className="photo-frame group"
+                            >
+                              <div className="flex justify-between items-center mb-2 negative-strip-font text-gray-400">
+                                <span>{formatDayLabel(publishedDate)}</span>
+                                <span>
+                                  {rollLabel} - {frameLabel}
+                                </span>
                               </div>
-                              <BookmarkIcon className="h-4 w-4" />
-                            </div>
-                          </Link>
-                        );
-                      })}
+                              <div className="aspect-square bg-gray-100 overflow-hidden">
+                                <img
+                                  alt={photo.title}
+                                  className="w-full h-full object-cover img-bw transition-all duration-700"
+                                  src={`/api/${photo.thumbnail_path}`}
+                                />
+                              </div>
+                              <div className="mt-4 flex justify-between items-start">
+                                <div>
+                                  <h3 className="text-xs font-black uppercase tracking-widest">
+                                    {photo.title}
+                                  </h3>
+                                  <p className="text-[10px] text-gray-500 uppercase mt-1">
+                                    {photo.location || 'Unknown location'}
+                                  </p>
+                                </div>
+                                <BookmarkIcon className="h-4 w-4" />
+                              </div>
+                            </Link>
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
 
-              {totalPages > 1 && (
-                <div className="mt-24 mb-20 flex flex-col items-center">
-                  <div className="flex items-center gap-1">
-                    {currentPage > 1 ? (
-                      <Link
-                        href={`/archive?page=${currentPage - 1}`}
-                        className="w-12 h-12 flex items-center justify-center border border-black hover:bg-black hover:text-white transition-colors text-xs font-bold"
-                      >
-                        Prev
-                      </Link>
-                    ) : (
-                      <div className="w-12 h-12 flex items-center justify-center border border-gray-300 text-gray-300 text-xs font-bold">
-                        Prev
-                      </div>
-                    )}
-                    
-                    {/* First page */}
+                {hasFilters && (
+                  <div className="mt-10 flex justify-center">
                     <Link
-                      href="/archive?page=1"
-                      className={`w-12 h-12 flex items-center justify-center border border-black transition-colors font-black text-xs ${
-                        currentPage === 1
-                          ? 'bg-black text-white'
-                          : 'hover:bg-black hover:text-white'
-                      }`}
+                      href="/archive"
+                      className="text-xs font-medium normal-case tracking-widest hover:underline"
                     >
-                      01
+                      View all photos
                     </Link>
-                    
-                    {/* Show pages around current */}
-                    {currentPage > 3 && (
-                      <div className="w-12 h-12 flex items-center justify-center text-xs">
-                        ...
-                      </div>
-                    )}
-                    
-                    {Array.from({ length: totalPages }, (_, i) => i + 1)
-                      .filter(
-                        (page) =>
-                          page > 1 &&
-                          page < totalPages &&
-                          Math.abs(page - currentPage) <= 1
-                      )
-                      .map((page) => (
+                  </div>
+                )}
+
+                {totalPages > 1 && (
+                  <div className="mt-24 mb-20 flex flex-col items-center">
+                    <div className="flex items-center gap-1">
+                      {currentPage > 1 ? (
                         <Link
-                          key={page}
-                          href={`/archive?page=${page}`}
-                          className={`w-12 h-12 flex items-center justify-center border border-black transition-colors font-black text-xs ${
-                            currentPage === page
-                              ? 'bg-black text-white'
-                              : 'hover:bg-black hover:text-white'
-                          }`}
+                          href={buildPageHref(currentPage - 1)}
+                          className="w-12 h-12 flex items-center justify-center border border-black hover:bg-black hover:text-white transition-colors text-xs font-bold"
                         >
-                          {String(page).padStart(2, '0')}
+                          Prev
                         </Link>
-                      ))}
-                    
-                    {currentPage < totalPages - 2 && totalPages > 3 && (
-                      <div className="w-12 h-12 flex items-center justify-center text-xs">
-                        ...
-                      </div>
-                    )}
-                    
-                    {/* Last page */}
-                    {totalPages > 1 && (
+                      ) : (
+                        <div className="w-12 h-12 flex items-center justify-center border border-gray-300 text-gray-300 text-xs font-bold">
+                          Prev
+                        </div>
+                      )}
+                      
+                      {/* First page */}
                       <Link
-                        href={`/archive?page=${totalPages}`}
+                        href={buildPageHref(1)}
                         className={`w-12 h-12 flex items-center justify-center border border-black transition-colors font-black text-xs ${
-                          currentPage === totalPages
+                          currentPage === 1
                             ? 'bg-black text-white'
                             : 'hover:bg-black hover:text-white'
                         }`}
                       >
-                        {String(totalPages).padStart(2, '0')}
+                        01
                       </Link>
-                    )}
-                    
-                    {currentPage < totalPages ? (
-                      <Link
-                        href={`/archive?page=${currentPage + 1}`}
-                        className="w-12 h-12 flex items-center justify-center border border-black hover:bg-black hover:text-white transition-colors text-xs font-bold"
-                      >
-                        Next
-                      </Link>
-                    ) : (
-                      <div className="w-12 h-12 flex items-center justify-center border border-gray-300 text-gray-300 text-xs font-bold">
-                        Next
-                      </div>
-                    )}
+                      
+                      {/* Show pages around current */}
+                      {currentPage > 3 && (
+                        <div className="w-12 h-12 flex items-center justify-center text-xs">
+                          ...
+                        </div>
+                      )}
+                      
+                      {Array.from({ length: totalPages }, (_, i) => i + 1)
+                        .filter(
+                          (page) =>
+                            page > 1 &&
+                            page < totalPages &&
+                            Math.abs(page - currentPage) <= 1
+                        )
+                        .map((page) => (
+                          <Link
+                            key={page}
+                            href={buildPageHref(page)}
+                            className={`w-12 h-12 flex items-center justify-center border border-black transition-colors font-black text-xs ${
+                              currentPage === page
+                                ? 'bg-black text-white'
+                                : 'hover:bg-black hover:text-white'
+                            }`}
+                          >
+                            {String(page).padStart(2, '0')}
+                          </Link>
+                        ))}
+                      
+                      {currentPage < totalPages - 2 && totalPages > 3 && (
+                        <div className="w-12 h-12 flex items-center justify-center text-xs">
+                          ...
+                        </div>
+                      )}
+                      
+                      {/* Last page */}
+                      {totalPages > 1 && (
+                        <Link
+                          href={buildPageHref(totalPages)}
+                          className={`w-12 h-12 flex items-center justify-center border border-black transition-colors font-black text-xs ${
+                            currentPage === totalPages
+                              ? 'bg-black text-white'
+                              : 'hover:bg-black hover:text-white'
+                          }`}
+                        >
+                          {String(totalPages).padStart(2, '0')}
+                        </Link>
+                      )}
+                      
+                      {currentPage < totalPages ? (
+                        <Link
+                          href={buildPageHref(currentPage + 1)}
+                          className="w-12 h-12 flex items-center justify-center border border-black hover:bg-black hover:text-white transition-colors text-xs font-bold"
+                        >
+                          Next
+                        </Link>
+                      ) : (
+                        <div className="w-12 h-12 flex items-center justify-center border border-gray-300 text-gray-300 text-xs font-bold">
+                          Next
+                        </div>
+                      )}
+                    </div>
+                    <p className="mt-6 text-[10px] font-bold tracking-widest uppercase text-gray-400">
+                      Visualizing {offset + 1}-{Math.min(offset + limit, pagination.count)} of {pagination.count} frames | Page {currentPage} of {totalPages}
+                    </p>
                   </div>
-                  <p className="mt-6 text-[10px] font-bold tracking-widest uppercase text-gray-400">
-                    Visualizing {offset + 1}-{Math.min(offset + limit, pagination.count)} of {pagination.count} frames | Page {currentPage} of {totalPages}
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
+                )}
+              </div>
+            )}
+          </PageContainer>
         </section>
       </main>
 
-      <footer className="border-t border-black p-8 bg-white">
-        <div className="max-w-screen-2xl mx-auto flex flex-col md:flex-row justify-between items-start gap-12">
+      <footer className="border-t border-black bg-white">
+        <PageContainer className="py-8 flex flex-col md:flex-row justify-between items-start gap-12">
           <div className="max-w-md">
             <h4 className="text-xs font-black uppercase tracking-widest mb-4">
               The Silicon Traveler Archive
@@ -324,7 +367,7 @@ export default async function ArchivePage({ searchParams }: PageProps) {
                 : 'Documenting the journey'}
             </div>
           </div>
-        </div>
+        </PageContainer>
       </footer>
     </div>
   );

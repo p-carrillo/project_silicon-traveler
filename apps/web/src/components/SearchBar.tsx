@@ -1,22 +1,44 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { useRouter } from 'next/navigation';
 
 interface SearchBarProps {
-  onSearch?: (query: string) => void;
+  initialQuery?: string;
+  actionPath?: string;
   placeholder?: string;
+  extraParams?: Record<string, string | undefined>;
 }
 
 export default function SearchBar({
-  onSearch,
-  placeholder = 'SEARCH BY LOCATION, DATE, OR KEYWORD',
+  initialQuery = '',
+  actionPath = '/archive',
+  placeholder = 'SEARCH BY LOCATION, TITLE, NARRATIVE, OR TAG',
+  extraParams,
 }: SearchBarProps) {
-  const [query, setQuery] = useState('');
+  const router = useRouter();
+  const [query, setQuery] = useState(initialQuery);
+
+  useEffect(() => {
+    setQuery(initialQuery);
+  }, [initialQuery]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSearch?.(query);
+    const trimmed = query.trim();
+
+    const params = new URLSearchParams();
+    if (trimmed) params.set('q', trimmed);
+    if (extraParams) {
+      Object.entries(extraParams).forEach(([key, value]) => {
+        if (!value || key === 'q') return;
+        params.set(key, value);
+      });
+    }
+
+    const queryString = params.toString();
+    router.push(queryString ? `${actionPath}?${queryString}` : actionPath);
   };
 
   return (

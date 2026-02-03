@@ -1,4 +1,4 @@
-import { Photo, JourneyStats, RoutePoint } from '@/types';
+import { Photo, JourneyStats, RoutePoint, MapState, MapPin } from '@/types';
 
 // Server-side usa el nombre del contenedor, client-side usa localhost
 const API_BASE_URL = typeof window === 'undefined'
@@ -47,13 +47,27 @@ export async function getLatestPhoto(): Promise<Photo | null> {
   }
 }
 
-export async function getPhotos(limit = 20, offset = 0): Promise<{
+export async function getPhotos(
+  limit = 20,
+  offset = 0,
+  query?: string,
+  dateRange?: { startDate?: string; endDate?: string }
+): Promise<{
   photos: Photo[];
   pagination: { limit: number; offset: number; count: number };
 }> {
   try {
+    const params = new URLSearchParams({
+      limit: limit.toString(),
+      offset: offset.toString(),
+    });
+    const normalizedQuery = query?.trim();
+    if (normalizedQuery) params.append('q', normalizedQuery);
+    if (dateRange?.startDate) params.append('start_date', dateRange.startDate);
+    if (dateRange?.endDate) params.append('end_date', dateRange.endDate);
+
     const res = await fetchWithTimeout(
-      `${API_BASE_URL}/api/photos?limit=${limit}&offset=${offset}`,
+      `${API_BASE_URL}/api/photos?${params.toString()}`,
       { cache: 'no-store' }
     );
     
@@ -108,5 +122,66 @@ export async function getRoutePoints(
   } catch (error) {
     console.error('Error fetching route points:', error);
     return { route_points: [], pagination: { limit, offset, count: 0 } };
+  }
+}
+
+export async function getMapState(): Promise<MapState | null> {
+  try {
+    const res = await fetchWithTimeout(`${API_BASE_URL}/api/map/state`, {
+      cache: 'no-store',
+    });
+
+    if (!res.ok) throw new Error('Failed to fetch map state');
+
+    return res.json();
+  } catch (error) {
+    console.error('Error fetching map state:', error);
+    return null;
+  }
+}
+
+export async function saveMapState(
+  bbox: { minLng: number; minLat: number; maxLng: number; maxLat: number },
+  zoom: number
+): Promise<MapState | null> {
+  try {
+    const res = await fetchWithTimeout(`${API_BASE_URL}/api/map/state`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ bbox, zoom }),
+    });
+
+    if (!res.ok) throw new Error('Failed to save map state');
+
+    return res.json();
+  } catch (error) {
+    console.error('Error saving map state:', error);
+    return null;
+  }
+}
+
+export async function getMapPins(
+  bbox: { minLng: number; minLat: number; maxLng: number; maxLat: number },
+  limit = 200,
+  query?: string
+): Promise<{ pins: MapPin[] }> {
+  try {
+    const params = new URLSearchParams({
+      bbox: `${bbox.minLng},${bbox.minLat},${bbox.maxLng},${bbox.maxLat}`,
+      limit: limit.toString(),
+    });
+    if (query?.trim()) params.append('q', query.trim());
+
+    const res = await fetchWithTimeout(
+      `${API_BASE_URL}/api/map/pins?${params.toString()}`,
+      { cache: 'no-store' }
+    );
+
+    if (!res.ok) throw new Error('Failed to fetch map pins');
+
+    return res.json();
+  } catch (error) {
+    console.error('Error fetching map pins:', error);
+    return { pins: [] };
   }
 }

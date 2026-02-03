@@ -10,6 +10,7 @@
     { "path": "../../packages/shared" },
     { "path": "../../packages/journey" },
     { "path": "../../packages/route" },
-    { "path": "../../packages/photo" }
+    { "path": "../../packages/photo" },
+    { "path": "../../packages/map" }
   ]
 }

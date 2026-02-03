@@ -16,6 +16,8 @@ export interface Photo {
   frame_number: string | null;
   series_name: string | null;
   volume_issue: string | null;
+  tags: string[];
+  metadata: Record<string, unknown> | null;
   image_path: string;
   thumbnail_path: string;
   published_at: string;
@@ -51,4 +53,30 @@ export interface JourneyStats {
     }>;
     photos_published: number;
   };
+}
+
+export interface MapState {
+  id: number;
+  bbox: {
+    minLng: number;
+    minLat: number;
+    maxLng: number;
+    maxLat: number;
+  };
+  zoom: number;
+  lastPhotoId: number | null;
+  updatedAt: string;
+}
+
+export interface MapPin {
+  id: number;
+  title: string;
+  location: string;
+  narrative: string;
+  coordinates: {
+    x: number;
+    y: number;
+  };
+  thumbnail_path: string;
+  published_at: string;
 }

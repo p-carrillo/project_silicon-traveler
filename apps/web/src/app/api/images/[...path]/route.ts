@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+const API_URL = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://api:3000';
 
 export async function GET(
   request: NextRequest,
@@ -8,7 +8,10 @@ export async function GET(
 ) {
   try {
     const imagePath = params.path.join('/');
-    const imageUrl = `${API_URL}/images/${imagePath}`;
+    const normalizedPath = imagePath.startsWith('images/')
+      ? imagePath.slice('images/'.length)
+      : imagePath;
+    const imageUrl = `${API_URL}/images/${normalizedPath}`;
     
     const response = await fetch(imageUrl);
     

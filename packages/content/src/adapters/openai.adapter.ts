@@ -1,5 +1,6 @@
 import OpenAI from 'openai';
 import { ILLMPort, ContentInput, GeneratedContent } from '../ports/llm.port';
+import { selectCamera, getDefaultCamera, type CameraSelection } from '../config/photographer';
 
 export class OpenAIAdapter implements ILLMPort {
   private readonly client: OpenAI;
@@ -11,7 +12,8 @@ export class OpenAIAdapter implements ILLMPort {
   }
 
   async generateContent(input: ContentInput): Promise<GeneratedContent> {
-    const prompt = this.buildPrompt(input);
+    const cameraSelection = selectCamera(`${input.placeName}|${input.region}|${input.country}`);
+    const prompt = this.buildPrompt(input, cameraSelection);
 
     try {
       const completion = await this.client.chat.completions.create({
@@ -31,14 +33,16 @@ export class OpenAIAdapter implements ILLMPort {
       });
 
       const response = completion.choices[0]?.message?.content || '';
-      return this.parseResponse(response);
+      const parsed = this.parseResponse(response);
+      return this.applyCameraSelection(parsed, cameraSelection);
     } catch (error: any) {
       console.error('OpenAI API error:', error.message);
-      return this.getFallbackContent(input);
+      const fallback = this.getFallbackContent(input);
+      return this.applyCameraSelection(fallback, cameraSelection);
     }
   }
 
-  private buildPrompt(input: ContentInput): string {
+  private buildPrompt(input: ContentInput, cameraSelection: CameraSelection): string {
     const locationContext = input.isFferryCrossing
       ? `crossing by ferry near ${input.placeName}, ${input.region}, ${input.country}`
       : `visiting ${input.placeName}, ${input.region}, ${input.country}`;
@@ -51,7 +55,9 @@ ${input.researchSummary}
 Generate the following in JSON format:
 1. "imagePrompt": A detailed DALL-E prompt for a documentary-style black & white photograph of this location. Include mood, lighting, composition, and photographic style (inspired by Magnum photographers). Also specify realistic camera metadata.
 2. "narrative": A short first-person reflection (100-150 words) about this moment in the journey, inspired by Magnum photographers' documentary style.
-3. "cameraMetadata": Realistic camera settings as JSON with fields: camera (Leica model), lens, iso, shutterSpeed, aperture.
+3. "cameraMetadata": Realistic camera settings as JSON with fields: camera, lens, iso, shutterSpeed, aperture.
+
+Use the camera "${cameraSelection.camera}" with the lens "${cameraSelection.lens}".
 
 Return ONLY valid JSON, no markdown or code blocks.`;
   }
@@ -92,12 +98,24 @@ Return ONLY valid JSON, no markdown or code blocks.`;
   }
 
   private getDefaultCamera() {
+    const selection = getDefaultCamera();
     return {
-      camera: 'Leica M11',
-      lens: '35mm f/1.4',
+      camera: selection.camera,
+      lens: selection.lens,
       iso: 800,
       shutterSpeed: '1/125',
       aperture: 'f/2.8',
+    };
+  }
+
+  private applyCameraSelection(content: GeneratedContent, cameraSelection: CameraSelection): GeneratedContent {
+    return {
+      ...content,
+      cameraMetadata: {
+        ...content.cameraMetadata,
+        camera: cameraSelection.camera,
+        lens: cameraSelection.lens,
+      },
     };
   }
 }

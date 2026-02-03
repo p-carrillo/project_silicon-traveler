@@ -1,9 +1,12 @@
 import { pool } from '@silicon-traveler/shared';
+import axios from 'axios';
 import { MariaDBRouteRepository } from '@silicon-traveler/route';
 import { MariaDBPhotoRepository, PublishPhotoUseCase } from '@silicon-traveler/photo';
 
 export class PublisherJob {
   private isRunning = false;
+  private readonly apiUrl = process.env.API_URL || 'http://api:3000';
+  private readonly apiKey = process.env.API_KEY;
 
   constructor(
     private readonly routeRepo: MariaDBRouteRepository,
@@ -42,16 +45,35 @@ export class PublisherJob {
         iso: routePoint.cameraMetadata?.iso || 800,
         shutterSpeed: routePoint.cameraMetadata?.shutterSpeed || '1/125',
         aperture: routePoint.cameraMetadata?.aperture || 'f/2.8',
-        revisedPrompt: routePoint.imagePrompt,
+        revisedPrompt: null,
       };
 
       const photoId = await this.publishPhotoUseCase.execute(routePoint.id, preparedPhoto);
       console.log(`[Publisher] ✓ Published photo ${photoId}`);
+      await this.notifyMapRefresh(photoId);
 
     } catch (error: any) {
       console.error('[Publisher] Error:', error.message);
     } finally {
       this.isRunning = false;
+    }
+  }
+
+  private async notifyMapRefresh(photoId: number): Promise<void> {
+    try {
+      const headers: Record<string, string> = {};
+      if (this.apiKey) {
+        headers.Authorization = `Bearer ${this.apiKey}`;
+      }
+
+      await axios.post(
+        `${this.apiUrl}/api/map/refresh`,
+        { photo_id: photoId },
+        { headers, timeout: 8000 }
+      );
+      console.log(`[Publisher] ✓ Map refreshed for photo ${photoId}`);
+    } catch (error: any) {
+      console.error('[Publisher] Failed to refresh map:', error?.message || error);
     }
   }
 }

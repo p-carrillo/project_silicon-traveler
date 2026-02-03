@@ -7,6 +7,11 @@ body {
 }
 
 @layer components {
+  .page-container {
+    @apply mx-auto w-full px-6 md:px-12 lg:px-20;
+    max-width: 1600px;
+  }
+
   .contact-sheet-grid {
     background-size: 100% 1px, 1px 100%;
     background-image: linear-gradient(

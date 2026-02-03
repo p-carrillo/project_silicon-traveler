@@ -4,7 +4,7 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && mkdir -p dist/config && cp src/config/*.json dist/config/",
     "dev": "tsc --watch",
     "test": "pnpm -w vitest -c vitest.workspace.ts run --project content",
     "test:unit": "pnpm -w vitest -c vitest.workspace.ts run --project content --dir test/unit",

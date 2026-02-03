@@ -12,6 +12,7 @@
     "@silicon-traveler/journey": "workspace:*",
     "@silicon-traveler/route": "workspace:*",
     "@silicon-traveler/photo": "workspace:*",
+    "@silicon-traveler/map": "workspace:*",
     "express": "^4.18.2",
     "cors": "^2.8.5",
     "helmet": "^7.1.0",

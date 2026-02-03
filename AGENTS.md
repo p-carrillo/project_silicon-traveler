@@ -23,3 +23,4 @@ When work touches more than one area, use the skills in this order:
 - ADR: every technical or architectural decision must be recorded as an ADR in the `.adr/` folder using the corresponding template.
 - Keep consistency with modular hexagonal architecture and MariaDB without ORM.
 - Tests: every new feature or change must include unit and/or integration tests following `.ai/skills/test.md` guidelines.
+- Language: UI copy and documentation must remain in English for consistency.

@@ -1,0 +1,21 @@
+{
+  "name": "@silicon-traveler/map",
+  "version": "1.0.0",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "pnpm -w vitest -c scripts/vitest.config.mjs run --dir packages/map/test",
+    "test:unit": "pnpm -w vitest -c scripts/vitest.config.mjs run --dir packages/map/test/unit",
+    "test:integration": "pnpm -w vitest -c scripts/vitest.config.mjs run --dir packages/map/test/integration"
+  },
+  "dependencies": {
+    "@silicon-traveler/shared": "workspace:*",
+    "mariadb": "^3.2.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.3.0"
+  }
+}
