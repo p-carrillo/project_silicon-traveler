@@ -39,8 +39,10 @@ export class OverpassAdapter implements IOverpassPort {
       }
       
       return null;
-    } catch (error) {
-      console.error('Overpass API error:', error);
+    } catch (error: any) {
+      const status = error?.response?.status;
+      const message = error?.message || 'Unknown error';
+      console.error(`Overpass API error (city lookup): ${status ? `${status} ` : ''}${message}`);
       return null;
     }
   }
@@ -60,8 +62,10 @@ export class OverpassAdapter implements IOverpassPort {
       });
       
       return response.data.elements && response.data.elements.length > 0;
-    } catch (error) {
-      console.error('Overpass API error (water detection):', error);
+    } catch (error: any) {
+      const status = error?.response?.status;
+      const message = error?.message || 'Unknown error';
+      console.error(`Overpass API error (water detection): ${status ? `${status} ` : ''}${message}`);
       return false;
     }
   }

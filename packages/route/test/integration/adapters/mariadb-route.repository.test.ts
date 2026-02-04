@@ -57,4 +57,80 @@ describe('MariaDBRouteRepository (integration)', () => {
       await pool.end();
     }
   });
+
+  dbTest('counts route points by status as number', async () => {
+    const { MariaDBRouteRepository } = await import('../../../src/adapters/mariadb-route.repository');
+    const { pool } = await import('../../../../shared/src/database/pool');
+    const { pointToWKT } = await import('../../../../shared/src/database/geographic');
+
+    const origin = { lat: 20, lng: 20 };
+    const now = new Date();
+
+    const journeyResult = await pool.query(
+      `INSERT INTO journey (name, origin_point, current_position, heading, started_at)
+       VALUES (?, ST_GeomFromText(?, 4326), ST_GeomFromText(?, 4326), ?, ?)`,
+      ['Route Count Journey', pointToWKT(origin), pointToWKT(origin), 'east', now]
+    );
+
+    const journeyId = journeyResult.insertId as number;
+    const repo = new MariaDBRouteRepository();
+
+    const createdIds: number[] = [];
+    try {
+      const first = await repo.create({
+        journeyId,
+        sequence: 1,
+        placeName: 'Count Place 1',
+        coordinates: { lat: 21, lng: 21 },
+        country: 'Test Country',
+        region: 'Test Region',
+        isFferryCrossing: false,
+        distanceFromPrevious: 5,
+        osmData: null,
+        researchSummary: null,
+        imagePrompt: null,
+        narrativePrompt: null,
+        cameraMetadata: null,
+        status: 'pending',
+        errorMessage: null,
+        imagePath: null,
+        thumbnailPath: null,
+        publishedAt: null,
+      });
+      createdIds.push(first.id);
+
+      const second = await repo.create({
+        journeyId,
+        sequence: 2,
+        placeName: 'Count Place 2',
+        coordinates: { lat: 22, lng: 22 },
+        country: 'Test Country',
+        region: 'Test Region',
+        isFferryCrossing: false,
+        distanceFromPrevious: 5,
+        osmData: null,
+        researchSummary: null,
+        imagePrompt: null,
+        narrativePrompt: null,
+        cameraMetadata: null,
+        status: 'content_generated',
+        errorMessage: null,
+        imagePath: null,
+        thumbnailPath: null,
+        publishedAt: null,
+      });
+      createdIds.push(second.id);
+
+      const count = await repo.countByStatuses(['pending', 'content_generated']);
+
+      expect(typeof count).toBe('number');
+      expect(count).toBeGreaterThanOrEqual(2);
+    } finally {
+      if (createdIds.length > 0) {
+        await pool.query('DELETE FROM route_points WHERE id IN (?)', [createdIds]);
+      }
+      await pool.query('DELETE FROM journey WHERE id = ?', [journeyId]);
+      await pool.end();
+    }
+  });
 });

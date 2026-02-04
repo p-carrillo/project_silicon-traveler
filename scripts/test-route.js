@@ -32,8 +32,8 @@ async function testRoute() {
     const nextPoint = calculateUseCase.execute({
       currentPosition: origin,
       heading: 'east',
-      minDistanceKm: 15,
-      maxDistanceKm: 20
+      minDistanceKm: 20,
+      maxDistanceKm: 30
     });
     
     const distance = calculateDistance(origin, nextPoint);
@@ -58,7 +58,8 @@ async function testRoute() {
     if (geocoding) {
       console.log(`✓ Location: ${geocoding.displayName}`);
       console.log(`  Country: ${geocoding.country}`);
-      console.log(`  Region: ${geocoding.region}\n`);
+      console.log(`  Region: ${geocoding.region}`);
+      console.log(`  Place: ${geocoding.placeName}\n`);
     } else {
       console.log('  Geocoding failed\n');
     }
@@ -80,7 +81,7 @@ async function testRoute() {
     
     const savedRoute = await routeRepository.create({
       ...routePointData,
-      placeName: city?.name || null,
+      placeName: city?.name || geocoding?.placeName || null,
       country: geocoding?.country || null,
       region: geocoding?.region || null,
     });

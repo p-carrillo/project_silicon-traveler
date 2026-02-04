@@ -38,7 +38,7 @@ export class MariaDBPhotoRepository implements IPhotoRepository {
       ]
     );
 
-    return result.insertId;
+    return Number(result.insertId ?? 0);
   }
 
   async findById(id: number): Promise<Photo | null> {
@@ -116,7 +116,7 @@ export class MariaDBPhotoRepository implements IPhotoRepository {
       metadata,
       imageUrl: row.image_path || '',
       gridThumbnailUrl: row.thumbnail_path || '',
-      heroThumbnailUrl: metadata?.heroThumbnailUrl ?? row.thumbnail_path || '',
+      heroThumbnailUrl: (metadata?.heroThumbnailUrl ?? row.thumbnail_path) || '',
       publishedAt: new Date(row.published_at),
       createdAt: new Date(row.created_at),
     };

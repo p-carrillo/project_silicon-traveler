@@ -1,0 +1,4 @@
+interface:
+  display_name: "Docker Security Audit"
+  short_description: "Audit Docker, secrets, and vulnerabilities"
+  default_prompt: "Use $docker-security-audit to audit my Docker deployment for secrets and vulnerabilities."

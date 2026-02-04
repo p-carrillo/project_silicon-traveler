@@ -4,6 +4,7 @@ export interface GeocodingResult {
   country: string;
   region: string;
   displayName: string;
+  placeName: string;
 }
 
 export interface INominatimPort {

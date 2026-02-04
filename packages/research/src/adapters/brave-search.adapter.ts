@@ -6,7 +6,7 @@ export class BraveSearchAdapter implements IBraveSearchPort {
   private readonly baseUrl = 'https://api.search.brave.com/res/v1/web/search';
 
   constructor(apiKey?: string) {
-    this.apiKey = apiKey || process.env.BRAVE_API_KEY || '';
+    this.apiKey = apiKey || process.env.BRAVE_SEARCH_API_KEY || process.env.BRAVE_API_KEY || '';
   }
 
   async search(query: string, limit: number = 5): Promise<SearchResult[]> {

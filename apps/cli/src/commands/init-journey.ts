@@ -68,8 +68,8 @@ export async function initJourney(): Promise<void> {
       const nextCoordinates = calculateNextPoint.execute({
         currentPosition,
         heading: 'east',
-        minDistanceKm: 15,
-        maxDistanceKm: 20,
+        minDistanceKm: 20,
+        maxDistanceKm: 30,
       });
 
       // Create route point - pass all required fields
@@ -112,6 +112,9 @@ export async function initJourney(): Promise<void> {
       if (location) {
         routePoint.country = location.country;
         routePoint.region = location.region;
+        if (!routePoint.placeName && location.placeName && location.placeName !== 'Unknown') {
+          routePoint.placeName = location.placeName;
+        }
       }
 
       // Detect water (ferry crossing)

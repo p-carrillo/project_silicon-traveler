@@ -3,7 +3,7 @@ x-app-base: &app-base
     context: .
     dockerfile: docker/Dockerfile.dev
   environment:
-    - NODE_ENV=development
+    - NODE_ENV=production
     - DB_HOST=${DB_HOST:-mariadb}
     - DB_PORT=3306
     - DB_USER=${DB_USER}
@@ -50,6 +50,8 @@ services:
     <<: *app-base
     ports:
       - "3010:3000"
+    environment:
+      - NODE_ENV=development
     depends_on:
       mariadb:
         condition: service_healthy

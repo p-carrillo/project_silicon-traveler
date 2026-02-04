@@ -1,6 +1,8 @@
 import OpenAI from 'openai';
 import { ILLMPort, ContentInput, GeneratedContent } from '../ports/llm.port';
-import { selectCamera, getDefaultCamera, type CameraSelection } from '../config/photographer';
+import { selectCamera, getDefaultCamera } from '../config/photographer';
+import type { CameraSelection } from '../config/photographer';
+import { buildContentPrompt, CONTENT_SYSTEM_PROMPT } from '../prompts/content-prompts';
 
 export class OpenAIAdapter implements ILLMPort {
   private readonly client: OpenAI;
@@ -13,7 +15,7 @@ export class OpenAIAdapter implements ILLMPort {
 
   async generateContent(input: ContentInput): Promise<GeneratedContent> {
     const cameraSelection = selectCamera(`${input.placeName}|${input.region}|${input.country}`);
-    const prompt = this.buildPrompt(input, cameraSelection);
+    const prompt = buildContentPrompt(input, cameraSelection);
 
     try {
       const completion = await this.client.chat.completions.create({
@@ -21,7 +23,7 @@ export class OpenAIAdapter implements ILLMPort {
         messages: [
           {
             role: 'system',
-            content: 'You are a documentary photographer traveling the world on foot. You write in first person with introspection and attention to detail, inspired by Magnum photographers.',
+            content: CONTENT_SYSTEM_PROMPT,
           },
           {
             role: 'user',
@@ -40,26 +42,6 @@ export class OpenAIAdapter implements ILLMPort {
       const fallback = this.getFallbackContent(input);
       return this.applyCameraSelection(fallback, cameraSelection);
     }
-  }
-
-  private buildPrompt(input: ContentInput, cameraSelection: CameraSelection): string {
-    const locationContext = input.isFferryCrossing
-      ? `crossing by ferry near ${input.placeName}, ${input.region}, ${input.country}`
-      : `visiting ${input.placeName}, ${input.region}, ${input.country}`;
-
-    return `I'm ${locationContext} on my journey around the world on foot.
-
-Research about this place:
-${input.researchSummary}
-
-Generate the following in JSON format:
-1. "imagePrompt": A detailed DALL-E prompt for a documentary-style black & white photograph of this location. Include mood, lighting, composition, and photographic style (inspired by Magnum photographers). Also specify realistic camera metadata.
-2. "narrative": A short first-person reflection (100-150 words) about this moment in the journey, inspired by Magnum photographers' documentary style.
-3. "cameraMetadata": Realistic camera settings as JSON with fields: camera, lens, iso, shutterSpeed, aperture.
-
-Use the camera "${cameraSelection.camera}" with the lens "${cameraSelection.lens}".
-
-Return ONLY valid JSON, no markdown or code blocks.`;
   }
 
   private parseResponse(response: string): GeneratedContent {

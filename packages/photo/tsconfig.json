@@ -14,5 +14,5 @@
     { "path": "../image" },
     { "path": "../storage" }
   ],
-  "include": ["src/**/*"]
+  "include": ["src/**/*", "src/config/*.json"]
 }

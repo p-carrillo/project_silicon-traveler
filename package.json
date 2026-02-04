@@ -13,6 +13,7 @@
     "db:migrate": "pnpm --filter @silicon-traveler/cli migrate",
     "db:seed": "pnpm --filter @silicon-traveler/cli seed",
     "journey:init": "pnpm --filter @silicon-traveler/cli init-journey",
+    "journey:prepare-prompts": "pnpm --filter @silicon-traveler/cli prepare-prompts",
     "script:docker": "./scripts/docker-run.sh",
     "script:db:migrate": "./scripts/docker-run.sh node scripts/run-migrations.js",
     "script:db:reset": "./scripts/docker-run.sh node scripts/reset-db.js",

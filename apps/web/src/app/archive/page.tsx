@@ -201,7 +201,7 @@ export default async function ArchivePage({ searchParams }: PageProps) {
                                 <img
                                   alt={photo.title}
                                   className="w-full h-full object-cover img-bw transition-all duration-700"
-                                  src={`/api/${photo.thumbnail_path}`}
+                                  src={`/api/images/${photo.thumbnail_path.replace(/^\//, '')}`}
                                 />
                               </div>
                               <div className="mt-4 flex justify-between items-start">

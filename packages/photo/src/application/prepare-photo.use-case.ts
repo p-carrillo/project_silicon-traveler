@@ -59,11 +59,12 @@ export class PreparePhotoUseCase {
       });
 
       // 5. Update status: content_generated + store prompts/metadata
-      routePoint.updateContent(content.imagePrompt, content.narrative, content.cameraMetadata);
+      const imagePrompt = this.normalizePrompt(content.imagePrompt);
+      routePoint.updateContent(imagePrompt, content.narrative, content.cameraMetadata);
       await this.routeRepository.update(routePoint);
 
       // 6. Generate image
-      const image = await this.imageGenerator.generate(content.imagePrompt);
+      const image = await this.imageGenerator.generate(imagePrompt);
 
       // 7. Download image
       const imageResponse = await axios.get(image.url, { responseType: 'arraybuffer' });
@@ -72,7 +73,7 @@ export class PreparePhotoUseCase {
       // 8. Generate thumbnails
       const thumbnails = await this.thumbnailGenerator.generate(imageBuffer, [
         { width: 400, height: 400, suffix: '_grid' },
-        { width: 1920, height: 1080, suffix: '_hero' },
+        { width: 1024, height: 1024, suffix: '_hero' },
       ]);
 
       // 9. Save to storage
@@ -107,5 +108,24 @@ export class PreparePhotoUseCase {
       await this.routeRepository.update(routePoint);
       throw error;
     }
+  }
+
+  private normalizePrompt(prompt: unknown): string {
+    if (typeof prompt === 'string' && prompt.trim().length > 0) {
+      return prompt;
+    }
+
+    if (prompt !== null && prompt !== undefined) {
+      try {
+        const stringified = JSON.stringify(prompt);
+        if (stringified && stringified !== 'null') {
+          return stringified;
+        }
+      } catch (error) {
+        console.warn('Failed to stringify image prompt:', error);
+      }
+    }
+
+    return 'A documentary black and white photograph of a street scene';
   }
 }

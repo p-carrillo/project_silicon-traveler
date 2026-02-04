@@ -6,8 +6,11 @@ export class LocalStorageAdapter implements IStoragePort {
   private readonly baseDir: string;
   private readonly baseUrl: string;
 
-  constructor(baseDir = '/images', baseUrl = '/images') {
-    this.baseDir = baseDir;
+  constructor(baseDir?: string, baseUrl = '/images') {
+    const resolvedBaseDir =
+      baseDir || process.env.STORAGE_DIR || this.resolveDefaultBaseDir(process.cwd());
+
+    this.baseDir = resolvedBaseDir;
     this.baseUrl = baseUrl;
   }
 
@@ -63,5 +66,11 @@ export class LocalStorageAdapter implements IStoragePort {
         throw error;
       }
     }
+  }
+
+  private resolveDefaultBaseDir(cwd: string): string {
+    const nested =
+      cwd.includes(`${path.sep}apps${path.sep}`) || cwd.includes(`${path.sep}packages${path.sep}`);
+    return path.resolve(cwd, nested ? path.join('..', '..', 'images') : 'images');
   }
 }

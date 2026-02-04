@@ -11,12 +11,12 @@ describe('CalculateNextPointUseCase', () => {
     const result = useCase.execute({
       currentPosition: origin,
       heading: 'east',
-      minDistanceKm: 10,
-      maxDistanceKm: 20,
+      minDistanceKm: 20,
+      maxDistanceKm: 30,
     });
 
     const distance = calculateDistance(origin, result);
-    expect(distance).toBeCloseTo(10, 1);
+    expect(distance).toBeCloseTo(20, 1);
 
     randomSpy.mockRestore();
   });

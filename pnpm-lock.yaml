@@ -75,15 +75,30 @@ importers:
 
   apps/cli:
     dependencies:
+      '@silicon-traveler/content':
+        specifier: workspace:*
+        version: link:../../packages/content
+      '@silicon-traveler/image':
+        specifier: workspace:*
+        version: link:../../packages/image
       '@silicon-traveler/journey':
         specifier: workspace:*
         version: link:../../packages/journey
+      '@silicon-traveler/photo':
+        specifier: workspace:*
+        version: link:../../packages/photo
+      '@silicon-traveler/research':
+        specifier: workspace:*
+        version: link:../../packages/research
       '@silicon-traveler/route':
         specifier: workspace:*
         version: link:../../packages/route
       '@silicon-traveler/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      '@silicon-traveler/storage':
+        specifier: workspace:*
+        version: link:../../packages/storage
       chalk:
         specifier: ^4.1.2
         version: 4.1.2

@@ -142,7 +142,7 @@ export class MariaDBRouteRepository implements IRouteRepository {
         statuses
       );
 
-      return rows[0].count;
+      return Number(rows[0].count ?? 0);
     } finally {
       conn.release();
     }
@@ -164,11 +164,11 @@ export class MariaDBRouteRepository implements IRouteRepository {
           routePoint.placeName,
           routePoint.country,
           routePoint.region,
-          routePoint.osmData ? JSON.stringify(routePoint.osmData) : null,
+          this.safeStringify(routePoint.osmData),
           routePoint.researchSummary,
           routePoint.imagePrompt,
           routePoint.narrativePrompt,
-          routePoint.cameraMetadata ? JSON.stringify(routePoint.cameraMetadata) : null,
+          this.safeStringify(routePoint.cameraMetadata),
           routePoint.status,
           routePoint.errorMessage,
           routePoint.imagePath,
@@ -207,11 +207,11 @@ export class MariaDBRouteRepository implements IRouteRepository {
       row.region,
       Boolean(row.is_ferry_crossing),
       row.distance_from_previous ? parseFloat(row.distance_from_previous) : null,
-      row.osm_data ? JSON.parse(row.osm_data) : null,
+      row.osm_data ? this.safeJsonParse(row.osm_data) : null,
       row.research_summary,
       row.image_prompt,
       row.narrative_prompt,
-      row.camera_metadata ? JSON.parse(row.camera_metadata) : null,
+      row.camera_metadata ? this.safeJsonParse(row.camera_metadata) : null,
       row.status as RouteStatus,
       row.error_message,
       row.image_path,
@@ -226,5 +226,29 @@ export class MariaDBRouteRepository implements IRouteRepository {
     const match = wkt.match(/POINT\(([^ ]+) ([^ ]+)\)/);
     if (!match) throw new Error(`Invalid WKT: ${wkt}`);
     return { lng: parseFloat(match[1]), lat: parseFloat(match[2]) };
+  }
+
+  private safeJsonParse(data: string | object): any {
+    if (data && typeof data !== 'string') {
+      return data;
+    }
+
+    try {
+      return JSON.parse(data);
+    } catch (error) {
+      console.warn(`Failed to parse JSON: ${data}`);
+      return null;
+    }
+  }
+
+  private safeStringify(data: any): string | null {
+    if (!data) return null;
+    if (typeof data === 'string') return data; // Already a string
+    try {
+      return JSON.stringify(data);
+    } catch (error) {
+      console.warn(`Failed to stringify data: ${error instanceof Error ? error.message : String(error)}`);
+      return null;
+    }
   }
 }

@@ -52,11 +52,11 @@ export default function PhotoJournal({
       <PageContainer className="flex flex-col py-8">
         <main className="mt-12 flex flex-col lg:grid lg:grid-cols-12 gap-16">
           <div className="lg:col-span-8">
-            <div className="w-full bg-zinc-900 overflow-hidden h-[calc(100vh-280px)] min-h-[360px] ring-1 ring-white/10 animate-fade-up">
+            <div className="w-full bg-zinc-900 overflow-hidden aspect-square min-h-[360px] ring-1 ring-white/10 animate-fade-up">
               <img
                 alt={photo.title}
                 className="w-full h-full object-cover filter grayscale contrast-125 brightness-90"
-                src={`/api/${photo.image_path}`}
+                src={`/api/images/${photo.image_path.replace(/^\//, '')}`}
               />
             </div>
             {(technicalPlate || photo.roll_number || photo.frame_number) && (

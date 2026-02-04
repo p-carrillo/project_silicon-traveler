@@ -6,15 +6,21 @@
     "st": "./dist/index.js"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc -b",
     "dev": "tsc --watch",
     "migrate": "node dist/commands/migrate.js",
-    "init-journey": "node dist/commands/init-journey.js"
+    "init-journey": "node dist/commands/init-journey.js",
+    "prepare-prompts": "node dist/index.js prepare-prompts"
   },
   "dependencies": {
     "@silicon-traveler/shared": "workspace:*",
     "@silicon-traveler/journey": "workspace:*",
     "@silicon-traveler/route": "workspace:*",
+    "@silicon-traveler/research": "workspace:*",
+    "@silicon-traveler/content": "workspace:*",
+    "@silicon-traveler/image": "workspace:*",
+    "@silicon-traveler/photo": "workspace:*",
+    "@silicon-traveler/storage": "workspace:*",
     "commander": "^11.1.0",
     "chalk": "^4.1.2",
     "cli-progress": "^3.12.0"

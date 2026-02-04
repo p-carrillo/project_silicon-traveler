@@ -16,7 +16,7 @@ export class DalleAdapter implements IImageGeneratorPort {
         model: 'dall-e-3',
         prompt,
         n: 1,
-        size: '1792x1024', // Landscape format
+        size: '1024x1024', // Square format for printing
         quality: 'hd',
         style: 'natural', // More photographic, less artistic
       });

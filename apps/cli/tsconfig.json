@@ -8,7 +8,12 @@
   "references": [
     { "path": "../../packages/shared" },
     { "path": "../../packages/journey" },
-    { "path": "../../packages/route" }
+    { "path": "../../packages/route" },
+    { "path": "../../packages/research" },
+    { "path": "../../packages/content" },
+    { "path": "../../packages/image" },
+    { "path": "../../packages/photo" },
+    { "path": "../../packages/storage" }
   ],
   "include": ["src/**/*"]
 }
