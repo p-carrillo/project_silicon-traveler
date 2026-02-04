@@ -1,3 +1,4 @@
+// @ts-ignore - no types available
 import cron from 'node-cron';
 import { pool } from '@silicon-traveler/shared';
 import { createGeneratorJob } from './jobs/generator.job';

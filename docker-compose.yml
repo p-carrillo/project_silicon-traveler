@@ -52,6 +52,17 @@ services:
       - "3010:3000"
     environment:
       - NODE_ENV=development
+      - DB_HOST=${DB_HOST:-mariadb}
+      - DB_PORT=3306
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - DB_POOL_SIZE=${DB_POOL_SIZE:-10}
+      - API_KEY=${API_KEY}
+      - CORS_ORIGINS=${CORS_ORIGINS}
+      - API_URL=${API_URL:-http://api:3000}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - BRAVE_SEARCH_API_KEY=${BRAVE_SEARCH_API_KEY}
     depends_on:
       mariadb:
         condition: service_healthy

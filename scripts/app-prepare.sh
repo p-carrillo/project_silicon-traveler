@@ -32,7 +32,7 @@ fi
 
 if [ "$INSTALL_NEEDED" = "1" ]; then
   echo "📦 Installing dependencies..."
-  CI=1 pnpm install --frozen-lockfile --force
+  pnpm install --frozen-lockfile
   if [ -n "$LOCK_HASH" ]; then
     echo "$LOCK_HASH" > "$LOCK_HASH_FILE"
   fi
@@ -41,24 +41,29 @@ else
 fi
 
 NEEDS_BUILD=0
-for file in \
-  /app/packages/shared/dist/index.js \
-  /app/packages/journey/dist/index.js \
-  /app/packages/route/dist/index.js \
-  /app/packages/photo/dist/index.js \
-  /app/packages/map/dist/index.js
-do
-  if [ ! -f "$file" ]; then
-    NEEDS_BUILD=1
-    break
+for dir in /app/packages/*; do
+  if [ -d "$dir" ] && [ -f "$dir/package.json" ]; then
+    if [ ! -d "$dir/dist" ] || [ -z "$(ls -A "$dir/dist" 2>/dev/null)" ]; then
+      echo "⚠️  Package $(basename "$dir") missing dist/"
+      NEEDS_BUILD=1
+      break
+    fi
+    
+    # Check if any .ts file is newer than the dist/ directory
+    NEWER_FILES=$(find "$dir/src" -type f -name "*.ts" -newer "$dir/dist" 2>/dev/null | head -n 1)
+    if [ -n "$NEWER_FILES" ]; then
+      echo "⚠️  Package $(basename "$dir") has changes since last build"
+      NEEDS_BUILD=1
+      break
+    fi
   fi
 done
 
 if [ "$NEEDS_BUILD" = "1" ]; then
-  echo "🔨 Building workspace packages..."
+  echo "🔨 Building all workspace packages..."
   pnpm --filter "./packages/*" build
 else
-  echo "✓ Packages already built"
+  echo "✓ All packages already built and up to date"
 fi
 
 touch "$READY_FILE"

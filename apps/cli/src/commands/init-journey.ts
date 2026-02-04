@@ -11,11 +11,12 @@ import {
   NominatimAdapter
 } from '@silicon-traveler/route';
 import chalk from 'chalk';
+// @ts-ignore - no types available
 import cliProgress from 'cli-progress';
 
 const OLEIROS_LAT = 43.3328;
 const OLEIROS_LNG = -8.3186;
-const INITIAL_POINTS = 10;
+const INITIAL_POINTS = 10; // Points to generate after Oleiros (sequence 1-10)
 
 export async function initJourney(): Promise<void> {
   console.log(chalk.bold('\n🌍 Initializing Silicon Traveler journey...\n'));
@@ -46,8 +47,35 @@ export async function initJourney(): Promise<void> {
     console.log(chalk.gray(`  Origin: ${OLEIROS_LAT}°N, ${OLEIROS_LNG}°W`));
     console.log(chalk.gray(`  Heading: East\n`));
 
-    // 2. Generate initial route points
-    console.log(chalk.blue(`→ Generating first ${INITIAL_POINTS} route points...\n`));
+    // 2. Create Point 0 at Oleiros (starting point)
+    console.log(chalk.blue('→ Creating starting point at Oleiros...\n'));
+    
+    const startingPointData = {
+      journeyId: journey.id,
+      sequence: 0,
+      placeName: 'Oleiros',
+      coordinates: { lat: OLEIROS_LAT, lng: OLEIROS_LNG },
+      country: 'Spain',
+      region: 'Galicia',
+      isFferryCrossing: false,
+      distanceFromPrevious: null, // First point has no previous
+      osmData: null,
+      researchSummary: null,
+      imagePrompt: null,
+      narrativePrompt: null,
+      cameraMetadata: null,
+      status: 'pending' as const,
+      errorMessage: null,
+      imagePath: null,
+      thumbnailPath: null,
+      publishedAt: null,
+    };
+
+    await routeRepo.create(startingPointData as any);
+    console.log(chalk.green(`✓ Starting point created (Sequence 0: Oleiros, Spain)\n`));
+
+    // 3. Generate next route points
+    console.log(chalk.blue(`→ Generating next ${INITIAL_POINTS} route points...\n`));
 
     const progressBar = new cliProgress.SingleBar({
       format: chalk.cyan('{bar}') + ' | {percentage}% | {value}/{total} points | {status}',

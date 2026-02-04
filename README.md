@@ -52,77 +52,173 @@ The system maintains a buffer of 10 pre-generated photos and displays them in a 
 ## Requirements
 
 - Docker and Docker Compose v2.0+
-- Node.js 20+ (solo si ejecutas fuera de Docker)
-- pnpm 9.12.0+ (solo si ejecutas fuera de Docker)
+- Node.js 20+ (only if running outside Docker)
+- pnpm 9.12.0+ (only if running outside Docker)
 
-## Quick Start con Docker
+## Getting Started (Development)
 
-### 1. Configurar variables de entorno
+### 1. Configure environment
 
 ```bash
 cp .env.example .env
-# Edita .env con tus valores reales
+# Edit .env with your actual values (DB credentials, API keys)
 ```
 
-### 2. Iniciar en modo desarrollo
+### 2. Start all services
 
 ```bash
-# Opción rápida con script
-./scripts/docker-deploy.sh dev up
-
-# O manualmente con docker compose
-docker compose up -d
+docker-compose up
 ```
 
-Los servicios estarán disponibles en:
-- **API**: http://localhost:3010
-- **Web**: http://localhost:3011
-- **MariaDB**: localhost:3316
+This will:
+- ✅ Start MariaDB (port 3316)
+- ✅ Install dependencies automatically
+- ✅ Build all packages (detects changes via timestamps)
+- ✅ Run migrations automatically
+- ✅ Seed 10 sample photos
+- ✅ Start API on http://localhost:3010
+- ✅ Start Web on http://localhost:3011
 
-### 3. Ver logs
+**First boot takes ~2-3 minutes**. Subsequent boots are much faster (reuses builds).
+
+### 3. Initialize your journey (optional)
+
+If you want to create your own journey instead of using seeded data:
 
 ```bash
-./scripts/docker-deploy.sh dev logs
-# O: docker compose logs -f
+# Reset database
+docker-compose exec api node scripts/reset-db.js
+
+# Run migrations
+docker-compose exec api node scripts/run-migrations.js
+
+# Initialize journey from Oleiros (creates 11 points: Oleiros + 10 following points)
+docker-compose exec api pnpm --filter @silicon-traveler/cli init-journey
 ```
 
-### 4. Ejecutar migraciones
+### 4. Generate photos
 
 ```bash
-docker compose exec api node scripts/run-migrations.js
+# Generate 7 photos (research + prompts + images)
+docker-compose exec api pnpm --filter @silicon-traveler/cli prepare-prompts -- 7 --journey-id 1
 ```
 
-### 5. Inicializar el journey
+**Note**: Requires `OPENAI_API_KEY` and `BRAVE_SEARCH_API_KEY` in `.env`.
+
+### 5. View logs
 
 ```bash
-docker compose exec api pnpm --filter @silicon-traveler/cli init-journey
+# All services
+docker-compose logs -f
+
+# Specific service
+docker-compose logs -f api
+docker-compose logs -f web
 ```
 
-### 6. Prepare photos (same pipeline as Scheduler)
+### 6. Stop services
 
 ```bash
-docker compose exec api pnpm --filter @silicon-traveler/cli prepare-prompts -- 7 --journey-id 1
+# Stop containers
+docker-compose down
+
+# Stop and remove volumes (⚠️ deletes database data)
+docker-compose down -v
 ```
-Generates research, prompts, images, and thumbnails for the next N days and updates `route_points` to `image_ready`.
-If Brave Search returns no results, prompts are generated with an empty research summary.
-If Overpass/OpenStreetMap calls fail, the command continues with missing city/water context.
-If the place name remains `Unknown`, the pipeline marks the route point as `failed` and throws.
-Use `--prompts-only` to skip image generation and stop at `content_generated`.
 
-## Despliegue en Producción
+## Common Development Commands
+
+All commands use `docker-compose exec` for easy copy-paste:
+
+### Database
 
 ```bash
-# Construir e iniciar en producción
+# Run migrations
+docker-compose exec api node scripts/run-migrations.js
+
+# Reset database (drops all tables)
+docker-compose exec api node scripts/reset-db.js
+
+# Test database connection
+docker-compose exec api node scripts/test-db.js
+```
+
+### Journey Management
+
+```bash
+# Initialize journey (creates Oleiros as starting point + 10 following points)
+docker-compose exec api pnpm --filter @silicon-traveler/cli init-journey
+
+# Get journey stats
+docker-compose exec api node scripts/test-journey.js
+```
+
+### Photo Pipeline
+
+```bash
+# Prepare photos (research + prompts + images)
+docker-compose exec api pnpm --filter @silicon-traveler/cli prepare-prompts -- 7 --journey-id 1
+
+# Prepare prompts only (skip images)
+docker-compose exec api pnpm --filter @silicon-traveler/cli prepare-prompts -- 7 --journey-id 1 --prompts-only
+
+# Seed sample photos
+docker-compose exec api node scripts/seed-photos.js
+```
+
+### Build & Test
+
+```bash
+# Build all packages
+docker-compose exec app pnpm --filter "./packages/*" build
+
+# Build specific package
+docker-compose exec app pnpm --filter @silicon-traveler/shared build
+
+# Run tests
+docker-compose exec app pnpm test
+
+# Run specific module tests
+docker-compose exec app node scripts/test-journey.js
+docker-compose exec app node scripts/test-route.js
+```
+
+### API Testing
+
+```bash
+# Health check
+curl http://localhost:3010/health
+
+# Journey stats (requires API_KEY from .env)
+curl -H "Authorization: Bearer YOUR_API_KEY" http://localhost:3010/api/journey/stats
+
+# Latest photo
+curl -H "Authorization: Bearer YOUR_API_KEY" http://localhost:3010/api/photos/latest
+```
+
+### Shell Access
+
+```bash
+# Access container shell
+docker-compose exec api sh
+docker-compose exec app sh
+docker-compose exec mariadb sh
+```
+
+## Production Deployment
+
+```bash
+# Build and start in production mode
 ./scripts/docker-deploy.sh prod up
 
-# Ver estado
+# View status
 ./scripts/docker-deploy.sh prod status
 
-# Ver logs
+# View logs
 ./scripts/docker-deploy.sh prod logs
 ```
 
-Ver documentación completa en [.ai/DOCKER.md](.ai/DOCKER.md)
+See full documentation in [.ai/DOCKER.md](.ai/DOCKER.md)
 
 ## Project Status
 
@@ -143,8 +239,8 @@ All core domain modules implemented with hexagonal architecture:
 
 1. **CLI app** - Migration runner (`migrate` command), journey initialization (`init-journey` command)
    - ✅ Applies 4 SQL migrations from `/migrations` directory
-   - ✅ Creates journey and 10 initial route points with OSM/Nominatim enrichment
-   - ✅ Tested successfully: Journey ID 1 created with 10 route points
+   - ✅ Creates journey and 11 initial route points: Oleiros (sequence 0) + 10 following points with OSM/Nominatim enrichment
+   - ✅ Tested successfully: Journey ID 1 created with route points
    - ✅ `prepare-prompts` generates research, prompts, and images for the next N days (same pipeline as Scheduler)
 
 2. **Scheduler app** - Automated photo generation and publishing
@@ -187,267 +283,6 @@ All core domain modules implemented with hexagonal architecture:
 - ADRs are stored in `.adr/` and track architecture decisions.
 - Latest: ADR 029 (Generate content even when research is empty).
 
-## Getting Started
-
-### 1. Setup Environment
-
-```bash
-# Copy environment template and add your API keys
-cp .env.example .env
-# Edit .env and add:
-# DB_ROOT_PASSWORD=change-me
-# DB_PASSWORD=change-me
-# DB_HOST=mariadb (for Docker; use localhost if running locally)
-# API_KEY=change-me
-# CORS_ORIGINS=http://localhost:3011
-# API_URL=http://api:3000
-# NEXT_PUBLIC_API_URL=http://localhost:3010
-# STORAGE_DIR=/app/images
-# OPENAI_API_KEY=sk-proj-...
-# BRAVE_SEARCH_API_KEY=BSA...
-```
-
-### 2. Build and Start Services
-
-```bash
-# Build and start core services (MariaDB + API + Web + app shell)
-docker compose up -d
-
-# Check services are healthy
-docker compose ps
-
-# First boot installs workspace dependencies and builds packages inside the app container
-docker compose logs -f app
-```
-
-The Docker Compose setup runs the API in development mode, so the web app can call it without an API key.
-
-If you update `pnpm-lock.yaml`, restart the app container to re-run installs:
-
-```bash
-docker compose restart app
-```
-
-If you change package source code and need a rebuild, run:
-
-```bash
-docker compose exec app pnpm --filter "./packages/*" build
-```
-
-### 2a. Dev Compose (defaults included)
-
-If you want quick local defaults without editing `.env`, use the dev compose file:
-
-```bash
-docker compose -f docker-compose.dev.yml up -d
-```
-
-This uses dev-only credentials and API key values. For real API calls, set `OPENAI_API_KEY` and `BRAVE_SEARCH_API_KEY` in `.env` and use the main `docker-compose.yml`.
-
-### 3. Run Migrations
-
-```bash
-# Execute migrations to create database schema
-docker compose exec app pnpm --filter @silicon-traveler/cli migrate
-```
-
-### 4. Initialize Journey
-
-```bash
-# Create initial journey from Oleiros with 10 route points
-docker compose exec app pnpm --filter @silicon-traveler/cli init-journey
-
-# This creates:
-# - Journey ID 1 (from Oleiros heading east)
-# - 10 route points with city enrichment (OSM + Nominatim)
-# - Status: 'pending' (ready for Scheduler to process)
-```
-
-### 4a. Prepare Photos (Same Pipeline as Scheduler)
-
-```bash
-# Generate research, prompts, and images for the next 7 days
-docker compose exec app pnpm --filter @silicon-traveler/cli prepare-prompts -- 7 --journey-id 1
-```
-If Brave Search returns no results, prompts are generated with an empty research summary.
-If Overpass/OpenStreetMap calls fail, the command continues with missing city/water context.
-If the place name remains `Unknown`, the pipeline marks the route point as `failed` and throws.
-Use `--prompts-only` to skip image generation and stop at `content_generated`.
-
-### 5. Start Applications
-
-```bash
-# API + Web start automatically with docker compose up.
-# Enable Scheduler explicitly (requires API keys):
-docker compose --profile scheduler up -d scheduler
-
-# Test endpoints
-curl http://localhost:3010/health
-curl -H "Authorization: Bearer $API_KEY" http://localhost:3010/api/journey/stats
-
-# Open browser
-http://localhost:3011        # Web app homepage (daily journal)
-http://localhost:3011/archive # Archive page (photo grid)
-```
-
-### 5a. Run Scheduler Once (On Demand)
-
-```bash
-# Run generator once (same job that runs every 6h)
-docker compose run --rm scheduler sh -c "pnpm --filter @silicon-traveler/scheduler build && pnpm --filter @silicon-traveler/scheduler run-once -- --job generator"
-
-# Run publisher once
-docker compose run --rm scheduler sh -c "pnpm --filter @silicon-traveler/scheduler build && pnpm --filter @silicon-traveler/scheduler run-once -- --job publisher"
-```
-
-### 4. Test Database Connection
-
-```bash
-# Create a test script
-cat > scripts/test-db.js << 'EOF'
-const { pool, healthCheck } = require('../packages/shared/dist/index.js');
-
-async function test() {
-  console.log('Testing database connection...');
-  const healthy = await healthCheck();
-  
-  if (healthy) {
-    console.log('✓ Database connection successful!');
-    
-    // Test query
-    const conn = await pool.getConnection();
-    const result = await conn.query('SHOW TABLES');
-    console.log('Tables:', result.map(r => Object.values(r)[0]));
-    conn.release();
-  } else {
-    console.log('✗ Database connection failed');
-  }
-  
-  await pool.end();
-}
-
-test().catch(console.error);
-EOF
-
-# Run test inside container
-./scripts/docker-run.sh node scripts/test-db.js
-```
-
-## Testing
-
-Tests are organized per module in `test/unit` and `test/integration`.
-
-```bash
-# Run all tests across modules
-pnpm test
-
-# Run all tests inside Docker
-./scripts/test.sh
-
-# Unit tests only
-pnpm test:unit
-
-# Integration tests only
-pnpm test:integration
-```
-
-Integration tests that require MariaDB are skipped unless `RUN_DB_TESTS=true` and the
-`DB_*` environment variables are set. Make sure migrations are applied before running them.
-
-## Project Structure
-
-```
-project-silicon-traveler/
-├── .adr/                          # Architectural Decision Records
-│   ├── 001-module-architecture.md
-│   └── 002-database-design.md
-├── .ai/                           # AI agent skills
-│   ├── designs/                   # UI/UX designs
-│   └── skills/                    # Development guidelines
-├── migrations/                    # Database migrations
-│   ├── 20260202100000_create_migrations_table.sql
-│   ├── 20260202100001_create_journey_table.sql
-│   ├── 20260202100002_create_route_points_table.sql
-│   └── 20260202100003_create_photos_table.sql
-├── scripts/                       # Development and test scripts
-├── packages/                      # Domain modules
-│   ├── shared/                    # Database pool, utilities
-│   │   └── src/
-│   │       ├── database/
-│   │       │   ├── pool.ts        # MariaDB connection pool
-│   │       │   └── geographic.ts  # Geographic utilities
-│   │       └── index.ts
-│   └── journey/                   # Journey module
-│       └── src/
-│           ├── domain/            # Entities, value objects
-│           │   └── journey.entity.ts
-│           ├── application/       # Use cases
-│           │   ├── create-journey.use-case.ts
-│           │   ├── get-journey-stats.use-case.ts
-│           │   └── update-journey-position.use-case.ts
-│           ├── ports/             # Interfaces
-│           │   └── journey-repository.port.ts
-│           ├── adapters/          # Infrastructure
-│           │   └── mariadb-journey.repository.ts
-│           └── index.ts
-├── apps/                          # Applications (TBD)
-│   ├── cli/
-│   ├── scheduler/
-│   ├── api/
-│   └── web/
-├── docker/                        # Dockerfiles (dev/prod)
-│   ├── Dockerfile.dev
-│   └── Dockerfile.prod
-├── docker-compose.yml             # MariaDB service
-├── package.json                   # Monorepo root
-├── pnpm-workspace.yaml            # Workspace configuration
-└── tsconfig.base.json             # Base TypeScript config
-```
-
-## Development
-
-All commands run inside Docker containers using the `./scripts/docker-run.sh` helper script.
-
-You can also run the same helpers via `pnpm` scripts:
-
-```bash
-# Wrapper around ./scripts/docker-run.sh
-pnpm script:docker -- pnpm build
-
-# Database helpers
-pnpm script:db:migrate
-pnpm script:db:reset
-pnpm script:test:db
-
-# Test helpers
-pnpm script:test
-
-# Module helpers
-pnpm script:test:journey
-pnpm script:test:route
-pnpm script:test:api
-pnpm script:journey:explore
-```
-
-### Build All Packages
-
-```bash
-./scripts/docker-run.sh pnpm build
-```
-
-### Build Specific Package
-
-```bash
-./scripts/docker-run.sh pnpm --filter @silicon-traveler/shared build
-./scripts/docker-run.sh pnpm --filter @silicon-traveler/journey build
-```
-
-### Watch Mode (Development)
-
-```bash
-./scripts/docker-run.sh pnpm --filter @silicon-traveler/shared dev
-```
-
 ## API Keys Required
 
 The following environment variables must be set to use external APIs:
@@ -462,62 +297,28 @@ BRAVE_SEARCH_API_KEY=...
 
 Add these to `.env` file or export in shell before running apps.
 
-## Development
+## Testing
 
-### Build Packages
-
-```bash
-# Build all packages
-./scripts/docker-run.sh pnpm -r build
-
-# Build specific package
-./scripts/docker-run.sh pnpm --filter @silicon-traveler/route build
-```
-
-### Run Tests
+Tests are organized per module in `test/unit` and `test/integration`.
 
 ```bash
-# Journey module test
-./scripts/docker-run.sh node scripts/test-journey.js
+# Run all tests
+docker-compose exec app pnpm test
 
-# Route module test
-./scripts/docker-run.sh node scripts/test-route.js
+# Unit tests only
+docker-compose exec app pnpm test:unit
+
+# Integration tests only  
+docker-compose exec app pnpm test:integration
+
+# Specific module tests
+docker-compose exec app node scripts/test-journey.js
+docker-compose exec app node scripts/test-route.js
 ```
 
-### Watch Mode
+Integration tests that require MariaDB are skipped unless `RUN_DB_TESTS=true` and the `DB_*` environment variables are set.
 
-```bash
-./scripts/docker-run.sh pnpm --filter @silicon-traveler/shared dev
-```
-
-### Shell Access
-
-```bash
-# Open shell inside app container
-docker compose exec app sh
-```
-
-### View Logs
-
-```bash
-# All services
-docker compose logs -f
-
-# Specific service
-docker compose logs -f mariadb
-docker compose logs -f app
-```
-
-### Stop Services
-
-```bash
-docker compose down
-
-# Remove volumes (WARNING: deletes database data)
-docker compose down -v
-```
-
-## Database
+## Project Structure
 
 ### Connection
 
@@ -561,6 +362,25 @@ Stores published photos (denormalized for fast queries).
 
 See [ADR 002: Database Design](.adr/002-database-design.md) for complete schema documentation.
 
+## Scheduler
+
+Enable the scheduler to run automated jobs:
+
+```bash
+# Start scheduler with profile
+docker-compose --profile scheduler up -d scheduler
+
+# Run generator once (on demand)
+docker-compose run --rm scheduler sh -c "pnpm --filter @silicon-traveler/scheduler build && pnpm --filter @silicon-traveler/scheduler run-once -- --job generator"
+
+# Run publisher once (on demand)
+docker-compose run --rm scheduler sh -c "pnpm --filter @silicon-traveler/scheduler build && pnpm --filter @silicon-traveler/scheduler run-once -- --job publisher"
+```
+
+The scheduler runs two jobs:
+- **Generator**: Every 6 hours, maintains buffer of 10 `image_ready` photos
+- **Publisher**: Daily 18-20h (randomized), publishes one photo per day
+
 ## Architecture Decisions
 
 All architectural decisions are documented as ADRs in [`.adr/`](.adr/) directory:
@@ -571,63 +391,9 @@ All architectural decisions are documented as ADRs in [`.adr/`](.adr/) directory
 - **[ADR 004: Image Storage](.adr/004-image-storage-thumbnails.md)** - Local filesystem, thumbnail strategy, cloud migration
 - **[ADR 005: Photo Pipeline](.adr/005-photo-pipeline-status-flow.md)** - Orchestration, status flow, idempotency
 
-## Status
-
-### ✅ Completed Modules
-
-- [x] Shared (database pool, geographic utilities)
-- [x] Journey (entity, use cases, repository)
-- [x] Route (calculation, Overpass, Nominatim)
-- [x] Research (Brave Search integration)
-- [x] Content (GPT-4 prompts/narratives)
-- [x] Image (DALL-E 3, Sharp thumbnails)
-- [x] Storage (local filesystem with cloud abstraction)
-- [x] Photo (pipeline orchestration, repository)
-
-### 🚧 In Progress
-
-- [ ] CLI app (migrations, journey init)
-- [ ] Scheduler app (generator + publisher cron)
-- [ ] API app (REST endpoints)
-- [ ] Web app (Next.js frontend)
-
-### ✅ Testing
-
-- [x] Database connection verified
-- [x] Journey creation tested (Oleiros origin)
-- [x] Route calculation tested (17.55km east, A Carreira village)
-- [x] Modules compile successfully (94 TypeScript files)
-
 ## Contributing
 
 See [AGENTS.md](AGENTS.md) and `docs/agents/INDEX.md` for AI agent guidelines when modifying this codebase.
-- Monorepo structure with pnpm workspaces
-- Docker Compose with MariaDB 11
-- Database schema design and migrations
-- Shared package (database pool, geographic utilities)
-- Journey module (complete hexagonal architecture)
-- ADRs documenting architecture and database decisions
-
-### 🚧 In Progress
-- Testing current implementation
-
-### 📋 To Do
-- Route module (Overpass, Nominatim, city finding)
-- Research module (Brave Search API)
-- Content module (GPT-4 prompt generation)
-- Image module (DALL-E 3, Sharp thumbnails)
-- Storage module (local filesystem with cloud abstraction)
-- Photo module (publishing logic)
-- CLI app (migration runner, journey initialization)
-- Scheduler app (generator & publisher cron jobs)
-- API app (REST endpoints)
-- Web app (Next.js frontend with gallery)
-
-## Documentation
-
-- Architecture decisions: [.adr/](.adr/)
-- Development skills: [.ai/skills/](.ai/skills/)
-- UI/UX designs: [.ai/designs/](.ai/designs/)
 
 ## License
 

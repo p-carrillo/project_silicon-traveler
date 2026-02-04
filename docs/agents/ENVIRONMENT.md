@@ -20,6 +20,7 @@
 | `NEXT_PUBLIC_API_URL` | Web | Public API URL for browser | Example `http://localhost:3010`.
 | `STORAGE_DIR` | Scheduler, API | Local image storage root | Default resolves to repo `images/` when unset.
 | `OPENAI_API_KEY` | content, image, photo | OpenAI for text and image generation | Required for real runs.
+| `IMAGE_MODEL` | image | OpenAI image generation model | Default `gpt-image-1.5`. Options: `gpt-image-1.5`, `gpt-image-1`, `gpt-image-1-mini`, `dall-e-3`, `dall-e-2`.
 | `BRAVE_SEARCH_API_KEY` | research, photo | Brave Search API | Required for real runs.
 
 ## Runtime Defaults
