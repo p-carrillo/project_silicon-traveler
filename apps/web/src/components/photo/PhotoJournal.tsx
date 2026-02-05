@@ -49,13 +49,13 @@ export default function PhotoJournal({
         className="border-b border-white/10"
       />
 
-      <PageContainer className="flex flex-col py-8">
-        <main className="mt-12 flex flex-col lg:grid lg:grid-cols-12 gap-16">
-          <div className="lg:col-span-8">
-            <div className="w-full bg-zinc-900 overflow-hidden aspect-square min-h-[360px] ring-1 ring-white/10 animate-fade-up">
+      <PageContainer className="flex flex-col py-6">
+        <main className="mt-8 flex flex-col lg:flex-row gap-12">
+          <div className="lg:flex-none">
+            <div className="w-full max-w-[calc(100vh-14rem)] max-h-[calc(100vh-14rem)] bg-zinc-900 overflow-hidden aspect-square min-h-[320px] ring-1 ring-white/10 animate-fade-up">
               <img
                 alt={photo.title}
-                className="w-full h-full object-cover filter grayscale contrast-125 brightness-90"
+                className="w-full h-full object-contain filter grayscale contrast-125 brightness-90"
                 src={`/api/images/${photo.image_path.replace(/^\//, '')}`}
               />
             </div>
@@ -83,10 +83,10 @@ export default function PhotoJournal({
           </div>
 
           <div
-            className="lg:col-span-4 flex flex-col h-full pt-4 animate-fade-up"
+            className="lg:flex-1 flex flex-col h-full pt-4 animate-fade-up"
             style={{ animationDelay: '120ms' }}
           >
-            <div className="sticky top-12">
+            <div className="sticky top-8">
               <div className="flex items-center gap-3 mb-4">
                 <div className="h-px w-8 bg-white/40"></div>
                 <p className="text-white/40 text-[10px] font-bold tracking-[0.3em] uppercase">
@@ -112,36 +112,48 @@ export default function PhotoJournal({
                 </p>
               </div>
               <div className="flex flex-col gap-8 border-t border-white/10 pt-10">
-                {photo.location && (
-                  <div className="flex items-start gap-4">
-                    <MapPinIcon className="h-5 w-5 text-white/30 mt-1" />
-                    <div className="flex flex-col">
-                      <span className="text-white/40 text-[9px] uppercase tracking-widest mb-1">
-                        Location
-                      </span>
-                      <span className="text-white/80 text-sm font-light tracking-wide">
-                        {photo.location}
-                      </span>
+                {photo.location ? (
+                  <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="flex items-start gap-4">
+                      <MapPinIcon className="h-5 w-5 text-white/30 mt-1" />
+                      <div className="flex flex-col">
+                        <span className="text-white/40 text-[9px] uppercase tracking-widest mb-1">
+                          Location
+                        </span>
+                        <span className="text-white/80 text-sm font-light tracking-wide">
+                          {photo.location}
+                        </span>
+                      </div>
                     </div>
+                    <Link
+                      href="/archive"
+                      className="group relative inline-flex items-center gap-6 py-4 pr-12 text-white border-b border-white/20 hover:border-white transition-all sm:self-start"
+                    >
+                      <span className="text-[10px] font-bold uppercase tracking-[0.4em]">
+                        Expand Archive
+                      </span>
+                      <ArrowRightIcon className="absolute right-0 h-5 w-5 group-hover:translate-x-2 transition-transform" />
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="mt-4">
+                    <Link
+                      href="/archive"
+                      className="group relative inline-flex items-center gap-6 py-4 pr-12 text-white border-b border-white/20 hover:border-white transition-all"
+                    >
+                      <span className="text-[10px] font-bold uppercase tracking-[0.4em]">
+                        Expand Archive
+                      </span>
+                      <ArrowRightIcon className="absolute right-0 h-5 w-5 group-hover:translate-x-2 transition-transform" />
+                    </Link>
                   </div>
                 )}
-                <div className="mt-4">
-                  <Link
-                    href="/archive"
-                    className="group relative inline-flex items-center gap-6 py-4 pr-12 text-white border-b border-white/20 hover:border-white transition-all"
-                  >
-                    <span className="text-[10px] font-bold uppercase tracking-[0.4em]">
-                      Expand Archive
-                    </span>
-                    <ArrowRightIcon className="absolute right-0 h-5 w-5 group-hover:translate-x-2 transition-transform" />
-                  </Link>
-                </div>
               </div>
             </div>
           </div>
         </main>
 
-        <footer className="mt-24 border-t border-white/10 py-12 flex flex-col md:flex-row justify-between items-center gap-8">
+        <footer className="mt-16 border-t border-white/10 py-8 flex flex-col md:flex-row justify-between items-center gap-8">
           <div className="text-white/30 text-[9px] uppercase tracking-[0.4em]">
             (c) {currentYear} Silicon Traveler - All Rights Reserved
           </div>
@@ -173,7 +185,7 @@ export default function PhotoJournal({
         </footer>
 
         {stats && (
-          <div className="pb-6 text-center text-xs text-white/40 tracking-[0.2em] uppercase">
+          <div className="pb-4 text-center text-xs text-white/40 tracking-[0.2em] uppercase">
             {stats.stats.photos_published} photos |{' '}
             {stats.stats.total_distance_km.toFixed(0)}km traveled |{' '}
             {stats.stats.route_points.reduce((sum, item) => sum + item.count, 0)} locations
