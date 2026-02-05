@@ -13,6 +13,9 @@ x-app-base: &app-base
     - API_KEY=${API_KEY}
     - CORS_ORIGINS=${CORS_ORIGINS}
     - API_URL=${API_URL:-http://api:3000}
+    - I18N_LANGUAGES=${I18N_LANGUAGES:-es,en}
+    - I18N_DEFAULT_LANGUAGE=${I18N_DEFAULT_LANGUAGE:-es}
+    - I18N_CONTENT_BASE_LANGUAGE=${I18N_CONTENT_BASE_LANGUAGE:-en}
     - OPENAI_API_KEY=${OPENAI_API_KEY}
     - BRAVE_SEARCH_API_KEY=${BRAVE_SEARCH_API_KEY}
   volumes:
@@ -61,6 +64,9 @@ services:
       - API_KEY=${API_KEY}
       - CORS_ORIGINS=${CORS_ORIGINS}
       - API_URL=${API_URL:-http://api:3000}
+      - I18N_LANGUAGES=${I18N_LANGUAGES:-es,en}
+      - I18N_DEFAULT_LANGUAGE=${I18N_DEFAULT_LANGUAGE:-es}
+      - I18N_CONTENT_BASE_LANGUAGE=${I18N_CONTENT_BASE_LANGUAGE:-en}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - BRAVE_SEARCH_API_KEY=${BRAVE_SEARCH_API_KEY}
     depends_on:
@@ -88,6 +94,9 @@ services:
       - BRAVE_SEARCH_API_KEY=${BRAVE_SEARCH_API_KEY}
       - API_URL=http://api:3000
       - NEXT_PUBLIC_API_URL=http://localhost:3010
+      - I18N_LANGUAGES=${I18N_LANGUAGES:-es,en}
+      - I18N_DEFAULT_LANGUAGE=${I18N_DEFAULT_LANGUAGE:-es}
+      - I18N_CONTENT_BASE_LANGUAGE=${I18N_CONTENT_BASE_LANGUAGE:-en}
     depends_on:
       mariadb:
         condition: service_healthy

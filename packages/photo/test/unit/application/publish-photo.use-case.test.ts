@@ -1,7 +1,18 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { PublishPhotoUseCase } from '../../../src/application/publish-photo.use-case';
 
 describe('PublishPhotoUseCase', () => {
+  const originalEnv = { ...process.env };
+
+  beforeEach(() => {
+    process.env.I18N_LANGUAGES = 'es,en';
+    process.env.I18N_DEFAULT_LANGUAGE = 'es';
+  });
+
+  afterEach(() => {
+    process.env = { ...originalEnv };
+  });
+
   it('creates a photo and updates route status', async () => {
     const routePoint = {
       id: 10,
@@ -21,6 +32,10 @@ describe('PublishPhotoUseCase', () => {
     const routeRepo = {
       findById: vi.fn().mockResolvedValue(routePoint),
       update: vi.fn().mockResolvedValue(undefined),
+      findContentTranslations: vi.fn().mockResolvedValue([
+        { language: 'es', imagePrompt: 'Prompt ES', narrative: 'Narrativa' },
+        { language: 'en', imagePrompt: 'Prompt', narrative: 'Narrative' },
+      ]),
     };
 
     const photoRepo = {
@@ -53,6 +68,22 @@ describe('PublishPhotoUseCase', () => {
         rollNumber: 'ROLL 01',
         frameNumber: '01',
       })
+    );
+    expect(createdInput.translations).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          language: 'es',
+          title: 'Porto',
+          location: 'Porto, Porto District, Portugal',
+          narrative: 'Narrativa',
+        }),
+        expect.objectContaining({
+          language: 'en',
+          title: 'Porto',
+          location: 'Porto, Porto District, Portugal',
+          narrative: 'Narrative',
+        }),
+      ])
     );
     expect(createdInput.tags).toEqual(
       expect.arrayContaining(['porto', 'porto district', 'portugal', 'city', 'documentary'])

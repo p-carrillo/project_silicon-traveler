@@ -8,6 +8,13 @@ export interface PhotoSearchDateRange {
   endDate?: string | null;
 }
 
+export interface PhotoSearchColumns {
+  title: string;
+  narrative: string;
+  location: string;
+  tags: string;
+}
+
 const DATE_PARAM_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 
 export function parseDateParam(rawValue: unknown, fieldName: string): {
@@ -50,7 +57,13 @@ const addDaysToDate = (dateString: string, days: number): string => {
 
 export function buildPhotoSearchFilter(
   rawQuery: unknown,
-  dateRange: PhotoSearchDateRange = {}
+  dateRange: PhotoSearchDateRange = {},
+  columns: PhotoSearchColumns = {
+    title: 'title',
+    narrative: 'narrative',
+    location: 'location',
+    tags: "COALESCE(tags, '')",
+  }
 ): PhotoSearchFilter {
   const query = typeof rawQuery === 'string' ? rawQuery.trim() : '';
   const clauses: string[] = [];
@@ -59,10 +72,10 @@ export function buildPhotoSearchFilter(
   if (query) {
     const term = `%${query.toLowerCase()}%`;
     clauses.push(`(
-      LOWER(title) LIKE ? OR
-      LOWER(narrative) LIKE ? OR
-      LOWER(location) LIKE ? OR
-      LOWER(COALESCE(tags, '')) LIKE ?
+      LOWER(${columns.title}) LIKE ? OR
+      LOWER(${columns.narrative}) LIKE ? OR
+      LOWER(${columns.location}) LIKE ? OR
+      LOWER(${columns.tags}) LIKE ?
     )`);
     params.push(term, term, term, term);
   }

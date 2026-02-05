@@ -3,10 +3,15 @@
 ## Start Here
 - `AGENTS.md`: Global agent rules and skills ordering.
 - `README.md`: Setup and operational commands.
+- `docs/agents/DOCKER.md`: Docker deployment and operations guide.
 - `docs/agents/ENVIRONMENT.md`: Required environment variables and defaults.
 - `docs/agents/DATABASE.md`: MariaDB schema overview and migration notes.
 - `docs/agents/GOLDEN_PATHS.md`: End-to-end flows for the core product.
 - `docs/agents/DEBUGGING.md`: Common issues and how to resolve them.
+
+## Skills
+- Core skills: `.ai/skills/` (architecture, database, coding, test).
+- Specialized skills: `dockshield-audit/SKILL.md`.
 
 ## Apps
 - `apps/api/AGENTS.md`: HTTP API for photos, journey, and map state.

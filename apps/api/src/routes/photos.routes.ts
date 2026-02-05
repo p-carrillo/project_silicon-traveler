@@ -1,6 +1,7 @@
 import { Router, type Request, type Response } from 'express';
 import { pool } from '@silicon-traveler/shared';
 import { buildPhotoSearchFilter, parseDateParam } from './photos.search';
+import { resolveRequestLanguage } from '../lib/language';
 
 export const photosRouter: Router = Router();
 
@@ -41,19 +42,28 @@ const buildPhotoResponse = (row: any) => {
 };
 
 // GET /api/photos/latest - Get the most recent published photo
-photosRouter.get('/latest', async (_req: Request, res: Response) => {
+photosRouter.get('/latest', async (req: Request, res: Response) => {
   try {
+    const language = resolveRequestLanguage(req);
     const rows = await pool.query<any[]>(
       `SELECT 
-        id, route_point_id, title, narrative, location,
-        ST_X(coordinates) as longitude, ST_Y(coordinates) as latitude,
-        camera_model, lens, iso, shutter_speed,
-        roll_number, frame_number, series_name, volume_issue,
-        tags, metadata,
-        image_path, thumbnail_path, published_at, created_at
-      FROM photos 
-      ORDER BY published_at DESC 
-      LIMIT 1`
+        p.id,
+        p.route_point_id,
+        COALESCE(pt.title, p.title) as title,
+        COALESCE(pt.narrative, p.narrative) as narrative,
+        COALESCE(pt.location, p.location) as location,
+        ST_X(p.coordinates) as longitude,
+        ST_Y(p.coordinates) as latitude,
+        p.camera_model, p.lens, p.iso, p.shutter_speed,
+        p.roll_number, p.frame_number, p.series_name, p.volume_issue,
+        p.tags, p.metadata,
+        p.image_path, p.thumbnail_path, p.published_at, p.created_at
+      FROM photos p
+      LEFT JOIN photo_translations pt
+        ON pt.photo_id = p.id AND pt.language = ?
+      ORDER BY p.published_at DESC
+      LIMIT 1`,
+      [language]
     );
     
     if (rows.length === 0) {
@@ -71,6 +81,7 @@ photosRouter.get('/latest', async (_req: Request, res: Response) => {
 // GET /api/photos - Get published photos with optional filters
 photosRouter.get('/', async (req, res) => {
   try {
+    const language = resolveRequestLanguage(req);
     const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 20;
     const offset = req.query.offset ? parseInt(req.query.offset as string, 10) : 0;
     
@@ -102,31 +113,51 @@ photosRouter.get('/', async (req, res) => {
       });
     }
 
-    const searchFilter = buildPhotoSearchFilter(req.query.q, {
-      startDate: startDateResult.value,
-      endDate: endDateResult.value,
-    });
+    const searchFilter = buildPhotoSearchFilter(
+      req.query.q,
+      {
+        startDate: startDateResult.value,
+        endDate: endDateResult.value,
+      },
+      {
+        title: 'COALESCE(pt.title, p.title)',
+        narrative: 'COALESCE(pt.narrative, p.narrative)',
+        location: 'COALESCE(pt.location, p.location)',
+        tags: "COALESCE(p.tags, '')",
+      }
+    );
 
     // Get total count
     const countResult = await pool.query<any[]>(
-      `SELECT COUNT(*) as total FROM photos ${searchFilter.whereClause}`,
-      searchFilter.params
+      `SELECT COUNT(*) as total
+       FROM photos p
+       LEFT JOIN photo_translations pt
+         ON pt.photo_id = p.id AND pt.language = ?
+       ${searchFilter.whereClause}`,
+      [language, ...searchFilter.params]
     );
     const totalCount = Number(countResult[0].total);
 
     const rows = await pool.query<any[]>(
       `SELECT 
-        id, route_point_id, title, narrative, location,
-        ST_X(coordinates) as longitude, ST_Y(coordinates) as latitude,
-        camera_model, lens, iso, shutter_speed,
-        roll_number, frame_number, series_name, volume_issue,
-        tags, metadata,
-        image_path, thumbnail_path, published_at, created_at
-      FROM photos 
+        p.id,
+        p.route_point_id,
+        COALESCE(pt.title, p.title) as title,
+        COALESCE(pt.narrative, p.narrative) as narrative,
+        COALESCE(pt.location, p.location) as location,
+        ST_X(p.coordinates) as longitude,
+        ST_Y(p.coordinates) as latitude,
+        p.camera_model, p.lens, p.iso, p.shutter_speed,
+        p.roll_number, p.frame_number, p.series_name, p.volume_issue,
+        p.tags, p.metadata,
+        p.image_path, p.thumbnail_path, p.published_at, p.created_at
+      FROM photos p
+      LEFT JOIN photo_translations pt
+        ON pt.photo_id = p.id AND pt.language = ?
       ${searchFilter.whereClause}
-      ORDER BY published_at DESC 
+      ORDER BY p.published_at DESC
       LIMIT ? OFFSET ?`,
-      [...searchFilter.params, limit, offset]
+      [language, ...searchFilter.params, limit, offset]
     );
 
     const photos = rows.map(buildPhotoResponse);
@@ -148,6 +179,7 @@ photosRouter.get('/', async (req, res) => {
 // GET /api/photos/:id - Get specific photo by ID
 photosRouter.get('/:id', async (req, res) => {
   try {
+    const language = resolveRequestLanguage(req);
     const id = parseInt(req.params.id, 10);
     
     if (isNaN(id)) {
@@ -156,16 +188,23 @@ photosRouter.get('/:id', async (req, res) => {
 
     const rows = await pool.query<any[]>(
       `SELECT 
-        id, route_point_id, title, narrative, location,
-        ST_X(coordinates) as longitude, ST_Y(coordinates) as latitude,
-        camera_model, lens, iso, shutter_speed,
-        roll_number, frame_number, series_name, volume_issue,
-        tags, metadata,
-        image_path, thumbnail_path, published_at, created_at
-      FROM photos 
-      WHERE id = ?
+        p.id,
+        p.route_point_id,
+        COALESCE(pt.title, p.title) as title,
+        COALESCE(pt.narrative, p.narrative) as narrative,
+        COALESCE(pt.location, p.location) as location,
+        ST_X(p.coordinates) as longitude,
+        ST_Y(p.coordinates) as latitude,
+        p.camera_model, p.lens, p.iso, p.shutter_speed,
+        p.roll_number, p.frame_number, p.series_name, p.volume_issue,
+        p.tags, p.metadata,
+        p.image_path, p.thumbnail_path, p.published_at, p.created_at
+      FROM photos p
+      LEFT JOIN photo_translations pt
+        ON pt.photo_id = p.id AND pt.language = ?
+      WHERE p.id = ?
       LIMIT 1`,
-      [id]
+      [language, id]
     );
 
     if (rows.length === 0) {

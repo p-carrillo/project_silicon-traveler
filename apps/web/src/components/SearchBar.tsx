@@ -3,20 +3,25 @@
 import { useEffect, useState } from 'react';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
+import { getTranslations } from '@/lib/i18n/translations';
 
 interface SearchBarProps {
   initialQuery?: string;
   actionPath?: string;
   placeholder?: string;
   extraParams?: Record<string, string | undefined>;
+  locale?: string;
 }
 
 export default function SearchBar({
   initialQuery = '',
   actionPath = '/archive',
-  placeholder = 'SEARCH BY LOCATION, TITLE, NARRATIVE, OR TAG',
+  placeholder,
   extraParams,
+  locale = 'es',
 }: SearchBarProps) {
+  const t = getTranslations(locale);
+  const resolvedPlaceholder = placeholder || t.archive.searchPlaceholder;
   const router = useRouter();
   const [query, setQuery] = useState(initialQuery);
 
@@ -48,8 +53,8 @@ export default function SearchBar({
         type="text"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder={placeholder}
-        aria-label={placeholder}
+        placeholder={resolvedPlaceholder}
+        aria-label={resolvedPlaceholder}
         className="w-full bg-transparent border-none focus:ring-0 pl-7 text-sm font-bold tracking-[0.2em] uppercase text-black placeholder:text-gray-300"
       />
     </form>

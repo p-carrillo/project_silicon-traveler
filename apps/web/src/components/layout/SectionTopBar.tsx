@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import PageContainer from '@/components/layout/PageContainer';
 import {
-  ARCHIVE_NAV_ITEMS,
+  getArchiveNavItems,
   getNavLinkClass,
   type NavTheme,
 } from '@/lib/navigation';
@@ -11,6 +11,11 @@ type SectionTopBarProps = {
   theme: NavTheme;
   activeHref: string;
   className?: string;
+  navLabels: {
+    journal: string;
+    archive: string;
+    map: string;
+  };
 };
 
 const BRAND_LABEL = 'Silicon Traveler';
@@ -33,9 +38,11 @@ export default function SectionTopBar({
   theme,
   activeHref,
   className,
+  navLabels,
 }: SectionTopBarProps) {
   const styles = themeStyles[theme];
   const headerClassName = ['w-full', className].filter(Boolean).join(' ');
+  const navItems = getArchiveNavItems(navLabels);
 
   return (
     <header className={headerClassName}>
@@ -67,7 +74,7 @@ export default function SectionTopBar({
           </div>
         </div>
         <nav className="hidden md:flex items-center gap-12">
-          {ARCHIVE_NAV_ITEMS.map((item) => (
+          {navItems.map((item) => (
             <Link
               key={item.href}
               className={getNavLinkClass(item.href, activeHref, theme)}

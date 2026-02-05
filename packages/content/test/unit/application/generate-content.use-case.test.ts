@@ -24,6 +24,7 @@ describe('GenerateContentUseCase', () => {
       region: 'Region',
       researchSummary: 'Summary',
       isFferryCrossing: false,
+      language: 'en',
     });
 
     expect(result.imagePrompt).toBe('Image');

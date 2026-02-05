@@ -1,0 +1,4 @@
+interface:
+  display_name: "DockShield Audit"
+  short_description: "Audit Docker, secrets, and vulnerabilities"
+  default_prompt: "Use $dockshield-audit to audit my Docker deployment for secrets and vulnerabilities."

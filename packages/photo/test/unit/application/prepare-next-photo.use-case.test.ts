@@ -28,12 +28,13 @@ const createRoutePoint = () =>
     10,
     1,
     1,
-    null,
+    'Test City',
     { lat: 1, lng: 1 },
-    null,
-    null,
+    'Testland',
+    'Test Region',
     false,
     42,
+    null,
     null,
     null,
     null,
@@ -75,6 +76,11 @@ describe('PrepareNextPhotoUseCase', () => {
 
     journeyRepository.findById.mockResolvedValue(journey);
     routeRepository.findByStatus.mockResolvedValue([pendingPoint]);
+    findNearestCity.execute.mockResolvedValue({
+      placeName: 'Test City',
+      regionName: 'Test Region',
+      countryName: 'Testland',
+    });
     preparePhotoUseCase.execute.mockResolvedValue({
       imageUrl: '/images/1.jpg',
       gridThumbnailUrl: '/images/1_grid.jpg',
@@ -118,6 +124,11 @@ describe('PrepareNextPhotoUseCase', () => {
     journeyRepository.findById.mockResolvedValue(journey);
     routeRepository.findByStatus.mockResolvedValue([]);
     routeRepository.getLastSequence.mockResolvedValue(4);
+    findNearestCity.execute.mockResolvedValue({
+      placeName: 'Test City',
+      regionName: 'Test Region',
+      countryName: 'Testland',
+    });
     calculateNextPoint.execute.mockReturnValue({ lat: 2, lng: 2 });
     detectWater.execute.mockRejectedValue(new Error('overpass timeout'));
     findNearestCity.execute.mockResolvedValue(null);
@@ -177,6 +188,11 @@ describe('PrepareNextPhotoUseCase', () => {
 
     journeyRepository.findById.mockResolvedValue(journey);
     routeRepository.findByStatus.mockResolvedValue([pendingPoint]);
+    findNearestCity.execute.mockResolvedValue({
+      placeName: 'Test City',
+      regionName: 'Test Region',
+      countryName: 'Testland',
+    });
     preparePhotoPromptsUseCase.execute.mockResolvedValue({
       routePointId: 10,
       journeyId: 1,

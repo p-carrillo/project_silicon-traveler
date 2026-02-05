@@ -8,6 +8,13 @@ export interface PhotoMetadata {
   isFerryCrossing?: boolean;
 }
 
+export interface PhotoTranslation {
+  language: string;
+  title: string;
+  narrative: string;
+  location: string;
+}
+
 export interface Photo {
   id: number;
   journeyId: number;
@@ -51,6 +58,7 @@ export interface CreatePhotoInput {
   metadata: PhotoMetadata | null;
   imageUrl: string;
   gridThumbnailUrl: string;
+  translations: PhotoTranslation[];
   publishedAt: Date;
 }
 

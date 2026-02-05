@@ -14,12 +14,14 @@ describe('SearchPhotoPinsByBboxUseCase', () => {
       bbox: { minLng: -20, minLat: -10, maxLng: 20, maxLat: 10 },
       limit: 1000,
       query: '  Berlin  ',
+      language: 'es',
     });
 
     expect(repo.findByBoundingBox).toHaveBeenCalledWith({
       bbox: { minLng: -20, minLat: -10, maxLng: 20, maxLat: 10 },
       limit: 500,
       query: 'Berlin',
+      language: 'es',
     });
   });
 

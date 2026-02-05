@@ -29,11 +29,17 @@ async function fetchWithTimeout(url: string, options: RequestInit = {}, timeout 
   }
 }
 
-export async function getLatestPhoto(): Promise<Photo | null> {
+export async function getLatestPhoto(locale?: string): Promise<Photo | null> {
   try {
-    const res = await fetchWithTimeout(`${API_BASE_URL}/api/photos/latest`, {
-      cache: 'no-store'
-    });
+    const params = new URLSearchParams();
+    if (locale) params.append('lang', locale);
+
+    const res = await fetchWithTimeout(
+      `${API_BASE_URL}/api/photos/latest${params.toString() ? `?${params.toString()}` : ''}`,
+      {
+        cache: 'no-store'
+      }
+    );
     
     if (!res.ok) {
       if (res.status === 404) return null;
@@ -51,7 +57,8 @@ export async function getPhotos(
   limit = 20,
   offset = 0,
   query?: string,
-  dateRange?: { startDate?: string; endDate?: string }
+  dateRange?: { startDate?: string; endDate?: string },
+  locale?: string
 ): Promise<{
   photos: Photo[];
   pagination: { limit: number; offset: number; count: number };
@@ -65,6 +72,7 @@ export async function getPhotos(
     if (normalizedQuery) params.append('q', normalizedQuery);
     if (dateRange?.startDate) params.append('start_date', dateRange.startDate);
     if (dateRange?.endDate) params.append('end_date', dateRange.endDate);
+    if (locale) params.append('lang', locale);
 
     const res = await fetchWithTimeout(
       `${API_BASE_URL}/api/photos?${params.toString()}`,
@@ -163,7 +171,8 @@ export async function saveMapState(
 export async function getMapPins(
   bbox: { minLng: number; minLat: number; maxLng: number; maxLat: number },
   limit = 200,
-  query?: string
+  query?: string,
+  locale?: string
 ): Promise<{ pins: MapPin[] }> {
   try {
     const params = new URLSearchParams({
@@ -171,6 +180,7 @@ export async function getMapPins(
       limit: limit.toString(),
     });
     if (query?.trim()) params.append('q', query.trim());
+    if (locale) params.append('lang', locale);
 
     const res = await fetchWithTimeout(
       `${API_BASE_URL}/api/map/pins?${params.toString()}`,

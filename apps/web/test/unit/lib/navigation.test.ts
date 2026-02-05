@@ -1,10 +1,16 @@
 import { describe, expect, it } from 'vitest';
 
-import { ARCHIVE_NAV_ITEMS, getNavLinkClass } from '../../../src/lib/navigation';
+import { getArchiveNavItems, getNavLinkClass } from '../../../src/lib/navigation';
 
-describe('ARCHIVE_NAV_ITEMS', () => {
-  it('includes the primary navigation links', () => {
-    expect(ARCHIVE_NAV_ITEMS).toEqual([
+describe('getArchiveNavItems', () => {
+  it('returns navigation links with provided labels', () => {
+    const navItems = getArchiveNavItems({
+      journal: 'Journal',
+      archive: 'Archive',
+      map: 'Map',
+    });
+
+    expect(navItems).toEqual([
       { label: 'Journal', href: '/' },
       { label: 'Archive', href: '/archive' },
       { label: 'Map', href: '/map' },

@@ -1,5 +1,5 @@
 import { pool, Point, pointToWKT } from '@silicon-traveler/shared';
-import { IRouteRepository } from '../ports/route-repository.port';
+import { IRouteRepository, RoutePointContentTranslation } from '../ports/route-repository.port';
 import { RoutePoint, RouteStatus } from '../domain/route-point.entity';
 
 export class MariaDBRouteRepository implements IRouteRepository {
@@ -143,6 +143,57 @@ export class MariaDBRouteRepository implements IRouteRepository {
       );
 
       return Number(rows[0].count ?? 0);
+    } finally {
+      conn.release();
+    }
+  }
+
+  async upsertContentTranslations(
+    routePointId: number,
+    translations: RoutePointContentTranslation[]
+  ): Promise<void> {
+    if (!translations.length) return;
+
+    const conn = await pool.getConnection();
+    try {
+      const values = translations.map(() => '(?, ?, ?, ?)').join(', ');
+      const params = translations.flatMap((translation) => [
+        routePointId,
+        translation.language,
+        translation.imagePrompt,
+        translation.narrative,
+      ]);
+
+      await conn.query(
+        `INSERT INTO route_point_translations
+         (route_point_id, language, image_prompt, narrative)
+         VALUES ${values}
+         ON DUPLICATE KEY UPDATE
+           image_prompt = VALUES(image_prompt),
+           narrative = VALUES(narrative),
+           updated_at = CURRENT_TIMESTAMP`,
+        params
+      );
+    } finally {
+      conn.release();
+    }
+  }
+
+  async findContentTranslations(routePointId: number): Promise<RoutePointContentTranslation[]> {
+    const conn = await pool.getConnection();
+    try {
+      const rows = await conn.query(
+        `SELECT language, image_prompt, narrative
+         FROM route_point_translations
+         WHERE route_point_id = ?`,
+        [routePointId]
+      );
+
+      return rows.map((row: any) => ({
+        language: row.language,
+        imagePrompt: row.image_prompt ?? null,
+        narrative: row.narrative ?? null,
+      }));
     } finally {
       conn.release();
     }

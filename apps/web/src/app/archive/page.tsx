@@ -5,6 +5,8 @@ import PageContainer from '@/components/layout/PageContainer';
 import SectionTopBar from '@/components/layout/SectionTopBar';
 import SearchBar from '@/components/SearchBar';
 import DateRangeAction from '@/components/DateRangeAction';
+import { getServerLocale } from '@/lib/i18n/server';
+import { getTranslations } from '@/lib/i18n/translations';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,6 +15,9 @@ interface PageProps {
 }
 
 export default async function ArchivePage({ searchParams }: PageProps) {
+  const locale = getServerLocale();
+  const t = getTranslations(locale);
+  const numberFormatter = new Intl.NumberFormat(locale);
   const currentPage = Number(searchParams.page) || 1;
   const limit = 8;
   const offset = (currentPage - 1) * limit;
@@ -20,10 +25,16 @@ export default async function ArchivePage({ searchParams }: PageProps) {
   const startDate = searchParams.start_date?.trim() ?? '';
   const endDate = searchParams.end_date?.trim() ?? '';
   
-  const { photos, pagination } = await getPhotos(limit, offset, query, {
-    startDate: startDate || undefined,
-    endDate: endDate || undefined,
-  });
+  const { photos, pagination } = await getPhotos(
+    limit,
+    offset,
+    query,
+    {
+      startDate: startDate || undefined,
+      endDate: endDate || undefined,
+    },
+    locale
+  );
   const stats = await getJourneyStats();
   
   const totalPages = Math.ceil(pagination.count / limit);
@@ -55,19 +66,20 @@ export default async function ArchivePage({ searchParams }: PageProps) {
     .sort((a, b) => b.date.getTime() - a.date.getTime());
 
   const formatMonthLabel = (date: Date) => {
-    const month = new Intl.DateTimeFormat('en-US', { month: 'short' }).format(
+    const month = new Intl.DateTimeFormat(locale, { month: 'short' }).format(
       date
     );
-    return `${month} '${String(date.getFullYear()).slice(-2)}`;
+    const normalizedMonth = month.charAt(0).toUpperCase() + month.slice(1);
+    return `${normalizedMonth} '${String(date.getFullYear()).slice(-2)}`;
   };
 
   const formatSheetLabel = (date: Date) => {
     const month = String(date.getMonth() + 1).padStart(2, '0');
-    return `Sheet ${month} / ${date.getFullYear()}`;
+    return t.archive.sheetLabel(month, date.getFullYear());
   };
 
   const formatDayLabel = (date: Date) => {
-    const label = new Intl.DateTimeFormat('en-US', {
+    const label = new Intl.DateTimeFormat(locale, {
       month: 'short',
       day: '2-digit',
     }).format(date);
@@ -95,10 +107,11 @@ export default async function ArchivePage({ searchParams }: PageProps) {
   return (
     <div className="min-h-screen bg-white text-black">
       <SectionTopBar
-        title="Archive"
+        title={t.archive.title}
         theme="light"
         activeHref="/archive"
         className="sticky top-0 z-50 border-b border-black bg-white/95 backdrop-blur-sm"
+        navLabels={t.nav}
       />
 
       <main className="flex-1">
@@ -107,6 +120,7 @@ export default async function ArchivePage({ searchParams }: PageProps) {
             <div className="flex-1 border-b md:border-b-0 md:border-r border-black p-8">
               <SearchBar
                 initialQuery={query}
+                locale={locale}
                 extraParams={{
                   start_date: startDate || undefined,
                   end_date: endDate || undefined,
@@ -117,13 +131,14 @@ export default async function ArchivePage({ searchParams }: PageProps) {
               <DateRangeAction
                 initialStartDate={startDate}
                 initialEndDate={endDate}
+                locale={locale}
                 buttonClassName="px-10 py-6 sm:py-8 border-b sm:border-b-0 sm:border-r border-black hover:bg-black hover:text-white transition-all text-xs font-black uppercase tracking-widest w-full"
               />
               <Link
                 href="/map"
                 className="px-10 py-6 sm:py-8 border-b sm:border-b-0 border-black hover:bg-black hover:text-white transition-all text-xs font-black uppercase tracking-widest text-center"
               >
-                Geography
+                {t.archive.geography}
               </Link>
             </div>
           </PageContainer>
@@ -134,21 +149,21 @@ export default async function ArchivePage({ searchParams }: PageProps) {
             {photos.length === 0 ? (
               <div className="text-center py-20">
                 <p className="text-gray-600 text-lg font-archive italic">
-                  {hasFilters ? 'No results. Refine your search.' : 'No photos published yet.'}
+                  {hasFilters ? t.archive.noResults : t.archive.noPhotos}
                 </p>
                 {hasFilters ? (
                   <Link
                     href="/archive"
                     className="text-xs font-medium normal-case tracking-widest hover:underline mt-6 inline-block"
                   >
-                    View all photos
+                    {t.archive.viewAll}
                   </Link>
                 ) : (
                   <Link
                     href="/"
                     className="text-xs font-black uppercase tracking-widest hover:underline mt-6 inline-block"
                   >
-                    Return to Journal
+                    {t.archive.returnJournal}
                   </Link>
                 )}
               </div>
@@ -157,7 +172,7 @@ export default async function ArchivePage({ searchParams }: PageProps) {
                 {groupedPhotos.map((group) => {
                   const seriesLabel =
                     group.photos.find((photo) => photo.series_name)?.series_name ||
-                    'Silicon Traveler Journal';
+                    t.archive.seriesFallback;
                   return (
                     <div key={group.date.toISOString()} className="mb-20">
                       <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-12 border-b-2 border-black pb-4 gap-6">
@@ -178,7 +193,7 @@ export default async function ArchivePage({ searchParams }: PageProps) {
                           const publishedDate = new Date(photo.published_at);
                           const rollLabel = photo.roll_number
                             ? photo.roll_number.toUpperCase()
-                            : `ROLL ${String(photo.id).padStart(3, '0')}`;
+                            : `${t.archive.rollLabel} ${String(photo.id).padStart(3, '0')}`;
                           const frameLabel = photo.frame_number
                             ? String(photo.frame_number).padStart(2, '0')
                             : String(index + 1).padStart(2, '0');
@@ -210,7 +225,7 @@ export default async function ArchivePage({ searchParams }: PageProps) {
                                     {photo.title}
                                   </h3>
                                   <p className="text-[10px] text-gray-500 uppercase mt-1">
-                                    {photo.location || 'Unknown location'}
+                                    {photo.location || t.archive.unknownLocation}
                                   </p>
                                 </div>
                                 <BookmarkIcon className="h-4 w-4" />
@@ -229,7 +244,7 @@ export default async function ArchivePage({ searchParams }: PageProps) {
                       href="/archive"
                       className="text-xs font-medium normal-case tracking-widest hover:underline"
                     >
-                      View all photos
+                      {t.archive.viewAll}
                     </Link>
                   </div>
                 )}
@@ -242,11 +257,11 @@ export default async function ArchivePage({ searchParams }: PageProps) {
                           href={buildPageHref(currentPage - 1)}
                           className="w-12 h-12 flex items-center justify-center border border-black hover:bg-black hover:text-white transition-colors text-xs font-bold"
                         >
-                          Prev
+                          {t.archive.prev}
                         </Link>
                       ) : (
                         <div className="w-12 h-12 flex items-center justify-center border border-gray-300 text-gray-300 text-xs font-bold">
-                          Prev
+                          {t.archive.prev}
                         </div>
                       )}
                       
@@ -315,16 +330,22 @@ export default async function ArchivePage({ searchParams }: PageProps) {
                           href={buildPageHref(currentPage + 1)}
                           className="w-12 h-12 flex items-center justify-center border border-black hover:bg-black hover:text-white transition-colors text-xs font-bold"
                         >
-                          Next
+                          {t.archive.next}
                         </Link>
                       ) : (
                         <div className="w-12 h-12 flex items-center justify-center border border-gray-300 text-gray-300 text-xs font-bold">
-                          Next
+                          {t.archive.next}
                         </div>
                       )}
                     </div>
                     <p className="mt-6 text-[10px] font-bold tracking-widest uppercase text-gray-400">
-                      Visualizing {offset + 1}-{Math.min(offset + limit, pagination.count)} of {pagination.count} frames | Page {currentPage} of {totalPages}
+                      {t.archive.paginationSummary(
+                        numberFormatter.format(offset + 1),
+                        numberFormatter.format(Math.min(offset + limit, pagination.count)),
+                        numberFormatter.format(pagination.count),
+                        numberFormatter.format(currentPage),
+                        numberFormatter.format(totalPages)
+                      )}
                     </p>
                   </div>
                 )}
@@ -338,12 +359,10 @@ export default async function ArchivePage({ searchParams }: PageProps) {
         <PageContainer className="py-8 flex flex-col md:flex-row justify-between items-start gap-12">
           <div className="max-w-md">
             <h4 className="text-xs font-black uppercase tracking-widest mb-4">
-              The Silicon Traveler Archive
+              {t.archive.footerTitle}
             </h4>
             <p className="text-sm font-archive leading-relaxed text-gray-600">
-              A daily exercise in observation. One photograph, one reflection,
-              every 24 hours. A lifetime of seeing, cataloged and preserved for
-              the public record.
+              {t.archive.footerBody}
             </p>
           </div>
           <div className="flex flex-col md:items-end gap-6">
@@ -352,19 +371,22 @@ export default async function ArchivePage({ searchParams }: PageProps) {
                 className="text-xs font-black uppercase tracking-widest hover:underline"
                 href="/"
               >
-                Journal
+                {t.nav.journal}
               </Link>
               <Link
                 className="text-xs font-black uppercase tracking-widest hover:underline"
                 href="/archive"
               >
-                Archive
+                {t.nav.archive}
               </Link>
             </div>
             <div className="text-[10px] font-bold tracking-widest text-gray-400 uppercase">
               {stats
-                ? `${stats.stats.photos_published} frames | ${stats.stats.total_distance_km.toFixed(0)}km traveled`
-                : 'Documenting the journey'}
+                ? t.archive.footerStats(
+                    numberFormatter.format(stats.stats.photos_published),
+                    numberFormatter.format(Math.round(stats.stats.total_distance_km))
+                  )
+                : t.archive.footerFallback}
             </div>
           </div>
         </PageContainer>

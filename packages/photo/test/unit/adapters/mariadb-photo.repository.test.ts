@@ -20,6 +20,7 @@ const makeInput = () => ({
   imageUrl: '/images/1.jpg',
   gridThumbnailUrl: '/images/1_grid.jpg',
   publishedAt: new Date('2026-02-04T00:00:00Z'),
+  translations: [],
 });
 
 describe('MariaDBPhotoRepository (unit)', () => {

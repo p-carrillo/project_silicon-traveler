@@ -8,6 +8,7 @@ import {
   MariaDBPhotoPinsRepository,
 } from '@silicon-traveler/map';
 import { parseBboxParam, parseLimitParam, parseZoomParam } from './map.utils';
+import { resolveRequestLanguage } from '../lib/language';
 
 export const mapRouter: Router = Router();
 
@@ -87,6 +88,7 @@ mapRouter.put('/state', async (req: Request, res: Response) => {
 
 mapRouter.get('/pins', async (req: Request, res: Response) => {
   try {
+    const language = resolveRequestLanguage(req);
     const bboxResult = parseBboxParam(req.query.bbox);
     if (bboxResult.error || !bboxResult.value) {
       return res.status(400).json({ error: bboxResult.error || 'bbox is required' });
@@ -103,6 +105,7 @@ mapRouter.get('/pins', async (req: Request, res: Response) => {
       bbox: bboxResult.value,
       limit: limitResult.value,
       query,
+      language,
     });
 
     return res.json({

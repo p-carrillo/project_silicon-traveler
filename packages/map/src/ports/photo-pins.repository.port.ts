@@ -5,6 +5,7 @@ export interface PhotoPinsQuery {
   bbox: BoundingBox;
   limit: number;
   query?: string;
+  language?: string;
 }
 
 export interface IPhotoPinsRepository {

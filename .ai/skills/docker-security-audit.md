@@ -1,9 +1,9 @@
 ---
-name: docker-security-audit
+name: dockshield-audit
 description: "Audit Docker and Docker Compose deployments for security posture, focusing on secrets/API keys, image and dependency vulnerabilities, and risky runtime settings. Use when reviewing Dockerfiles, compose files, .env files, or a VPS Docker host before production."
 ---
 
-# Docker Security Audit
+# DockShield Docker Security Audit
 
 ## Overview
 

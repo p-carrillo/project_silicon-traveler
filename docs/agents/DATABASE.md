@@ -11,12 +11,16 @@
 | `migrations` | Tracks applied migrations | Core | `20260202100000_create_migrations_table.sql` |
 | `journey` | Journey origin, current position, heading | `@silicon-traveler/journey` | `20260202100001_create_journey_table.sql` |
 | `route_points` | Route points, research data, content, status | `@silicon-traveler/route` | `20260202100002_create_route_points_table.sql` |
+| `route_point_translations` | Multilingual prompts and narratives per route point | `@silicon-traveler/route` | `20260205120000_create_route_point_translations_table.sql` |
 | `photos` | Published photos metadata | `@silicon-traveler/photo` | `20260202100003_create_photos_table.sql` |
+| `photo_translations` | Multilingual photo metadata | `@silicon-traveler/photo` | `20260205120010_create_photo_translations_table.sql` |
 | `map_state` | Global map viewport and refresh state | `@silicon-traveler/map` | `20260203120000_create_map_state_table.sql` |
 
 ## Key Relationships
 - `route_points.journey_id` references `journey.id`.
+- `route_point_translations.route_point_id` references `route_points.id`.
 - `photos.route_point_id` references `route_points.id`.
+- `photo_translations.photo_id` references `photos.id`.
 
 ## Status Flow
 `route_points.status` is an enum with values `pending`, `researched`, `content_generated`, `image_ready`, `published`, `failed`.

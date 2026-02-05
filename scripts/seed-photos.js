@@ -111,6 +111,8 @@ const FILM_STOCKS = [
   'Kodak Gold 200',
 ];
 
+const TRANSLATION_LANGUAGES = ['es', 'en'];
+
 /**
  * Download an image from URL
  */
@@ -254,10 +256,24 @@ async function seedPhotos() {
       );
       
       const routePointId = Number(routeResult.insertId);
+
+      for (const language of TRANSLATION_LANGUAGES) {
+        await connection.query(
+          `INSERT INTO route_point_translations
+           (route_point_id, language, image_prompt, narrative)
+           VALUES (?, ?, ?, ?)`,
+          [
+            routePointId,
+            language,
+            null,
+            photo.narrative,
+          ]
+        );
+      }
       
       // Insert photo
       console.log(`   Inserting photo...`);
-      await connection.query(
+      const photoResult = await connection.query(
         `INSERT INTO photos 
          (route_point_id, title, narrative, location, coordinates, camera_model, lens, iso, 
           shutter_speed, roll_number, frame_number, image_path, thumbnail_path, published_at, created_at)
@@ -280,6 +296,22 @@ async function seedPhotos() {
           new Date().toISOString().slice(0, 19).replace('T', ' '),
         ]
       );
+
+      const photoId = Number(photoResult.insertId);
+      for (const language of TRANSLATION_LANGUAGES) {
+        await connection.query(
+          `INSERT INTO photo_translations
+           (photo_id, language, title, narrative, location)
+           VALUES (?, ?, ?, ?, ?)`,
+          [
+            photoId,
+            language,
+            photo.title,
+            photo.narrative,
+            photo.location,
+          ]
+        );
+      }
       
       console.log(`   ✓ Photo ${sequence} inserted\n`);
     }

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { PreparePhotoUseCase } from '../../../src/application/prepare-photo.use-case';
 
 vi.mock('axios', () => ({
@@ -10,6 +10,18 @@ vi.mock('axios', () => ({
 import axios from 'axios';
 
 describe('PreparePhotoUseCase (integration)', () => {
+  const originalEnv = { ...process.env };
+
+  beforeEach(() => {
+    process.env.I18N_LANGUAGES = 'es,en';
+    process.env.I18N_DEFAULT_LANGUAGE = 'es';
+    process.env.I18N_CONTENT_BASE_LANGUAGE = 'en';
+  });
+
+  afterEach(() => {
+    process.env = { ...originalEnv };
+  });
+
   it('orchestrates the photo preparation flow', async () => {
     const routePoint: any = {
       id: 1,
@@ -50,6 +62,7 @@ describe('PreparePhotoUseCase (integration)', () => {
     const routeRepo = {
       findById: vi.fn().mockResolvedValue(routePoint),
       update: vi.fn().mockResolvedValue(undefined),
+      upsertContentTranslations: vi.fn().mockResolvedValue(undefined),
     };
 
     const braveSearch = {
@@ -67,6 +80,10 @@ describe('PreparePhotoUseCase (integration)', () => {
           shutterSpeed: '1/100',
           aperture: 'f/2.8',
         },
+      }),
+      translateContent: vi.fn().mockResolvedValue({
+        imagePrompt: 'Prompt ES',
+        narrative: 'Narrativa',
       }),
     };
 
@@ -104,8 +121,10 @@ describe('PreparePhotoUseCase (integration)', () => {
 
     expect(result.imageUrl).toBe('/images/1.jpg');
     expect(routeRepo.update).toHaveBeenCalled();
+    expect(routeRepo.upsertContentTranslations).toHaveBeenCalledTimes(1);
     expect(imageGenerator.generate).toHaveBeenCalledWith('Prompt');
     expect(thumbnailGenerator.generate).toHaveBeenCalled();
+    expect(result.narrative).toBe('Narrativa');
   });
 
   it('normalizes non-string image prompts', async () => {
@@ -148,6 +167,7 @@ describe('PreparePhotoUseCase (integration)', () => {
     const routeRepo = {
       findById: vi.fn().mockResolvedValue(routePoint),
       update: vi.fn().mockResolvedValue(undefined),
+      upsertContentTranslations: vi.fn().mockResolvedValue(undefined),
     };
 
     const braveSearch = {
@@ -165,6 +185,10 @@ describe('PreparePhotoUseCase (integration)', () => {
           shutterSpeed: '1/100',
           aperture: 'f/2.8',
         },
+      }),
+      translateContent: vi.fn().mockResolvedValue({
+        imagePrompt: 'Prompt ES',
+        narrative: 'Narrativa',
       }),
     };
 
@@ -201,6 +225,6 @@ describe('PreparePhotoUseCase (integration)', () => {
     await useCase.execute(2);
 
     expect(imageGenerator.generate).toHaveBeenCalledWith('{"text":"Prompt"}');
-    expect(routePoint.imagePrompt).toBe('{"text":"Prompt"}');
+    expect(routePoint.imagePrompt).toBe('Prompt ES');
   });
 });

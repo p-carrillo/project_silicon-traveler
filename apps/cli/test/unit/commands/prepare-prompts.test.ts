@@ -1,53 +1,40 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 
-const poolEnd = vi.fn();
-
 vi.mock('@silicon-traveler/shared', () => ({
-  pool: { end: poolEnd },
+  pool: { end: vi.fn() },
 }));
 
-class MariaDBJourneyRepository {}
 vi.mock('@silicon-traveler/journey', () => ({
-  MariaDBJourneyRepository,
+  MariaDBJourneyRepository: vi.fn(),
 }));
 
-class MariaDBRouteRepository {}
-class CalculateNextPointUseCase {}
-class FindNearestCityUseCase {}
-class GeocodePointUseCase {}
-class DetectWaterUseCase {}
-class OverpassAdapter {}
-class NominatimAdapter {}
 vi.mock('@silicon-traveler/route', () => ({
-  MariaDBRouteRepository,
-  CalculateNextPointUseCase,
-  FindNearestCityUseCase,
-  GeocodePointUseCase,
-  DetectWaterUseCase,
-  OverpassAdapter,
-  NominatimAdapter,
+  MariaDBRouteRepository: vi.fn(() => ({
+    findByStatus: vi.fn().mockResolvedValue([]),
+  })),
+  CalculateNextPointUseCase: vi.fn(),
+  FindNearestCityUseCase: vi.fn(),
+  GeocodePointUseCase: vi.fn(),
+  DetectWaterUseCase: vi.fn(),
+  OverpassAdapter: vi.fn(),
+  NominatimAdapter: vi.fn(),
 }));
 
-class BraveSearchAdapter {}
 vi.mock('@silicon-traveler/research', () => ({
-  BraveSearchAdapter,
+  BraveSearchAdapter: vi.fn(),
 }));
 
-class OpenAIAdapter {}
 vi.mock('@silicon-traveler/content', () => ({
-  OpenAIAdapter,
+  OpenAIAdapter: vi.fn(),
 }));
 
-class DalleAdapter {}
-class SharpAdapter {}
 vi.mock('@silicon-traveler/image', () => ({
-  DalleAdapter,
-  SharpAdapter,
+  DalleAdapter: vi.fn(),
+  SharpAdapter: vi.fn(),
 }));
 
-class LocalStorageAdapter {}
 vi.mock('@silicon-traveler/storage', () => ({
-  LocalStorageAdapter,
+  LocalStorageAdapter: vi.fn(),
 }));
 
 const prepareNextPhotoExecute = vi.fn().mockResolvedValue({
@@ -74,19 +61,19 @@ const prepareNextPhotoExecute = vi.fn().mockResolvedValue({
   },
 });
 
-class PreparePhotoUseCase {}
-class PreparePhotoPromptsUseCase {}
-class PrepareNextPhotoUseCase {
-  execute = prepareNextPhotoExecute;
-}
-
 vi.mock('@silicon-traveler/photo', () => ({
-  PreparePhotoUseCase,
-  PreparePhotoPromptsUseCase,
-  PrepareNextPhotoUseCase,
+  PreparePhotoUseCase: vi.fn(),
+  PreparePhotoPromptsUseCase: vi.fn(),
+  PrepareNextPhotoUseCase: vi.fn(() => ({
+    execute: prepareNextPhotoExecute,
+  })),
+  MariaDBPhotoRepository: vi.fn(),
 }));
 
 import { preparePrompts } from '../../../src/commands/prepare-prompts';
+import { pool } from '@silicon-traveler/shared';
+
+const poolEnd = vi.mocked(pool.end);
 
 describe('preparePrompts', () => {
   afterEach(() => {

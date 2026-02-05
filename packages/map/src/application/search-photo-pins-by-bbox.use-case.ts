@@ -18,6 +18,7 @@ export class SearchPhotoPinsByBboxUseCase {
       bbox,
       limit,
       query: normalizedQuery,
+      language: query.language,
     });
   }
 }

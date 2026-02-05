@@ -1,5 +1,11 @@
 import { IRouteRepository } from '@silicon-traveler/route';
-import { IPhotoRepository, CreatePhotoInput, PhotoMetadata } from '../domain/photo.repository';
+import { getI18nConfig } from '@silicon-traveler/shared';
+import {
+  IPhotoRepository,
+  CreatePhotoInput,
+  PhotoMetadata,
+  PhotoTranslation,
+} from '../domain/photo.repository';
 import { PreparePhotoResult } from './prepare-photo.use-case';
 import { photoMetadataConfig } from '../config/photo-metadata';
 
@@ -19,19 +25,39 @@ export class PublishPhotoUseCase {
       throw new Error(`RoutePoint ${routePointId} not ready for publishing (status: ${routePoint.status})`);
     }
 
-    const title = this.buildTitle(routePoint.placeName);
-    const location = this.buildLocation(routePoint.placeName, routePoint.region, routePoint.country);
+    const { supportedLanguages, defaultLanguage } = getI18nConfig();
+    const translations = await this.routeRepository.findContentTranslations(routePoint.id);
+    const translationMap = new Map(
+      translations.map((translation) => [translation.language, translation])
+    );
+
+    const defaultNarrative =
+      translationMap.get(defaultLanguage)?.narrative ||
+      routePoint.narrativePrompt ||
+      preparedPhoto.narrative;
+
+    const title = this.buildTitle(routePoint.placeName, defaultLanguage);
+    const location = this.buildLocation(routePoint.placeName, routePoint.region, routePoint.country, defaultLanguage);
     const tags = this.buildTags(routePoint);
     const normalizedTags = tags.length ? tags : null;
     const editorial = this.buildEditorialMetadata(routePoint.sequence);
     const metadata = this.buildMetadata(preparedPhoto, routePoint.imagePrompt, routePoint.isFferryCrossing);
+    const translationRecords: PhotoTranslation[] = supportedLanguages.map((language) => {
+      const translation = translationMap.get(language);
+      return {
+        language,
+        title: this.buildTitle(routePoint.placeName, language),
+        location: this.buildLocation(routePoint.placeName, routePoint.region, routePoint.country, language),
+        narrative: translation?.narrative || defaultNarrative,
+      };
+    });
 
     const photoInput: CreatePhotoInput = {
       routePointId: routePoint.id,
       title,
       imageUrl: preparedPhoto.imageUrl,
       gridThumbnailUrl: preparedPhoto.gridThumbnailUrl,
-      narrative: preparedPhoto.narrative,
+      narrative: defaultNarrative,
       location,
       coordinates: routePoint.coordinates,
       camera: preparedPhoto.camera,
@@ -44,6 +70,7 @@ export class PublishPhotoUseCase {
       volumeIssue: editorial.volumeIssue,
       tags: normalizedTags,
       metadata,
+      translations: translationRecords,
       publishedAt: new Date(),
     };
 
@@ -55,13 +82,23 @@ export class PublishPhotoUseCase {
     return photoId;
   }
 
-  private buildTitle(placeName: string | null): string {
-    return placeName?.trim() || 'Unknown place';
+  private buildTitle(placeName: string | null, language: string): string {
+    const fallback = this.getFallbackCopy(language).title;
+    return placeName?.trim() || fallback;
   }
 
-  private buildLocation(placeName: string | null, region: string | null, country: string | null): string {
+  private buildLocation(
+    placeName: string | null,
+    region: string | null,
+    country: string | null,
+    language: string
+  ): string {
     const parts = [placeName, region, country].filter((part) => part && part.trim().length > 0);
-    return parts.length ? parts.join(', ') : 'Unknown location';
+    if (parts.length) {
+      return parts.join(', ');
+    }
+
+    return this.getFallbackCopy(language).location;
   }
 
   private buildTags(routePoint: { placeName?: string | null; region?: string | null; country?: string | null; osmData?: any; isFferryCrossing?: boolean }): string[] {
@@ -134,6 +171,21 @@ export class PublishPhotoUseCase {
       heroThumbnailUrl: preparedPhoto.heroThumbnailUrl,
       imagePrompt: imagePrompt ?? null,
       isFerryCrossing: isFferryCrossing,
+    };
+  }
+
+  private getFallbackCopy(language: string): { title: string; location: string } {
+    const normalized = language.trim().toLowerCase();
+    if (normalized.startsWith('es')) {
+      return {
+        title: 'Lugar desconocido',
+        location: 'Ubicación desconocida',
+      };
+    }
+
+    return {
+      title: 'Unknown place',
+      location: 'Unknown location',
     };
   }
 }

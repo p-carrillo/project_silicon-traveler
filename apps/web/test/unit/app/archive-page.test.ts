@@ -21,7 +21,7 @@ describe('archive page filters', () => {
     expect(page).not.toContain('Layout:');
   });
 
-  it('uses english empty-search copy', () => {
+  it('uses translations for empty-search copy', () => {
     const testDir = path.dirname(fileURLToPath(import.meta.url));
     const repoRoot = path.resolve(testDir, '../../../../..');
     const pagePath = path.join(
@@ -35,11 +35,11 @@ describe('archive page filters', () => {
     );
     const page = readFileSync(pagePath, 'utf8');
 
-    expect(page).toContain('No results. Refine your search.');
-    expect(page).not.toContain('Sin resultados');
+    expect(page).toContain('t.archive.noResults');
+    expect(page).toContain('t.archive.noPhotos');
   });
 
-  it('offers a clear search link copy in english', () => {
+  it('offers a clear search link using translations', () => {
     const testDir = path.dirname(fileURLToPath(import.meta.url));
     const repoRoot = path.resolve(testDir, '../../../../..');
     const pagePath = path.join(
@@ -53,7 +53,7 @@ describe('archive page filters', () => {
     );
     const page = readFileSync(pagePath, 'utf8');
 
-    expect(page).toContain('View all photos');
+    expect(page).toContain('t.archive.viewAll');
   });
 
   it('links archive photos by published date slug', () => {

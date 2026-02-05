@@ -1,8 +1,21 @@
 import OpenAI from 'openai';
-import { ILLMPort, ContentInput, GeneratedContent } from '../ports/llm.port';
+import {
+  ILLMPort,
+  ContentInput,
+  GeneratedContent,
+  TranslateContentInput,
+  TranslatedContent,
+} from '../ports/llm.port';
 import { selectCamera, getDefaultCamera } from '../config/photographer';
 import type { CameraSelection } from '../config/photographer';
-import { buildContentPrompt, CONTENT_SYSTEM_PROMPT } from '../prompts/content-prompts';
+import {
+  buildContentPrompt,
+  buildTranslationPrompt,
+  CONTENT_SYSTEM_PROMPT,
+} from '../prompts/content-prompts';
+
+const CONTENT_MODEL = 'gpt-4o-mini';
+const TRANSLATION_MODEL = 'gpt-4o-mini';
 
 export class OpenAIAdapter implements ILLMPort {
   private readonly client: OpenAI;
@@ -19,7 +32,7 @@ export class OpenAIAdapter implements ILLMPort {
 
     try {
       const completion = await this.client.chat.completions.create({
-        model: 'gpt-4',
+        model: CONTENT_MODEL,
         messages: [
           {
             role: 'system',
@@ -44,22 +57,45 @@ export class OpenAIAdapter implements ILLMPort {
     }
   }
 
+  async translateContent(input: TranslateContentInput): Promise<TranslatedContent> {
+    const prompt = buildTranslationPrompt(input);
+
+    try {
+      const completion = await this.client.chat.completions.create({
+        model: TRANSLATION_MODEL,
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a translation engine. Return only valid JSON.',
+          },
+          {
+            role: 'user',
+            content: prompt,
+          },
+        ],
+        temperature: 0.2,
+        max_tokens: 800,
+      });
+
+      const response = completion.choices[0]?.message?.content || '';
+      return this.parseTranslationResponse(response, input);
+    } catch (error: any) {
+      console.error('OpenAI translation error:', error.message);
+      return {
+        imagePrompt: input.imagePrompt,
+        narrative: input.narrative,
+      };
+    }
+  }
+
   private parseResponse(response: string): GeneratedContent {
     try {
-      // Remove markdown code blocks if present
-      let cleaned = response.trim();
-      if (cleaned.startsWith('```json')) {
-        cleaned = cleaned.replace(/```json\n?/, '').replace(/\n?```$/, '');
-      } else if (cleaned.startsWith('```')) {
-        cleaned = cleaned.replace(/```\n?/, '').replace(/\n?```$/, '');
-      }
-
-      const parsed = JSON.parse(cleaned);
+      const parsed = this.parseJsonResponse(response) as any;
 
       return {
-        imagePrompt: parsed.imagePrompt || parsed.image_prompt || '',
-        narrative: parsed.narrative || '',
-        cameraMetadata: parsed.cameraMetadata || parsed.camera_metadata || this.getDefaultCamera(),
+        imagePrompt: parsed?.imagePrompt || parsed?.image_prompt || '',
+        narrative: parsed?.narrative || '',
+        cameraMetadata: parsed?.cameraMetadata || parsed?.camera_metadata || this.getDefaultCamera(),
       };
     } catch (error) {
       console.error('Failed to parse LLM response:', error);
@@ -99,5 +135,34 @@ export class OpenAIAdapter implements ILLMPort {
         lens: cameraSelection.lens,
       },
     };
+  }
+
+  private parseTranslationResponse(
+    response: string,
+    input: TranslateContentInput
+  ): TranslatedContent {
+    try {
+      const parsed = this.parseJsonResponse(response) as any;
+      const imagePrompt = parsed?.imagePrompt || parsed?.image_prompt || input.imagePrompt;
+      const narrative = parsed?.narrative || input.narrative;
+      return { imagePrompt, narrative };
+    } catch (error) {
+      console.error('Failed to parse translation response:', error);
+      return {
+        imagePrompt: input.imagePrompt,
+        narrative: input.narrative,
+      };
+    }
+  }
+
+  private parseJsonResponse(response: string): unknown {
+    let cleaned = response.trim();
+    if (cleaned.startsWith('```json')) {
+      cleaned = cleaned.replace(/```json\n?/, '').replace(/\n?```$/, '');
+    } else if (cleaned.startsWith('```')) {
+      cleaned = cleaned.replace(/```\n?/, '').replace(/\n?```$/, '');
+    }
+
+    return JSON.parse(cleaned);
   }
 }

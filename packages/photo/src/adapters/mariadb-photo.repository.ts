@@ -38,7 +38,32 @@ export class MariaDBPhotoRepository implements IPhotoRepository {
       ]
     );
 
-    return Number(result.insertId ?? 0);
+    const photoId = Number(result.insertId ?? 0);
+
+    if (photoId && input.translations.length) {
+      const values = input.translations.map(() => '(?, ?, ?, ?, ?)').join(', ');
+      const params = input.translations.flatMap((translation) => [
+        photoId,
+        translation.language,
+        translation.title,
+        translation.narrative,
+        translation.location,
+      ]);
+
+      await this.pool.query(
+        `INSERT INTO photo_translations
+         (photo_id, language, title, narrative, location)
+         VALUES ${values}
+         ON DUPLICATE KEY UPDATE
+           title = VALUES(title),
+           narrative = VALUES(narrative),
+           location = VALUES(location),
+           updated_at = CURRENT_TIMESTAMP`,
+        params
+      );
+    }
+
+    return photoId;
   }
 
   async findById(id: number): Promise<Photo | null> {

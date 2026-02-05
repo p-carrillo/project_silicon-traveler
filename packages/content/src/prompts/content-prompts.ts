@@ -38,6 +38,9 @@ export const buildContentPrompt = (input: ContentInput, cameraSelection: CameraS
 
   const photographicTheme = getRandomElement(PHOTOGRAPHIC_THEMES);
   const photographicTone = getRandomElement(PHOTOGRAPHIC_TONES);
+  const languageInstruction = input.language
+    ? `Write all generated text in ${input.language}.`
+    : '';
 
   return `I'm ${locationContext} on my journey around the world on foot.
 
@@ -48,16 +51,36 @@ Generate the following in JSON format:
 1. "imagePrompt": A detailed DALL-E prompt for a documentary-style black & white photograph of this location.
    - Focus on: ${photographicTheme}
    - Photographic tone: ${photographicTone}
-   - Identify 2-3 specific landmarks, monuments, or architectural features mentioned in the research and include them by name (e.g., "the Cathedral of Santiago", "Castro de Nete fortress", "Roman villa ruins")
+   - Identify 1 specific landmark, monument, or architectural feature mentioned in the research and include it by name (e.g., "the Cathedral of Santiago", "Castro de Nete fortress", "Roman villa ruins")
    - Include the exact camera settings: shot with ${cameraSelection.camera} using ${cameraSelection.lens} lens
-   - Include local people, animals, or authentic cultural elements if relevant to the theme
    - Focus on the unique character and history of this place
+   - Journey it's happeing in 2026, so avoid creation of old time looking photos, instead focus on timeless documentary style that could be taken in present day but with the depth and storytelling of Magnum photographers.
 
 2. "narrative": A short first-person reflection (100-150 words) about this moment in the journey, inspired by Magnum photographers' documentary style. Reference specific places or observations.
 
 3. "cameraMetadata": Realistic camera settings as JSON with fields: camera, lens, iso, shutterSpeed, aperture.
 
 Use the camera "${cameraSelection.camera}" with the lens "${cameraSelection.lens}".
+${languageInstruction}
 
 Return ONLY valid JSON, no markdown or code blocks.`;
+};
+
+export const buildTranslationPrompt = (input: {
+  sourceLanguage: string;
+  targetLanguage: string;
+  narrative: string;
+  imagePrompt: string;
+}): string => {
+  return `Translate the following content from ${input.sourceLanguage} to ${input.targetLanguage}.
+
+Return ONLY valid JSON with:
+1. "imagePrompt": The translated image prompt.
+2. "narrative": The translated narrative.
+
+Image prompt:
+"""${input.imagePrompt}"""
+
+Narrative:
+"""${input.narrative}"""`;
 };

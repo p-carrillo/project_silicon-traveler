@@ -5,6 +5,7 @@ This repo is a Node.js + TypeScript monorepo with a modular hexagonal architectu
 
 ## Agent Documentation
 - `docs/agents/INDEX.md`: Entry point for agent-facing documentation.
+- `docs/agents/DOCKER.md`: Docker deployment and operations guide.
 - `docs/agents/ENVIRONMENT.md`: Environment variables and defaults.
 - `docs/agents/DATABASE.md`: Database schema overview and migrations.
 - `docs/agents/GOLDEN_PATHS.md`: End-to-end flows for the product.
@@ -17,12 +18,13 @@ This repo is a Node.js + TypeScript monorepo with a modular hexagonal architectu
 - `scripts/`: Dev, test, and Docker helpers.
 
 ## Available skills and location
-Skills live in `.ai/skills/`:
+Core skills live in `.ai/skills/`:
 - `.ai/skills/architecture.md`
 - `.ai/skills/database.md`
 - `.ai/skills/coding.md`
 - `.ai/skills/test.md`
-- `.ai/skills/readme.md`
+Specialized skills live at the repo root:
+- `dockshield-audit/SKILL.md`
 
 ## Orchestration
 When work touches more than one area, use the skills in this order:
@@ -30,7 +32,6 @@ When work touches more than one area, use the skills in this order:
 2) `.ai/skills/database.md`
 3) `.ai/skills/coding.md`
 4) `.ai/skills/test.md`
-5) `.ai/skills/readme.md`
 
 ## Global rules
 - README: update `README.md` whenever a change affects setup, architecture, usage, dependencies, configuration, or commands.

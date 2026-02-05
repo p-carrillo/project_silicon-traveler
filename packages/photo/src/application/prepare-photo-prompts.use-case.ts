@@ -1,4 +1,4 @@
-import { IRouteRepository } from '@silicon-traveler/route';
+import { IRouteRepository, RoutePointContentTranslation } from '@silicon-traveler/route';
 import { IBraveSearchPort } from '@silicon-traveler/research';
 import {
   ILLMPort,
@@ -7,7 +7,7 @@ import {
   CONTENT_SYSTEM_PROMPT,
   selectCamera,
 } from '@silicon-traveler/content';
-import { Point } from '@silicon-traveler/shared';
+import { Point, getI18nConfig } from '@silicon-traveler/shared';
 
 export interface PreparePhotoPromptsResult {
   routePointId: number;
@@ -58,12 +58,16 @@ export class PreparePhotoPromptsUseCase {
     routePoint.updateResearch(researchSummary, routePoint.osmData);
     await this.routeRepository.update(routePoint);
 
+    const { supportedLanguages, defaultLanguage, contentBaseLanguage } = getI18nConfig();
+    const baseLanguage = contentBaseLanguage || defaultLanguage;
+
     const input: ContentInput = {
       placeName: routePoint.placeName || 'Unknown Place',
       country: routePoint.country || 'Unknown Country',
       region: routePoint.region || 'Unknown Region',
       researchSummary,
       isFferryCrossing: routePoint.isFferryCrossing,
+      language: baseLanguage,
     };
 
     const cameraSelection = selectCamera(`${input.placeName}|${input.region}|${input.country}`);
@@ -71,8 +75,41 @@ export class PreparePhotoPromptsUseCase {
 
     const content = await this.llm.generateContent(input);
 
-    routePoint.updateContent(content.imagePrompt, content.narrative, content.cameraMetadata);
+    const baseImagePrompt = this.normalizePrompt(content.imagePrompt);
+    const translations: RoutePointContentTranslation[] = [
+      {
+        language: baseLanguage,
+        imagePrompt: baseImagePrompt,
+        narrative: content.narrative,
+      },
+    ];
+
+    for (const language of supportedLanguages) {
+      if (language === baseLanguage) continue;
+      const translated = await this.llm.translateContent({
+        sourceLanguage: baseLanguage,
+        targetLanguage: language,
+        narrative: content.narrative,
+        imagePrompt: baseImagePrompt,
+      });
+
+      translations.push({
+        language,
+        imagePrompt: this.normalizePrompt(translated.imagePrompt),
+        narrative: translated.narrative,
+      });
+    }
+
+    const defaultTranslation =
+      translations.find((translation) => translation.language === defaultLanguage) ??
+      translations[0];
+
+    const imagePrompt = this.normalizePrompt(defaultTranslation.imagePrompt ?? baseImagePrompt);
+    const narrative = defaultTranslation.narrative || content.narrative;
+
+    routePoint.updateContent(imagePrompt, narrative, content.cameraMetadata);
     await this.routeRepository.update(routePoint);
+    await this.routeRepository.upsertContentTranslations(routePoint.id, translations);
 
     return {
       routePointId: routePoint.id,
@@ -88,9 +125,28 @@ export class PreparePhotoPromptsUseCase {
       llmSystemPrompt: CONTENT_SYSTEM_PROMPT,
       llmUserPrompt,
       contentStatus: 'generated',
-      imagePrompt: content.imagePrompt,
-      narrative: content.narrative,
+      imagePrompt,
+      narrative,
       cameraMetadata: content.cameraMetadata,
     };
+  }
+
+  private normalizePrompt(prompt: unknown): string {
+    if (typeof prompt === 'string' && prompt.trim().length > 0) {
+      return prompt;
+    }
+
+    if (prompt !== null && prompt !== undefined) {
+      try {
+        const stringified = JSON.stringify(prompt);
+        if (stringified && stringified !== 'null') {
+          return stringified;
+        }
+      } catch (error) {
+        console.warn('Failed to stringify image prompt:', error);
+      }
+    }
+
+    return 'A documentary black and white photograph of a street scene';
   }
 }

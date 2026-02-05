@@ -5,10 +5,14 @@ export type NavItem = {
 
 export type NavTheme = 'dark' | 'light';
 
-export const ARCHIVE_NAV_ITEMS: NavItem[] = [
-  { label: 'Journal', href: '/' },
-  { label: 'Archive', href: '/archive' },
-  { label: 'Map', href: '/map' },
+export const getArchiveNavItems = (labels: {
+  journal: string;
+  archive: string;
+  map: string;
+}): NavItem[] => [
+  { label: labels.journal, href: '/' },
+  { label: labels.archive, href: '/archive' },
+  { label: labels.map, href: '/map' },
 ];
 
 export const getNavLinkClass = (

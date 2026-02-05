@@ -18,6 +18,13 @@ The system maintains a buffer of 10 pre-generated photos and displays them in a 
 - Camera and lens pool: `packages/content/src/config/photographer.json`
 - Editorial metadata defaults (series/volume/roll): `packages/photo/src/config/photo-metadata.json`
 
+## Internationalization
+
+- Enabled languages are configured via `I18N_LANGUAGES` (default `es,en`).
+- UI fallback language uses `I18N_DEFAULT_LANGUAGE` (default `es`).
+- LLM base generation language uses `I18N_CONTENT_BASE_LANGUAGE` (default `en`), with translations stored for every enabled language.
+- Photo APIs support `?lang=es` (or other enabled language) to fetch localized copy.
+
 ## Architecture
 
 - **Monorepo**: TypeScript packages organized by domain
@@ -146,7 +153,12 @@ docker-compose exec api node scripts/test-db.js
 ### Journey Management
 
 ```bash
-# Initialize journey (creates Oleiros as starting point + 10 following points)
+# Bootstrap complete journey (reset DB + migrations + init + generate & publish first photo)
+./scripts/bootstrap-journey.sh
+# or from inside container:
+docker compose exec api sh /app/scripts/bootstrap-journey.sh
+
+# Initialize journey only (creates Oleiros as starting point + 10 following points)
 docker-compose exec api pnpm --filter @silicon-traveler/cli init-journey
 
 # Get journey stats
@@ -218,7 +230,7 @@ docker-compose exec mariadb sh
 ./scripts/docker-deploy.sh prod logs
 ```
 
-See full documentation in [.ai/DOCKER.md](.ai/DOCKER.md)
+See full documentation in [docs/agents/DOCKER.md](docs/agents/DOCKER.md)
 
 ## Project Status
 

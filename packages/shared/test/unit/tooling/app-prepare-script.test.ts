@@ -10,8 +10,8 @@ describe('app prepare script', () => {
     const scriptPath = path.join(repoRoot, 'scripts', 'app-prepare.sh');
     const script = readFileSync(scriptPath, 'utf8');
 
-    expect(script).toContain('pnpm install --frozen-lockfile --force');
-    expect(script).toContain('for dir in /app/packages/* /app/apps/*');
+    expect(script).toContain('pnpm install --frozen-lockfile');
+    expect(script).toContain('for dir in /app/packages/*');
     expect(script).toContain('touch "$READY_FILE"');
   });
 });

@@ -5,20 +5,21 @@ import { IPhotoPinsRepository, PhotoPinsQuery } from '../ports/photo-pins.reposi
 export class MariaDBPhotoPinsRepository implements IPhotoPinsRepository {
   async findByBoundingBox(query: PhotoPinsQuery): Promise<PhotoPin[]> {
     const bboxWkt = `POLYGON((${query.bbox.minLng} ${query.bbox.minLat}, ${query.bbox.maxLng} ${query.bbox.minLat}, ${query.bbox.maxLng} ${query.bbox.maxLat}, ${query.bbox.minLng} ${query.bbox.maxLat}, ${query.bbox.minLng} ${query.bbox.minLat}))`;
+    const language = query.language ?? null;
 
     const filters: string[] = [
-      'MBRContains(ST_GeomFromText(?, 4326), coordinates)',
+      'MBRContains(ST_GeomFromText(?, 4326), p.coordinates)',
     ];
-    const params: any[] = [bboxWkt];
+    const params: any[] = [language, bboxWkt];
 
     if (query.query) {
       const term = `%${query.query.toLowerCase()}%`;
       filters.push(
         `(
-          LOWER(title) LIKE ? OR
-          LOWER(narrative) LIKE ? OR
-          LOWER(location) LIKE ? OR
-          LOWER(COALESCE(tags, '')) LIKE ?
+          LOWER(COALESCE(pt.title, p.title)) LIKE ? OR
+          LOWER(COALESCE(pt.narrative, p.narrative)) LIKE ? OR
+          LOWER(COALESCE(pt.location, p.location)) LIKE ? OR
+          LOWER(COALESCE(p.tags, '')) LIKE ?
         )`
       );
       params.push(term, term, term, term);
@@ -28,17 +29,19 @@ export class MariaDBPhotoPinsRepository implements IPhotoPinsRepository {
 
     const rows = await pool.query<any[]>(
       `SELECT
-        id,
-        title,
-        location,
-        narrative,
-        ST_X(coordinates) as longitude,
-        ST_Y(coordinates) as latitude,
-        thumbnail_path,
-        published_at
-      FROM photos
+        p.id,
+        COALESCE(pt.title, p.title) as title,
+        COALESCE(pt.location, p.location) as location,
+        COALESCE(pt.narrative, p.narrative) as narrative,
+        ST_X(p.coordinates) as longitude,
+        ST_Y(p.coordinates) as latitude,
+        p.thumbnail_path,
+        p.published_at
+      FROM photos p
+      LEFT JOIN photo_translations pt
+        ON pt.photo_id = p.id AND pt.language = ?
       ${whereClause}
-      ORDER BY published_at DESC
+      ORDER BY p.published_at DESC
       LIMIT ?`,
       [...params, query.limit]
     );

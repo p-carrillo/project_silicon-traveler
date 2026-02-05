@@ -1,9 +1,10 @@
 import axios from 'axios';
-import { IRouteRepository } from '@silicon-traveler/route';
+import { IRouteRepository, RoutePointContentTranslation } from '@silicon-traveler/route';
 import { IBraveSearchPort } from '@silicon-traveler/research';
 import { ILLMPort } from '@silicon-traveler/content';
 import { IImageGeneratorPort, IThumbnailGeneratorPort } from '@silicon-traveler/image';
 import { IStoragePort } from '@silicon-traveler/storage';
+import { getI18nConfig } from '@silicon-traveler/shared';
 
 export interface PreparePhotoResult {
   imageUrl: string;
@@ -50,21 +51,56 @@ export class PreparePhotoUseCase {
       await this.routeRepository.update(routePoint);
 
       // 4. Generate content
+      const { supportedLanguages, defaultLanguage, contentBaseLanguage } = getI18nConfig();
+      const baseLanguage = contentBaseLanguage || defaultLanguage;
+
       const content = await this.llm.generateContent({
         placeName: routePoint.placeName || 'Unknown Place',
         country: routePoint.country || 'Unknown Country',
         region: routePoint.region || 'Unknown Region',
         researchSummary,
         isFferryCrossing: routePoint.isFferryCrossing,
+        language: baseLanguage,
       });
 
+      const baseImagePrompt = this.normalizePrompt(content.imagePrompt);
+      const translations: RoutePointContentTranslation[] = [
+        {
+          language: baseLanguage,
+          imagePrompt: baseImagePrompt,
+          narrative: content.narrative,
+        },
+      ];
+
+      for (const language of supportedLanguages) {
+        if (language === baseLanguage) continue;
+        const translated = await this.llm.translateContent({
+          sourceLanguage: baseLanguage,
+          targetLanguage: language,
+          narrative: content.narrative,
+          imagePrompt: baseImagePrompt,
+        });
+
+        translations.push({
+          language,
+          imagePrompt: this.normalizePrompt(translated.imagePrompt),
+          narrative: translated.narrative,
+        });
+      }
+
+      const defaultTranslation =
+        translations.find((translation) => translation.language === defaultLanguage) ??
+        translations[0];
+
       // 5. Update status: content_generated + store prompts/metadata
-      const imagePrompt = this.normalizePrompt(content.imagePrompt);
-      routePoint.updateContent(imagePrompt, content.narrative, content.cameraMetadata);
+      const imagePrompt = this.normalizePrompt(defaultTranslation.imagePrompt ?? baseImagePrompt);
+      const narrative = defaultTranslation.narrative || content.narrative;
+      routePoint.updateContent(imagePrompt, narrative, content.cameraMetadata);
       await this.routeRepository.update(routePoint);
+      await this.routeRepository.upsertContentTranslations(routePoint.id, translations);
 
       // 6. Generate image
-      const image = await this.imageGenerator.generate(imagePrompt);
+      const image = await this.imageGenerator.generate(baseImagePrompt);
 
       // 7. Download image
       const imageResponse = await axios.get(image.url, { responseType: 'arraybuffer' });
@@ -95,7 +131,7 @@ export class PreparePhotoUseCase {
         imageUrl: savedImage.url,
         gridThumbnailUrl: savedThumbnails.get('_grid')!,
         heroThumbnailUrl: savedThumbnails.get('_hero')!,
-        narrative: content.narrative,
+        narrative,
         camera: content.cameraMetadata.camera,
         lens: content.cameraMetadata.lens,
         iso: content.cameraMetadata.iso,

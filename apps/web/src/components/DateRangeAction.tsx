@@ -3,12 +3,14 @@
 import { useEffect, useId, useState } from 'react';
 import { CalendarDaysIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { getTranslations } from '@/lib/i18n/translations';
 
 interface DateRangeActionProps {
   actionPath?: string;
   initialStartDate?: string;
   initialEndDate?: string;
   buttonClassName?: string;
+  locale?: string;
 }
 
 export default function DateRangeAction({
@@ -16,7 +18,9 @@ export default function DateRangeAction({
   initialStartDate = '',
   initialEndDate = '',
   buttonClassName = '',
+  locale = 'es',
 }: DateRangeActionProps) {
+  const t = getTranslations(locale);
   const router = useRouter();
   const searchParams = useSearchParams();
   const panelId = useId();
@@ -70,24 +74,24 @@ export default function DateRangeAction({
         onClick={() => setIsOpen((prev) => !prev)}
       >
         <CalendarDaysIcon className="h-4 w-4" />
-        <span>Date Range</span>
+        <span>{t.archive.dateRange}</span>
       </button>
 
       {isOpen && (
         <div
           id={panelId}
           role="dialog"
-          aria-label="Date range filter"
+          aria-label={t.archive.dateRangeLabel}
           className="absolute left-0 top-full mt-2 w-72 max-w-[90vw] border border-black bg-white p-4 shadow-xl z-50"
         >
           <div className="flex items-center justify-between">
             <p className="text-xs font-black uppercase tracking-widest">
-              Filter by published date
+              {t.archive.filterByPublished}
             </p>
             <button
               type="button"
               className="p-1 hover:bg-black hover:text-white transition-colors"
-              aria-label="Close date range panel"
+              aria-label={t.archive.closeDateRange}
               onClick={() => setIsOpen(false)}
             >
               <XMarkIcon className="h-4 w-4" />
@@ -96,7 +100,7 @@ export default function DateRangeAction({
 
           <div className="mt-4 grid gap-4">
             <label className="flex flex-col gap-2 text-[10px] font-bold uppercase tracking-[0.3em] text-gray-500">
-              Start date
+              {t.archive.startDate}
               <input
                 type="date"
                 value={startDate}
@@ -107,7 +111,7 @@ export default function DateRangeAction({
             </label>
 
             <label className="flex flex-col gap-2 text-[10px] font-bold uppercase tracking-[0.3em] text-gray-500">
-              End date
+              {t.archive.endDate}
               <input
                 type="date"
                 value={endDate}
@@ -124,14 +128,14 @@ export default function DateRangeAction({
               onClick={handleApply}
               className="flex-1 border border-black px-3 py-2 text-[10px] font-black uppercase tracking-widest hover:bg-black hover:text-white transition-colors"
             >
-              Apply
+              {t.archive.apply}
             </button>
             <button
               type="button"
               onClick={handleClear}
               className="flex-1 border border-black px-3 py-2 text-[10px] font-black uppercase tracking-widest hover:bg-black hover:text-white transition-colors"
             >
-              Clear
+              {t.archive.clear}
             </button>
           </div>
         </div>

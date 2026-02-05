@@ -19,6 +19,9 @@
 | `API_URL` | Scheduler, web | Base API URL | Default `http://api:3000` in Docker.
 | `NEXT_PUBLIC_API_URL` | Web | Public API URL for browser | Example `http://localhost:3010`.
 | `STORAGE_DIR` | Scheduler, API | Local image storage root | Default resolves to repo `images/` when unset.
+| `I18N_LANGUAGES` | API, web, scheduler | Enabled UI/content languages | Default `es,en`.
+| `I18N_DEFAULT_LANGUAGE` | API, web, scheduler | Fallback UI/content language | Default `es`.
+| `I18N_CONTENT_BASE_LANGUAGE` | Content, photo | Base language for LLM generation | Default `en`.
 | `OPENAI_API_KEY` | content, image, photo | OpenAI for text and image generation | Required for real runs.
 | `IMAGE_MODEL` | image | OpenAI image generation model | Default `gpt-image-1.5`. Options: `gpt-image-1.5`, `gpt-image-1`, `gpt-image-1-mini`, `dall-e-3`, `dall-e-2`.
 | `BRAVE_SEARCH_API_KEY` | research, photo | Brave Search API | Required for real runs.

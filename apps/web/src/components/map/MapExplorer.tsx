@@ -5,6 +5,7 @@ import { geoNaturalEarth1, geoPath } from 'd3-geo';
 import { feature } from 'topojson-client';
 import { getMapPins, getMapState, saveMapState } from '@/lib/api';
 import type { MapPin, MapState } from '@/types';
+import { getTranslations } from '@/lib/i18n/translations';
 
 const WORLD_GEO_BOUNDS = {
   minLng: -180,
@@ -101,7 +102,9 @@ function geoJsonToPath(geojson: any): string[] {
   return [path];
 }
 
-export default function MapExplorer() {
+export default function MapExplorer({ locale = 'es' }: { locale?: string }) {
+  const t = getTranslations(locale);
+  const numberFormatter = new Intl.NumberFormat(locale);
   const initialCenter = projection([0, 20]) || [0, 0];
   const [viewport, setViewport] = useState<Viewport>({
     center: { x: initialCenter[0], y: initialCenter[1] },
@@ -241,7 +244,7 @@ export default function MapExplorer() {
     let isMounted = true;
     const handle = setTimeout(() => {
       setIsLoadingPins(true);
-      getMapPins(bbox, 350, query)
+      getMapPins(bbox, 350, query, locale)
         .then((data) => {
           if (!isMounted) return;
           setPins(data.pins);
@@ -257,7 +260,7 @@ export default function MapExplorer() {
       isMounted = false;
       clearTimeout(handle);
     };
-  }, [bbox.minLng, bbox.minLat, bbox.maxLng, bbox.maxLat, query, ready]);
+  }, [bbox.minLng, bbox.minLat, bbox.maxLng, bbox.maxLat, query, ready, locale]);
 
   useEffect(() => {
     if (!selectedPin) return;
@@ -274,14 +277,14 @@ export default function MapExplorer() {
         lastPhotoRef.current = state.lastPhotoId;
         setMapState(state);
         setIsLoadingPins(true);
-        const data = await getMapPins(bbox, 350, query);
+        const data = await getMapPins(bbox, 350, query, locale);
         setPins(data.pins);
         setIsLoadingPins(false);
       }
     }, 15000);
 
     return () => clearInterval(interval);
-  }, [bbox.minLng, bbox.minLat, bbox.maxLng, bbox.maxLat, query, ready]);
+  }, [bbox.minLng, bbox.minLat, bbox.maxLng, bbox.maxLat, query, ready, locale]);
 
   const handlePointerDown = (event: PointerEvent<SVGSVGElement>) => {
     const target = event.target as Element | null;
@@ -359,22 +362,22 @@ export default function MapExplorer() {
     }));
   };
 
-  const pinCountLabel = `${pins.length} pins`;
+  const pinCountLabel = t.map.pinCount(numberFormatter.format(pins.length));
 
   return (
     <div className="mt-10 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-8">
       <section className="relative rounded-3xl bg-white shadow-[0_40px_120px_-80px_rgba(0,0,0,0.6)] border border-zinc-200 overflow-hidden">
         <div className="absolute inset-x-0 top-0 z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4 px-6 py-4 bg-white/90 backdrop-blur border-b border-zinc-200">
           <div className="flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.4em] text-zinc-500">
-            <span>Viewport</span>
+            <span>{t.map.viewport}</span>
             <span className="text-zinc-400">{pinCountLabel}</span>
-            {isLoadingPins && <span className="text-zinc-400">Updating...</span>}
+            {isLoadingPins && <span className="text-zinc-400">{t.map.updating}</span>}
           </div>
           <div className="flex flex-1 md:flex-none items-center gap-4">
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Filter by location, title, narrative, tags"
+              placeholder={t.map.filterPlaceholder}
               className="flex-1 md:w-[280px] bg-transparent border-b border-zinc-300 focus:border-zinc-900 outline-none text-xs uppercase tracking-[0.3em] placeholder:text-zinc-400"
             />
             <div className="flex items-center gap-2">
@@ -482,27 +485,27 @@ export default function MapExplorer() {
 
       <aside className="rounded-3xl bg-zinc-900 text-zinc-100 p-6 flex flex-col gap-6">
         <div>
-          <p className="text-[10px] uppercase tracking-[0.4em] text-zinc-400">Map State</p>
+          <p className="text-[10px] uppercase tracking-[0.4em] text-zinc-400">{t.map.mapState}</p>
           <div className="mt-3 space-y-2 text-xs text-zinc-200">
             <div className="flex items-center justify-between">
-              <span>Zoom</span>
+              <span>{t.map.zoom}</span>
               <span>{viewport.zoom.toFixed(2)}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span>Center</span>
+              <span>{t.map.center}</span>
               <span>
                 {centerGeo.lat.toFixed(2)}, {centerGeo.lng.toFixed(2)}
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span>Updated</span>
-              <span>{mapState ? new Date(mapState.updatedAt).toLocaleTimeString('en-US') : '--'}</span>
+              <span>{t.map.updated}</span>
+              <span>{mapState ? new Date(mapState.updatedAt).toLocaleTimeString(locale) : '--'}</span>
             </div>
           </div>
         </div>
 
         <div className="border-t border-zinc-800 pt-4">
-          <p className="text-[10px] uppercase tracking-[0.4em] text-zinc-400">Selected Frame</p>
+          <p className="text-[10px] uppercase tracking-[0.4em] text-zinc-400">{t.map.selectedFrame}</p>
           {selectedPin ? (
             <div className="mt-4 space-y-4">
               <div className="aspect-[4/3] overflow-hidden rounded-2xl border border-zinc-800 bg-black">
@@ -515,10 +518,10 @@ export default function MapExplorer() {
               <div>
                 <h3 className="text-lg font-serif leading-tight">{selectedPin.title}</h3>
                 <p className="text-xs uppercase tracking-[0.3em] text-zinc-400 mt-2">
-                  {selectedPin.location || 'Unknown location'}
+                  {selectedPin.location || t.archive.unknownLocation}
                 </p>
                 <p className="text-xs text-zinc-400 mt-2">
-                  {new Date(selectedPin.published_at).toLocaleDateString('en-US', {
+                  {new Date(selectedPin.published_at).toLocaleDateString(locale, {
                     year: 'numeric',
                     month: 'short',
                     day: 'numeric',
@@ -533,7 +536,7 @@ export default function MapExplorer() {
             </div>
           ) : (
             <p className="mt-4 text-sm text-zinc-400">
-              Select a pin to reveal the photo metadata.
+              {t.map.selectPin}
             </p>
           )}
         </div>
