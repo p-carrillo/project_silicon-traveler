@@ -1,0 +1,128 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch: # Permite ejecutar manualmente desde GitHub
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
+
+      - name: Trust host key
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Create deployment directory on server
+        run: |
+          ssh ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} "mkdir -p ${{ secrets.DEPLOY_PATH }}"
+
+      - name: Sync code to server
+        run: |
+          rsync -az --delete \
+            -e "ssh -T -o LogLevel=QUIET" \
+            --exclude ".git" \
+            --exclude ".github" \
+            --exclude "node_modules" \
+            --exclude ".env" \
+            --exclude ".env.local" \
+            --exclude "images" \
+            --exclude ".ai/pictures_seed" \
+            --exclude "*.log" \
+            --exclude ".DS_Store" \
+            --exclude "dist" \
+            --exclude "build" \
+            --exclude ".turbo" \
+            --exclude ".next" \
+            ./ "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }}/"
+
+      - name: Create production .env file
+        run: |
+          ssh ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} "cat > ${{ secrets.DEPLOY_PATH }}/.env << 'EOF'
+          # Database
+          DB_HOST=mariadb
+          DB_PORT=3306
+          DB_USER=${{ secrets.PROD_DB_USER }}
+          DB_PASSWORD=${{ secrets.PROD_DB_PASSWORD }}
+          DB_NAME=${{ secrets.PROD_DB_NAME }}
+          DB_POOL_SIZE=10
+          DB_ROOT_PASSWORD=${{ secrets.PROD_DB_ROOT_PASSWORD }}
+          
+          # API
+          API_KEY=${{ secrets.PROD_API_KEY }}
+          CORS_ORIGINS=${{ secrets.PROD_CORS_ORIGINS }}
+          API_URL=${{ secrets.PROD_API_URL }}
+          NEXT_PUBLIC_API_URL=${{ secrets.PROD_NEXT_PUBLIC_API_URL }}
+          
+          # Storage
+          STORAGE_DIR=/app/images
+          SEED_PHOTOS_SOURCE_DIR=.ai/pictures_seed
+          
+          # i18n
+          I18N_LANGUAGES=es,en
+          I18N_DEFAULT_LANGUAGE=es
+          I18N_CONTENT_BASE_LANGUAGE=en
+          
+          # External APIs
+          OPENAI_API_KEY=${{ secrets.PROD_OPENAI_API_KEY }}
+          IMAGE_MODEL=gpt-image-1.5
+          BRAVE_SEARCH_API_KEY=${{ secrets.PROD_BRAVE_SEARCH_API_KEY }}
+          EOF"
+
+      - name: Create images directory
+        run: |
+          ssh ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} "mkdir -p ${{ secrets.DEPLOY_PATH }}/images"
+
+      - name: Build and deploy containers
+        run: |
+          ssh ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} << 'ENDSSH'
+            cd ${{ secrets.DEPLOY_PATH }}
+            
+            echo "📦 Building production images..."
+            docker compose -f docker-compose.prod.yml build --no-cache
+            
+            echo "🚀 Starting services..."
+            docker compose -f docker-compose.prod.yml up -d
+            
+            echo "⏳ Waiting for services to be healthy..."
+            sleep 30
+            
+            echo "🔍 Checking service status..."
+            docker compose -f docker-compose.prod.yml ps
+          ENDSSH
+
+      - name: Verify deployment
+        run: |
+          ssh ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} << 'ENDSSH'
+            cd ${{ secrets.DEPLOY_PATH }}
+            
+            # Check if all services are running
+            if [ "$(docker compose -f docker-compose.prod.yml ps -q | wc -l)" -eq 4 ]; then
+              echo "✅ All 4 services are running"
+            else
+              echo "❌ Not all services are running"
+              docker compose -f docker-compose.prod.yml ps
+              exit 1
+            fi
+            
+            # Show logs for verification
+            echo "📋 Recent logs:"
+            docker compose -f docker-compose.prod.yml logs --tail=50
+          ENDSSH
+
+      - name: Deployment summary
+        if: success()
+        run: |
+          echo "🎉 Deployment completed successfully!"
+          echo "🌐 Application should be available at: ${{ secrets.PROD_NEXT_PUBLIC_API_URL }}"
+          echo "📊 Check logs with: ssh ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} 'cd ${{ secrets.DEPLOY_PATH }} && docker compose -f docker-compose.prod.yml logs -f'"
