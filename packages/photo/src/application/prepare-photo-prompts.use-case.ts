@@ -3,9 +3,9 @@ import { IBraveSearchPort } from '@silicon-traveler/research';
 import {
   ILLMPort,
   ContentInput,
-  buildContentPrompt,
-  CONTENT_SYSTEM_PROMPT,
-  selectCamera,
+  buildNarrativePrompt,
+  NARRATIVE_SYSTEM_PROMPT,
+  selectPortraitParameters,
 } from '@silicon-traveler/content';
 import { Point, getI18nConfig } from '@silicon-traveler/shared';
 
@@ -61,6 +61,7 @@ export class PreparePhotoPromptsUseCase {
     const { supportedLanguages, defaultLanguage, contentBaseLanguage } = getI18nConfig();
     const baseLanguage = contentBaseLanguage || defaultLanguage;
 
+    const portraitParameters = selectPortraitParameters();
     const input: ContentInput = {
       placeName: routePoint.placeName || 'Unknown Place',
       country: routePoint.country || 'Unknown Country',
@@ -68,10 +69,10 @@ export class PreparePhotoPromptsUseCase {
       researchSummary,
       isFferryCrossing: routePoint.isFferryCrossing,
       language: baseLanguage,
+      portraitParameters,
     };
 
-    const cameraSelection = selectCamera(`${input.placeName}|${input.region}|${input.country}`);
-    const llmUserPrompt = buildContentPrompt(input, cameraSelection);
+    const llmUserPrompt = buildNarrativePrompt(input);
 
     const content = await this.llm.generateContent(input);
 
@@ -122,7 +123,7 @@ export class PreparePhotoPromptsUseCase {
       isFerryCrossing: routePoint.isFferryCrossing,
       researchQuery: query,
       researchSummary,
-      llmSystemPrompt: CONTENT_SYSTEM_PROMPT,
+      llmSystemPrompt: NARRATIVE_SYSTEM_PROMPT,
       llmUserPrompt,
       contentStatus: 'generated',
       imagePrompt,

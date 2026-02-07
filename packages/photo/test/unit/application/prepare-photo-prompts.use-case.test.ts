@@ -1,16 +1,26 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { PreparePhotoPromptsUseCase } from '../../../src/application/prepare-photo-prompts.use-case';
-import { buildContentPrompt, CONTENT_SYSTEM_PROMPT, selectCamera } from '@silicon-traveler/content';
+import { NARRATIVE_SYSTEM_PROMPT } from '@silicon-traveler/content';
 
 vi.mock('@silicon-traveler/content', async () => {
   const actual = await vi.importActual<typeof import('@silicon-traveler/content')>('@silicon-traveler/content');
   return {
     ...actual,
-    selectCamera: vi.fn(() => ({
-      camera: 'Leica M11',
-      lens: '50mm f/2',
-      theme: 'children and youth',
-      photographicTone: 'moody and atmospheric with deep blacks, mysterious ambiance',
+    selectPortraitParameters: vi.fn(() => ({
+      gender: 'woman',
+      age: 34,
+      incomeClass: 'middle class',
+      shotType: 'close-up',
+      background: 'street',
+      expression: 'pensive',
+      gaze: 'looking away',
+      posture: 'standing',
+      timeOfDay: 'dusk',
+      activity: 'waiting',
+      lightingContrast: 'high contrast',
+      filmGrain: 'medium',
+      cameraHeight: 'eye level',
+      depthOfField: 'shallow',
     })),
   };
 });
@@ -95,24 +105,17 @@ describe('PreparePhotoPromptsUseCase', () => {
 
     expect(routeRepo.update).toHaveBeenCalledTimes(2);
     expect(result.researchQuery).toBe('Test City Testland history culture tourism');
-    expect(result.llmSystemPrompt).toBe(CONTENT_SYSTEM_PROMPT);
+    expect(result.llmSystemPrompt).toBe(NARRATIVE_SYSTEM_PROMPT);
     expect(result.contentStatus).toBe('generated');
 
-    const input = {
-      placeName: 'Test City',
-      country: 'Testland',
-      region: 'Test Region',
-      researchSummary: 'Info',
-      isFferryCrossing: false,
-      language: 'en',
-    };
-    
-    // Check that the prompt contains the key elements instead of exact match
-    // since camera selection varies
-    expect(result.llmUserPrompt).toContain("I'm visiting Test City, Test Region, Testland");
-    expect(result.llmUserPrompt).toContain('Research about this place:');
+    // Check that the prompt contains the key elements
+    expect(result.llmUserPrompt).toContain("I'm virtually visiting Test City, Test Region, Testland");
+    expect(result.llmUserPrompt).toContain('Research');
     expect(result.llmUserPrompt).toContain('Info');
-    expect(result.llmUserPrompt).toContain('shot with Leica M11 using 50mm f/2 lens');
+    expect(result.llmUserPrompt).toContain('Portrait Scene Parameters');
+    expect(result.llmUserPrompt).toContain('"gender": "woman"');
+    expect(result.llmUserPrompt).toContain('"age": 34');
+    expect(result.llmUserPrompt).toContain('40-60 words');
     expect(result.imagePrompt).toBe('Prompt ES');
     expect(result.narrative).toBe('Narrativa');
   });

@@ -6,15 +6,17 @@ import {
   TranslateContentInput,
   TranslatedContent,
 } from '../ports/llm.port';
-import { selectCamera, getDefaultCamera } from '../config/photographer';
-import type { CameraSelection } from '../config/photographer';
+import { generateCameraMetadata } from '../config/photographer';
 import {
-  buildContentPrompt,
+  buildNarrativePrompt,
   buildTranslationPrompt,
-  CONTENT_SYSTEM_PROMPT,
+  buildImagePrompt,
+  NARRATIVE_SYSTEM_PROMPT,
 } from '../prompts/content-prompts';
+import { selectPortraitParameters } from '../config/portrait';
+import type { PortraitParameters } from '../config/portrait';
 
-const CONTENT_MODEL = 'gpt-4o-mini';
+const NARRATIVE_MODEL = 'gpt-4o-mini';
 const TRANSLATION_MODEL = 'gpt-4o-mini';
 
 export class OpenAIAdapter implements ILLMPort {
@@ -27,58 +29,65 @@ export class OpenAIAdapter implements ILLMPort {
   }
 
   async generateContent(input: ContentInput): Promise<GeneratedContent> {
-    const cameraSelection = selectCamera(`${input.placeName}|${input.region}|${input.country}`);
-    const prompt = buildContentPrompt(input, cameraSelection);
+    const seed = `${input.placeName}|${input.region}|${input.country}`;
+    const portraitParameters = input.portraitParameters ?? selectPortraitParameters();
+    const contentInput = input.portraitParameters ? input : { ...input, portraitParameters };
+    const prompt = buildNarrativePrompt(contentInput);
 
     try {
-      const completion = await this.client.chat.completions.create({
-        model: CONTENT_MODEL,
-        messages: [
-          {
-            role: 'system',
-            content: CONTENT_SYSTEM_PROMPT,
-          },
-          {
-            role: 'user',
-            content: prompt,
-          },
-        ],
-        temperature: 0.8,
-        max_tokens: 1000,
+      const response = await this.client.responses.create({
+        model: NARRATIVE_MODEL,
+        reasoning: { effort: 'medium' },
+        instructions: NARRATIVE_SYSTEM_PROMPT,
+        input: prompt,
+        max_output_tokens: 200,
       });
 
-      const response = completion.choices[0]?.message?.content || '';
-      const parsed = this.parseResponse(response);
-      return this.applyCameraSelection(parsed, cameraSelection);
+      const narrative = this.parseNarrative(response.output_text || '');
+      const cameraMetadata = generateCameraMetadata(seed);
+      const imagePrompt = buildImagePrompt({
+        narrative,
+        portraitParameters,
+        placeName: input.placeName,
+        region: input.region,
+        country: input.country,
+        language: input.language,
+      });
+
+      return { narrative, cameraMetadata, imagePrompt };
     } catch (error: any) {
       console.error('OpenAI API error:', error.message);
-      const fallback = this.getFallbackContent(input);
-      return this.applyCameraSelection(fallback, cameraSelection);
+      return this.getFallbackContent(input, portraitParameters);
     }
+  }
+
+  private parseNarrative(response: string): string {
+    let text = response.trim();
+    // Remove markdown code blocks if present
+    if (text.startsWith('```')) {
+      text = text.replace(/```[\w]*\n?/, '').replace(/\n?```$/, '');
+    }
+    // Remove surrounding quotes if present
+    if ((text.startsWith('"') && text.endsWith('"')) || (text.startsWith("'") && text.endsWith("'"))) {
+      text = text.slice(1, -1);
+    }
+    return text.trim() || 'Another day on the road.';
   }
 
   async translateContent(input: TranslateContentInput): Promise<TranslatedContent> {
     const prompt = buildTranslationPrompt(input);
 
     try {
-      const completion = await this.client.chat.completions.create({
+      const response = await this.client.responses.create({
         model: TRANSLATION_MODEL,
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a translation engine. Return only valid JSON.',
-          },
-          {
-            role: 'user',
-            content: prompt,
-          },
-        ],
-        temperature: 0.2,
-        max_tokens: 800,
+        reasoning: { effort: 'medium' },
+        instructions: 'You are a translation engine. Return only valid JSON.',
+        input: prompt,
+        max_output_tokens: 800,
       });
 
-      const response = completion.choices[0]?.message?.content || '';
-      return this.parseTranslationResponse(response, input);
+      const responseText = response.output_text || '';
+      return this.parseTranslationResponse(responseText, input);
     } catch (error: any) {
       console.error('OpenAI translation error:', error.message);
       return {
@@ -88,53 +97,23 @@ export class OpenAIAdapter implements ILLMPort {
     }
   }
 
-  private parseResponse(response: string): GeneratedContent {
-    try {
-      const parsed = this.parseJsonResponse(response) as any;
+  private getFallbackContent(
+    input: ContentInput,
+    portraitParameters: PortraitParameters
+  ): GeneratedContent {
+    const seed = `${input.placeName}|${input.region}|${input.country}`;
+    const narrative = `Walking through ${input.placeName}, I capture another moment of this endless journey. The light here is different.`;
+    const cameraMetadata = generateCameraMetadata(seed);
+    const imagePrompt = buildImagePrompt({
+      narrative,
+      portraitParameters,
+      placeName: input.placeName,
+      region: input.region,
+      country: input.country,
+      language: input.language,
+    });
 
-      return {
-        imagePrompt: parsed?.imagePrompt || parsed?.image_prompt || '',
-        narrative: parsed?.narrative || '',
-        cameraMetadata: parsed?.cameraMetadata || parsed?.camera_metadata || this.getDefaultCamera(),
-      };
-    } catch (error) {
-      console.error('Failed to parse LLM response:', error);
-      return {
-        imagePrompt: 'A documentary black and white photograph of a street scene',
-        narrative: 'Another day on the road.',
-        cameraMetadata: this.getDefaultCamera(),
-      };
-    }
-  }
-
-  private getFallbackContent(input: ContentInput): GeneratedContent {
-    return {
-      imagePrompt: `Documentary black and white photograph of ${input.placeName}, ${input.country}. Magnum style, high contrast, grainy film aesthetic.`,
-      narrative: `Walking through ${input.placeName}, I capture another moment of this endless journey. The light here is different.`,
-      cameraMetadata: this.getDefaultCamera(),
-    };
-  }
-
-  private getDefaultCamera() {
-    const selection = getDefaultCamera();
-    return {
-      camera: selection.camera,
-      lens: selection.lens,
-      iso: 800,
-      shutterSpeed: '1/125',
-      aperture: 'f/2.8',
-    };
-  }
-
-  private applyCameraSelection(content: GeneratedContent, cameraSelection: CameraSelection): GeneratedContent {
-    return {
-      ...content,
-      cameraMetadata: {
-        ...content.cameraMetadata,
-        camera: cameraSelection.camera,
-        lens: cameraSelection.lens,
-      },
-    };
+    return { narrative, cameraMetadata, imagePrompt };
   }
 
   private parseTranslationResponse(

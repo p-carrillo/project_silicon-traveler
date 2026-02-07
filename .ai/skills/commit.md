@@ -29,8 +29,10 @@ Use **Conventional Commits** for all project commits.
 
 ### Scopes (examples)
 
-- `client`: Changes in Next.js
-- `server`: Changes in NestJS
+- `web`: Changes in Next.js frontend
+- `api`: Changes in Express API
+- `cli`: Changes in CLI commands
+- `scheduler`: Changes in scheduler jobs
 - `docker`: Changes in Docker/compose
 - `deps`: Dependencies
 - `config`: Configuration
@@ -47,11 +49,13 @@ Use **Conventional Commits** for all project commits.
 ### Examples
 
 ```bash
-feat(client): add health check display on homepage
-fix(server): resolve CORS issue on health endpoint
+feat(web): add health check display on homepage
+fix(api): resolve CORS issue on health endpoint
 docs: update README with Docker instructions
 chore(deps): upgrade next to 15.x
-refactor(server): extract health logic to service
+refactor(api): extract health logic to service
+feat(cli): add new migration command
+fix(scheduler): handle connection timeout gracefully
 ```
 
 ### Breaking Changes
@@ -59,7 +63,7 @@ refactor(server): extract health logic to service
 If there are breaking changes:
 
 ```
-feat(server): change health response format
+feat(api): change health response format
 
 BREAKING CHANGE: health endpoint now returns { status, timestamp } instead of plain string
 ```

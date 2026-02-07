@@ -1,3 +1,5 @@
+import type { PortraitParameters } from '../config/portrait';
+
 export interface GeneratedContent {
   imagePrompt: string;
   narrative: string;
@@ -29,6 +31,7 @@ export interface ContentInput {
   researchSummary: string;
   isFferryCrossing: boolean;
   language?: string;
+  portraitParameters?: PortraitParameters;
 }
 
 export interface ILLMPort {

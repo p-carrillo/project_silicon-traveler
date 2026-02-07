@@ -100,6 +100,7 @@ export async function preparePrompts(options: PreparePromptsOptions): Promise<vo
         preparedData.gridThumbnailUrl = result.prepared.gridThumbnailUrl;
         preparedData.heroThumbnailUrl = result.prepared.heroThumbnailUrl;
         preparedData.narrative = result.prepared.narrative;
+        preparedData.imagePrompt = result.prepared.imagePrompt;
         preparedData.camera = result.prepared.camera;
         preparedData.lens = result.prepared.lens;
         preparedData.iso = result.prepared.iso;
@@ -143,7 +144,9 @@ export async function preparePrompts(options: PreparePromptsOptions): Promise<vo
     };
 
     try {
-      console.log(JSON.stringify(output, null, 2));
+      const replacer = (_key: string, value: unknown): unknown =>
+        typeof value === 'bigint' ? Number(value) : value;
+      console.log(JSON.stringify(output, replacer, 2));
     } catch (serializeError) {
       throw new Error(`Failed to serialize output: ${serializeError instanceof Error ? serializeError.message : String(serializeError)}`);
     }

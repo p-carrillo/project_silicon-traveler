@@ -20,7 +20,7 @@ The codebase must follow hexagonal architecture with SOLID principles, using Mar
 
 ## Decision
 
-We will organize the application into **7 domain modules** within a monorepo structure, each following hexagonal architecture (domain, application, ports, adapters):
+We will organize the application into **8 domain modules** within a monorepo structure, each following hexagonal architecture (domain, application, ports, adapters):
 
 ### Module Structure
 
@@ -38,10 +38,9 @@ project-silicon-traveler/
 │   ├── content/          # LLM content generation (image & narrative prompts)
 │   ├── image/            # Image generation (DALL-E) & thumbnail creation
 │   ├── storage/          # Abstract file storage with pluggable adapters
-│   └── photo/            # Photo publishing & management
-└── shared/
-    ├── database/         # MariaDB connection pool & utilities
-    └── types/            # Shared TypeScript types
+│   ├── photo/            # Photo publishing & management
+│   ├── map/              # Map state and photo pins
+│   └── shared/           # MariaDB connection pool & utilities
 ```
 
 ### Module Responsibilities
@@ -107,7 +106,15 @@ This abstraction allows seamless migration from local filesystem to cloud storag
 - PublishPhoto (creates photo record, marks route point as published)
 - GetLatestPhoto, ListPhotos (with filters)  
 **Ports:** PhotoRepository (output)  
-**Adapters:** MariaDBPhotoRepository  
+**Adapters:** MariaDBPhotoRepository
+
+#### 8. Map Module
+**Domain:** MapState entity with photo pins and viewport  
+**Use Cases:** 
+- RefreshMapState (recalculate pins from published photos)
+- GetMapPins (retrieve pins for display)  
+**Ports:** MapRepository (output)  
+**Adapters:** MariaDBMapRepository  
 
 ### Dependency Flow
 

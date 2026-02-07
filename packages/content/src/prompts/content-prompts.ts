@@ -1,69 +1,75 @@
 import type { ContentInput } from '../ports/llm.port';
-import type { CameraSelection } from '../config/photographer';
+import type { PortraitParameters } from '../config/portrait';
+import { selectPortraitParameters } from '../config/portrait';
 
-export const PHOTOGRAPHIC_THEMES = [
-  'landscape and nature',
-  'street life and urban scenes',
-  'local people and cultural moments',
-  'architecture and built environment',
-  'animals and wildlife',
-  'children and youth',
-  'daily work and labor',
-  'solitude and empty spaces',
-  'markets and commerce',
-  'celebrations and gatherings',
-];
+const FIXED_PHOTO_PROMPT_BY_LANGUAGE = {
+  en: 'A realistic black and white documentary photograph in the style of the Magnum Photos agency. Shot with a Hasselblad 500 series. Natural lighting, authentic moment, present-day documentary aesthetic. Avoid the look of over-processed HDR. Do not include the location name in the photograph.',
+  es: 'Una fotografía documental realista en blanco y negro al estilo de la agencia Magnum Photos. Disparada con Hasselblad serie 500. Iluminación natural, momento auténtico, estética documental del presente. Evitar el aspecto HDR sobreprocesado. No incluir el nombre de la ubicación en la fotografía.',
+} as const;
 
-export const PHOTOGRAPHIC_TONES = [
-  'high contrast black and white with dramatic shadows, HDR-inspired intensity',
-  'soft natural light with subtle tones, gentle documentary style',
-  'moody and atmospheric with deep blacks, mysterious ambiance',
-  'minimalist composition with strong geometric elements',
-  'intimate close-up with shallow depth, emotional focus',
-  'wide-angle environmental portrait showing context and place',
-  'grainy film aesthetic with warm mid-tones',
-];
+const resolvePromptLanguage = (language?: string): keyof typeof FIXED_PHOTO_PROMPT_BY_LANGUAGE => {
+  if (language && language.toLowerCase().startsWith('es')) {
+    return 'es';
+  }
+  return 'en';
+};
 
-export const CONTENT_SYSTEM_PROMPT =
-  'You are a documentary photographer traveling the world on foot. You write in first person with introspection and attention to detail, inspired by Magnum photographers. Create diverse images capturing different aspects of life, culture, and landscapes around the world.';
+const formatPortraitParametersInline = (parameters: PortraitParameters): string =>
+  [
+    `gender: ${parameters.gender}`,
+    `age: ${parameters.age}`,
+    `incomeClass: ${parameters.incomeClass}`,
+    `shotType: ${parameters.shotType}`,
+    `background: ${parameters.background}`,
+    `expression: ${parameters.expression}`,
+    `gaze: ${parameters.gaze}`,
+    `posture: ${parameters.posture}`,
+    `timeOfDay: ${parameters.timeOfDay}`,
+    `activity: ${parameters.activity}`,
+    `lightingContrast: ${parameters.lightingContrast}`,
+    `filmGrain: ${parameters.filmGrain}`,
+    `cameraHeight: ${parameters.cameraHeight}`,
+    `depthOfField: ${parameters.depthOfField}`,
+  ].join(' | ');
 
-function getRandomElement<T>(array: T[]): T {
-  return array[Math.floor(Math.random() * array.length)];
-}
+export const NARRATIVE_SYSTEM_PROMPT =
+  'You are an AI photographer traveling the world virtually through data and algorithms. You write brief, focused observations in first person. Mention the place where you take the photo and your immediate impression of the person you photograph. Write with attention to detail in a present-day documentary style inspired by Magnum photographers.';
 
-export const buildContentPrompt = (input: ContentInput, cameraSelection: CameraSelection): string => {
+export const buildNarrativePrompt = (input: ContentInput): string => {
   const locationContext = input.isFferryCrossing
-    ? `crossing by ferry near ${input.placeName}, ${input.region}, ${input.country}`
-    : `visiting ${input.placeName}, ${input.region}, ${input.country}`;
+    ? `processing data from a ferry crossing near ${input.placeName}, ${input.region}, ${input.country}`
+    : `virtually visiting ${input.placeName}, ${input.region}, ${input.country}`;
+  const portraitParameters = input.portraitParameters ?? selectPortraitParameters();
+  const languageInstruction = input.language ? `Write in **${input.language}**.` : '';
 
-  const photographicTheme = getRandomElement(PHOTOGRAPHIC_THEMES);
-  const photographicTone = getRandomElement(PHOTOGRAPHIC_TONES);
-  const languageInstruction = input.language
-    ? `Write all generated text in ${input.language}.`
-    : '';
+  return `# Context
+I'm ${locationContext} on my virtual journey around the world.
 
-  return `I'm ${locationContext} on my journey around the world on foot.
-
-Research about this place:
+## Research
 ${input.researchSummary}
 
-Generate the following in JSON format:
-1. "imagePrompt": A detailed DALL-E prompt for a documentary-style black & white photograph of this location.
-   - Focus on: ${photographicTheme}
-   - Photographic tone: ${photographicTone}
-   - Identify 1 specific landmark, monument, or architectural feature mentioned in the research and include it by name (e.g., "the Cathedral of Santiago", "Castro de Nete fortress", "Roman villa ruins")
-   - Include the exact camera settings: shot with ${cameraSelection.camera} using ${cameraSelection.lens} lens
-   - Focus on the unique character and history of this place
-   - Journey it's happeing in 2026, so avoid creation of old time looking photos, instead focus on timeless documentary style that could be taken in present day but with the depth and storytelling of Magnum photographers.
+## Portrait Scene Parameters
+The portrait must be coherent with these parameters:
+${JSON.stringify(portraitParameters, null, 2)}
 
-2. "narrative": A short first-person reflection (100-150 words) about this moment in the journey, inspired by Magnum photographers' documentary style. Reference specific places or observations.
+# Instructions
+1. **Structure**: Write 2-3 sentences (40-60 words total):
+   - First sentence: Mention the specific location (${input.placeName}) where you take this photo
+   - Second/third sentence: Your brief impression of the person you photograph
 
-3. "cameraMetadata": Realistic camera settings as JSON with fields: camera, lens, iso, shutterSpeed, aperture.
+2. **Coherence**: The narrative MUST match the portrait parameters naturally:
+   - Match the background setting (home, street, workplace, etc.)
+   - Reflect the time of day and activity
+   - Show (don't tell) age, expression, and economic context through observation
 
-Use the camera "${cameraSelection.camera}" with the lens "${cameraSelection.lens}".
+3. **Style**: 
+   - Write in first person as an AI photographer
+   - Be concise and focused on the immediate moment
+   - NO explicit parameter mentions (ages, gender, income class)
+   - Show details through what you observe
+
 ${languageInstruction}
-
-Return ONLY valid JSON, no markdown or code blocks.`;
+Return **only** the narrative text (40-60 words), no JSON or formatting.`;
 };
 
 export const buildTranslationPrompt = (input: {
@@ -83,4 +89,20 @@ Image prompt:
 
 Narrative:
 """${input.narrative}"""`;
+};
+
+export const buildImagePrompt = (input: {
+  narrative: string;
+  portraitParameters: PortraitParameters;
+  placeName: string;
+  region: string;
+  country: string;
+  language?: string;
+}): string => {
+  const promptLanguage = resolvePromptLanguage(input.language);
+  const fixedPhotoPrompt = FIXED_PHOTO_PROMPT_BY_LANGUAGE[promptLanguage];
+  const portraitParams = formatPortraitParametersInline(input.portraitParameters);
+  const locationConnector = promptLanguage === 'es' ? 'Fotografiada en' : 'Shot in';
+
+  return `${fixedPhotoPrompt} ${locationConnector} ${input.placeName}, ${input.region}, ${input.country}. ${portraitParams}. ${input.narrative}`;
 };

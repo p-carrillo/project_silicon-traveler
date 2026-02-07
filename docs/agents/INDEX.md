@@ -10,8 +10,8 @@
 - `docs/agents/DEBUGGING.md`: Common issues and how to resolve them.
 
 ## Skills
-- Core skills: `.ai/skills/` (architecture, database, coding, test).
-- Specialized skills: `dockshield-audit/SKILL.md`.
+- Core skills: `.ai/skills/` (architecture, database, coding, test, subagents).
+- Specialized skills: `.ai/skills/docker-security-audit.md`.
 
 ## Apps
 - `apps/api/AGENTS.md`: HTTP API for photos, journey, and map state.

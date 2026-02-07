@@ -44,4 +44,5 @@ Cron-based job runner that generates and publishes photos on a schedule.
 - `pnpm --filter @silicon-traveler/scheduler run-once -- --job generator|publisher|all`
 
 ## Tests
-- No automated tests yet for this app.
+- Unit tests: `test/unit/run-once-options.test.ts`
+- Run: `pnpm --filter @silicon-traveler/scheduler test`

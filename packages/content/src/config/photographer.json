@@ -1,12 +1,8 @@
 {
   "cameras": [
     {
-      "model": "Leica M11",
-      "lenses": ["35mm f/1.4", "50mm f/2"]
-    },
-    {
-      "model": "Nikon FM2",
-      "lenses": ["28mm f/2.8", "50mm f/1.8"]
+      "model": "Hasselblad 500 series",
+      "lenses": ["50mm f/1.4", "80mm f/2.8", "150mm f/4"]
     }
   ]
 }

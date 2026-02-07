@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { IRouteRepository, RoutePointContentTranslation } from '@silicon-traveler/route';
 import { IBraveSearchPort } from '@silicon-traveler/research';
-import { ILLMPort } from '@silicon-traveler/content';
+import { ILLMPort, selectPortraitParameters } from '@silicon-traveler/content';
 import { IImageGeneratorPort, IThumbnailGeneratorPort } from '@silicon-traveler/image';
 import { IStoragePort } from '@silicon-traveler/storage';
 import { getI18nConfig } from '@silicon-traveler/shared';
@@ -11,6 +11,7 @@ export interface PreparePhotoResult {
   gridThumbnailUrl: string;
   heroThumbnailUrl: string;
   narrative: string;
+  imagePrompt: string;
   camera: string;
   lens: string;
   iso: number;
@@ -61,6 +62,7 @@ export class PreparePhotoUseCase {
         researchSummary,
         isFferryCrossing: routePoint.isFferryCrossing,
         language: baseLanguage,
+        portraitParameters: selectPortraitParameters(),
       });
 
       const baseImagePrompt = this.normalizePrompt(content.imagePrompt);
@@ -132,6 +134,7 @@ export class PreparePhotoUseCase {
         gridThumbnailUrl: savedThumbnails.get('_grid')!,
         heroThumbnailUrl: savedThumbnails.get('_hero')!,
         narrative,
+        imagePrompt,
         camera: content.cameraMetadata.camera,
         lens: content.cameraMetadata.lens,
         iso: content.cameraMetadata.iso,

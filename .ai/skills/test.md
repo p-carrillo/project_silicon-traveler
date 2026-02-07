@@ -74,12 +74,24 @@ describe('MariaDBJourneyRepository (integration)', () => {
 Integration tests should be skipped when dependencies are unavailable:
 
 ```typescript
-describe.skipIf(!process.env.DATABASE_URL)('Database tests', () => {
-  // Tests that require database
+// Pattern used in this project:
+const shouldRunDbTests = Boolean(process.env.DB_HOST);
+const dbIt = shouldRunDbTests ? it : it.skip;
+
+describe('Database tests', () => {
+  dbIt('should query the database', async () => {
+    // Test that requires database
+  });
 });
 
-describe.skipIf(!process.env.OPENAI_API_KEY)('OpenAI tests', () => {
-  // Tests that require OpenAI API
+// For API key dependent tests:
+const shouldRunOpenAI = Boolean(process.env.OPENAI_API_KEY);
+const openaiIt = shouldRunOpenAI ? it : it.skip;
+
+describe('OpenAI tests', () => {
+  openaiIt('should generate content', async () => {
+    // Test that requires OpenAI API
+  });
 });
 ```
 

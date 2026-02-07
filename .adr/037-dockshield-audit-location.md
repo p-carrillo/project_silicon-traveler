@@ -1,7 +1,11 @@
 # ADR 037: DockShield Audit Skill Location
 
-**Status:** Accepted  
+**Status:** Reverted  
 **Date:** 2026-02-05  
+**Reverted:** 2026-02-06
+
+## Reversion Reason
+After review, we decided to keep the Docker security audit skill in `.ai/skills/docker-security-audit.md` alongside other skills for consistency. The separation was deemed unnecessary complexity.  
 
 ## Context
 We want a clearer separation between agent-facing documentation in `docs/agents/` and operational skills. The Docker security audit skill was stored alongside core `.ai/skills/` guidance, which made it feel like there were two agent-doc roots. We also decided to remove the obsolete `.ai/skills/readme.md` skill stub.

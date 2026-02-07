@@ -23,8 +23,13 @@ Core skills live in `.ai/skills/`:
 - `.ai/skills/database.md`
 - `.ai/skills/coding.md`
 - `.ai/skills/test.md`
-Specialized skills live at the repo root:
-- `dockshield-audit/SKILL.md`
+- `.ai/skills/subagents.md`
+Specialized skills:
+- `.ai/skills/docker-security-audit.md`
+
+## Available commands
+Cursor commands live in `.cursor/commands/`:
+- `.cursor/commands/review-docs.md`: Review project documentation for issues (use with `/review-docs`)
 
 ## Orchestration
 When work touches more than one area, use the skills in this order:

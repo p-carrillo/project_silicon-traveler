@@ -169,7 +169,7 @@ curl http://localhost:3001
 docker compose exec mariadb mysql -u ${DB_USER} -p${DB_PASSWORD} ${DB_NAME}
 
 # From inside the api container
-docker compose exec api node -e "const db = require('./packages/shared/src/database/connection'); db.query('SELECT 1').then(console.log)"
+docker compose exec api node -e "const { pool } = require('./packages/shared/src/database/pool'); pool.query('SELECT 1').then(console.log)"
 ```
 
 ## Troubleshooting

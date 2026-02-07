@@ -23,8 +23,8 @@ Core skills are located in `.ai/skills/`:
 - `database.md`: MariaDB queries, migrations, and connection handling
 - `coding.md`: TypeScript coding standards and patterns
 - `test.md`: Unit and integration testing guidelines
-Specialized skills live at the repo root:
-- `dockshield-audit/SKILL.md`: Docker security audit workflow
+Specialized skills:
+- `.ai/skills/docker-security-audit.md`: Docker security audit workflow
 
 ### Orchestration Order
 For multi-area changes, follow this sequence:
