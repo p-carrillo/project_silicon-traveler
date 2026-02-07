@@ -86,6 +86,8 @@ This will:
 - ✅ Start API on http://localhost:3010
 - ✅ Start Web on http://localhost:3011
 
+`scripts/seed-photos.js` now uses local files from `.ai/pictures_seed` (or `SEED_PHOTOS_SOURCE_DIR` if set) instead of downloading images from the internet.
+
 **First boot takes ~2-3 minutes**. Subsequent boots are much faster (reuses builds).
 
 ### 3. Initialize your journey (optional)
@@ -177,6 +179,8 @@ docker-compose exec api pnpm --filter @silicon-traveler/cli prepare-prompts -- 7
 # Seed sample photos
 docker-compose exec api node scripts/seed-photos.js
 ```
+
+Set `SEED_PHOTOS_SOURCE_DIR` to use a different local folder of source images.
 
 ### Build & Test
 

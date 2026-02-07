@@ -1,85 +1,75 @@
 #!/usr/bin/env node
 
 /**
- * Seed database with 10 sample photos from Unsplash
+ * Seed database with 10 sample photos from local seed images
  * 
  * Usage: node scripts/seed-photos.js
  */
 
-const { pool } = require('../packages/shared/dist/index.js');
-const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
 const rootDir = path.resolve(__dirname, '..');
+const DEFAULT_SEED_IMAGES_DIR = path.join('.ai', 'pictures_seed');
+const SUPPORTED_IMAGE_EXTENSIONS = new Set(['.jpg', '.jpeg', '.png', '.webp']);
 
-// Sample photos from Unsplash (1600x900 landscape photos)
+// Sample photo metadata
 const PHOTOS = [
   {
-    url: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1600&h=900&fit=crop',
     title: 'Mountain Valley Dawn',
     location: 'Valencia, Spain',
     lat: 39.4699, lng: -0.3763,
     narrative: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.',
   },
   {
-    url: 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=1600&h=900&fit=crop',
     title: 'Coastal Sunset Path',
     location: 'Barcelona, Spain',
     lat: 41.3851, lng: 2.1734,
     narrative: 'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim.',
   },
   {
-    url: 'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=1600&h=900&fit=crop',
     title: 'Urban Twilight Streets',
     location: 'Madrid, Spain',
     lat: 40.4168, lng: -3.7038,
     narrative: 'Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae.',
   },
   {
-    url: 'https://images.unsplash.com/photo-1511593358241-7eea1f3c84e5?w=1600&h=900&fit=crop',
     title: 'Ancient Stone Bridge',
     location: 'Zaragoza, Spain',
     lat: 41.6488, lng: -0.8891,
     narrative: 'Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est.',
   },
   {
-    url: 'https://images.unsplash.com/photo-1470770841072-f978cf4d019e?w=1600&h=900&fit=crop',
     title: 'Desert Highway Horizon',
     location: 'Pamplona, Spain',
     lat: 42.8125, lng: -1.6458,
     narrative: 'Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur. At vero eos et accusamus.',
   },
   {
-    url: 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=1600&h=900&fit=crop',
     title: 'Lake Reflection Morning',
     location: 'Bilbao, Spain',
     lat: 43.2630, lng: -2.9350,
     narrative: 'Et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi sint occaecati cupiditate non provident.',
   },
   {
-    url: 'https://images.unsplash.com/photo-1472214103451-9374bd1c798e?w=1600&h=900&fit=crop',
     title: 'Foggy Forest Trail',
     location: 'San Sebastián, Spain',
     lat: 43.3183, lng: -1.9812,
     narrative: 'Similique sunt in culpa qui officia deserunt mollitia animi, id est laborum et dolorum fuga. Et harum quidem rerum facilis est et expedita distinctio. Nam libero tempore cum soluta nobis.',
   },
   {
-    url: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1600&h=900&fit=crop',
     title: 'Snow Peak Summit',
     location: 'Granada, Spain',
     lat: 37.1773, lng: -3.5986,
     narrative: 'Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet ut et voluptates repudiandae sint et molestiae non recusandae. Itaque earum rerum hic tenetur.',
   },
   {
-    url: 'https://images.unsplash.com/photo-1418065460487-3e41a6c84dc5?w=1600&h=900&fit=crop',
     title: 'Riverside Village Evening',
     location: 'Sevilla, Spain',
     lat: 37.3891, lng: -5.9845,
     narrative: 'Sapiente delectus ut aut reiciendis voluptatibus maiores alias consequatur aut perferendis doloribus asperiores repellat. Lorem ipsum dolor sit amet consectetur adipiscing elit sed eiusmod.',
   },
   {
-    url: 'https://images.unsplash.com/photo-1475924156734-496f6cac6ec1?w=1600&h=900&fit=crop',
     title: 'Golden Hour Meadow',
     location: 'Málaga, Spain',
     lat: 36.7213, lng: -4.4214,
@@ -114,22 +104,37 @@ const FILM_STOCKS = [
 const TRANSLATION_LANGUAGES = ['es', 'en'];
 
 /**
- * Download an image from URL
+ * Resolve local image sources for seeding.
  */
-function downloadImage(url, filepath) {
-  return new Promise((resolve, reject) => {
-    const file = fs.createWriteStream(filepath);
-    https.get(url, (response) => {
-      response.pipe(file);
-      file.on('finish', () => {
-        file.close();
-        resolve(filepath);
-      });
-    }).on('error', (err) => {
-      fs.unlink(filepath, () => {});
-      reject(err);
-    });
-  });
+async function resolveSeedImagePaths(requiredCount, sourceDir = process.env.SEED_PHOTOS_SOURCE_DIR || DEFAULT_SEED_IMAGES_DIR) {
+  const absoluteSourceDir = path.isAbsolute(sourceDir)
+    ? sourceDir
+    : path.resolve(rootDir, sourceDir);
+
+  let entries;
+  try {
+    entries = await fs.promises.readdir(absoluteSourceDir, { withFileTypes: true });
+  } catch (error) {
+    throw new Error(`Seed image directory not found: ${absoluteSourceDir}`, { cause: error });
+  }
+
+  const imagePaths = entries
+    .filter((entry) => entry.isFile())
+    .map((entry) => entry.name)
+    .filter((name) => SUPPORTED_IMAGE_EXTENSIONS.has(path.extname(name).toLowerCase()))
+    .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }))
+    .map((name) => path.join(absoluteSourceDir, name));
+
+  if (imagePaths.length < requiredCount) {
+    throw new Error(
+      `Not enough seed images in ${absoluteSourceDir}. Required ${requiredCount}, found ${imagePaths.length}.`
+    );
+  }
+
+  return {
+    sourceDir: absoluteSourceDir,
+    imagePaths: imagePaths.slice(0, requiredCount),
+  };
 }
 
 /**
@@ -153,9 +158,11 @@ function random(arr) {
 async function seedPhotos() {
   console.log('📸 Starting photo seed...\n');
   
+  let pool;
   let connection;
   
   try {
+    ({ pool } = require('../packages/shared/dist/index.js'));
     connection = await pool.getConnection();
     
     // Clean existing seed data
@@ -191,12 +198,16 @@ async function seedPhotos() {
     // Since we cleaned the tables, always start from sequence 1
     const startSequence = 1;
     console.log(`3. Starting from sequence: ${startSequence}\n`);
+
+    const seedImages = await resolveSeedImagePaths(PHOTOS.length);
+    console.log(`4. Using ${seedImages.imagePaths.length} local seed images from: ${seedImages.sourceDir}\n`);
     
     // Create images directory structure
     const baseDate = new Date('2026-02-01');
     
     for (let i = 0; i < PHOTOS.length; i++) {
       const photo = PHOTOS[i];
+      const sourceImagePath = seedImages.imagePaths[i];
       const sequence = startSequence + i;
       const photoDate = new Date(baseDate);
       photoDate.setDate(photoDate.getDate() + i);
@@ -204,6 +215,7 @@ async function seedPhotos() {
       const year = photoDate.getFullYear();
       const month = String(photoDate.getMonth() + 1).padStart(2, '0');
       const day = String(photoDate.getDate()).padStart(2, '0');
+      const extension = path.extname(sourceImagePath).toLowerCase() || '.jpg';
       
       console.log(`${sequence}/10: ${photo.title} (${photo.location})`);
       
@@ -211,14 +223,14 @@ async function seedPhotos() {
       const dateDir = path.join(rootDir, 'images', String(year), month, day);
       await fs.promises.mkdir(dateDir, { recursive: true });
       
-      // Download image
-      const imagePath = path.join(dateDir, `photo-${sequence}.jpg`);
-      const thumbnailPath = path.join(dateDir, `photo-${sequence}-thumb.jpg`);
-      const relativeImagePath = `images/${year}/${month}/${day}/photo-${sequence}.jpg`;
-      const relativeThumbnailPath = `images/${year}/${month}/${day}/photo-${sequence}-thumb.jpg`;
+      // Copy source image
+      const imagePath = path.join(dateDir, `photo-${sequence}${extension}`);
+      const thumbnailPath = path.join(dateDir, `photo-${sequence}-thumb${extension}`);
+      const relativeImagePath = `images/${year}/${month}/${day}/photo-${sequence}${extension}`;
+      const relativeThumbnailPath = `images/${year}/${month}/${day}/photo-${sequence}-thumb${extension}`;
       
-      console.log(`   Downloading image...`);
-      await downloadImage(photo.url, imagePath);
+      console.log(`   Copying local image (${path.basename(sourceImagePath)})...`);
+      await fs.promises.copyFile(sourceImagePath, imagePath);
       
       console.log(`   Creating thumbnail...`);
       await createThumbnail(imagePath, thumbnailPath);
@@ -321,14 +333,14 @@ async function seedPhotos() {
     console.log(`   - Journey: ${journeyId}`);
     console.log(`   - Route points: ${PHOTOS.length}`);
     console.log(`   - Photos: ${PHOTOS.length}`);
-    console.log(`   - Images downloaded to: images/2026/02/`);
+    console.log(`   - Images copied to: images/2026/02/`);
     
   } catch (error) {
     console.error('❌ Error seeding photos:', error);
     throw error;
   } finally {
     if (connection) connection.release();
-    await pool.end();
+    if (pool) await pool.end();
   }
 }
 
@@ -342,4 +354,8 @@ if (require.main === module) {
     });
 }
 
-module.exports = { seedPhotos };
+module.exports = {
+  seedPhotos,
+  resolveSeedImagePaths,
+  DEFAULT_SEED_IMAGES_DIR,
+};
