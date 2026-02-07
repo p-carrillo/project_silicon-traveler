@@ -22,6 +22,6 @@ describe('PhotoJournal', () => {
     expect(component).toContain('/api/images/');
     expect(component).toContain('aspect-square');
     expect(component).toContain('max-w-[calc(100vh-14rem)]');
-    expect(component).toContain('object-contain');
+    expect(component).toContain('object-cover');
   });
 });

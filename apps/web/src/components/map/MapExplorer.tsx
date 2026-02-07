@@ -4,8 +4,9 @@ import { useEffect, useMemo, useRef, useState, type PointerEvent, type WheelEven
 import { geoNaturalEarth1, geoPath } from 'd3-geo';
 import { feature } from 'topojson-client';
 import { getMapPins, getMapState, saveMapState } from '@/lib/api';
-import type { MapPin, MapState } from '@/types';
+import type { MapPin, MapState, Photo } from '@/types';
 import { getTranslations } from '@/lib/i18n/translations';
+import { resolveActiveFrame } from './active-frame';
 
 const WORLD_GEO_BOUNDS = {
   minLng: -180,
@@ -102,7 +103,13 @@ function geoJsonToPath(geojson: any): string[] {
   return [path];
 }
 
-export default function MapExplorer({ locale = 'es' }: { locale?: string }) {
+export default function MapExplorer({
+  locale = 'es',
+  latestPhoto = null,
+}: {
+  locale?: string;
+  latestPhoto?: Photo | null;
+}) {
   const t = getTranslations(locale);
   const numberFormatter = new Intl.NumberFormat(locale);
   const initialCenter = projection([0, 20]) || [0, 0];
@@ -178,6 +185,10 @@ export default function MapExplorer({ locale = 'es' }: { locale?: string }) {
     const scale = 1 / Math.pow(viewport.zoom, 0.65);
     return clamp(scale, 0.25, 1.05);
   }, [viewport.zoom]);
+  const activeFrame = useMemo(
+    () => resolveActiveFrame(selectedPin, latestPhoto),
+    [selectedPin, latestPhoto]
+  );
 
   useEffect(() => {
     let isMounted = true;
@@ -506,30 +517,30 @@ export default function MapExplorer({ locale = 'es' }: { locale?: string }) {
 
         <div className="border-t border-zinc-800 pt-4">
           <p className="text-[10px] uppercase tracking-[0.4em] text-zinc-400">{t.map.selectedFrame}</p>
-          {selectedPin ? (
+          {activeFrame ? (
             <div className="mt-4 space-y-4">
               <div className="aspect-[4/3] overflow-hidden rounded-2xl border border-zinc-800 bg-black">
                 <img
-                  src={`/api/${selectedPin.thumbnail_path}`}
-                  alt={selectedPin.title}
+                  src={activeFrame.imageSrc}
+                  alt={activeFrame.title}
                   className="w-full h-full object-cover filter grayscale"
                 />
               </div>
               <div>
-                <h3 className="text-lg font-serif leading-tight">{selectedPin.title}</h3>
+                <h3 className="text-lg font-serif leading-tight">{activeFrame.title}</h3>
                 <p className="text-xs uppercase tracking-[0.3em] text-zinc-400 mt-2">
-                  {selectedPin.location || t.archive.unknownLocation}
+                  {activeFrame.location || t.archive.unknownLocation}
                 </p>
                 <p className="text-xs text-zinc-400 mt-2">
-                  {new Date(selectedPin.published_at).toLocaleDateString(locale, {
+                  {new Date(activeFrame.publishedAt).toLocaleDateString(locale, {
                     year: 'numeric',
                     month: 'short',
                     day: 'numeric',
                   })}
                 </p>
-                {selectedPin.narrative && (
+                {activeFrame.narrative && (
                   <p className="text-sm text-zinc-300 mt-4 leading-relaxed">
-                    {selectedPin.narrative}
+                    {activeFrame.narrative}
                   </p>
                 )}
               </div>

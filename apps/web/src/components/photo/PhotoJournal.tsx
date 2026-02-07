@@ -61,7 +61,7 @@ export default function PhotoJournal({
             <div className="w-full max-w-[calc(100vh-14rem)] max-h-[calc(100vh-14rem)] bg-zinc-900 overflow-hidden aspect-square min-h-[320px] ring-1 ring-white/10 animate-fade-up">
               <img
                 alt={photo.title}
-                className="w-full h-full object-contain filter grayscale contrast-125 brightness-90"
+                className="w-full h-full object-cover object-center filter grayscale contrast-125 brightness-90"
                 src={`/api/images/${photo.image_path.replace(/^\//, '')}`}
               />
             </div>

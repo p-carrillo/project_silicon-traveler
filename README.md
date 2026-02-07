@@ -286,7 +286,7 @@ All core domain modules implemented with hexagonal architecture:
    - ✅ Homepage (`/`) - Daily photo journal with dark theme, hero image, narrative, camera metadata
    - ✅ Photo detail page (`/photo/YYYY-MM-DD`) - Same journal layout for a specific published date
    - ✅ Archive page (`/archive`) - Contact sheet grid with search (location, title, narrative, tags) plus date range filtering, light theme
-   - ✅ Map page (`/map`) - Local black & white basemap with photo pins (GeoJSON, no external calls)
+   - ✅ Map page (`/map`) - Local black & white basemap with photo pins (GeoJSON, no external calls), loading the latest published photo by default in the side panel
    - ✅ Shared layout components (`PageContainer`, `SectionTopBar`) standardize page width and top bar across sections
    - ✅ TypeScript + Tailwind CSS
    - ✅ Server-side rendering with API integration
@@ -297,7 +297,7 @@ All core domain modules implemented with hexagonal architecture:
 ### 📚 Documentation
 
 - ADRs are stored in `.adr/` and track architecture decisions.
-- Latest: ADR 029 (Generate content even when research is empty).
+- Latest: ADR 043 (Map side panel defaults to latest published photo).
 
 ## API Keys Required
 
