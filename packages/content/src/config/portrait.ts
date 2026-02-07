@@ -75,7 +75,7 @@ const pick = <T>(options: readonly T[]): T => {
   return options[index];
 };
 
-const randomAge = (): number => Math.floor(Math.random() * 113);
+const randomAge = (): number => 5 + Math.floor(Math.random() * 76);
 
 export const selectPortraitParameters = (): PortraitParameters => ({
   gender: pick(genderOptions),

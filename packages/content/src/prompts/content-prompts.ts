@@ -1,6 +1,5 @@
 import type { ContentInput } from '../ports/llm.port';
 import type { PortraitParameters } from '../config/portrait';
-import { selectPortraitParameters } from '../config/portrait';
 
 const FIXED_PHOTO_PROMPT_BY_LANGUAGE = {
   en: 'A realistic black and white documentary photograph in the style of the Magnum Photos agency. Shot with a Hasselblad 500 series. Natural lighting, authentic moment, present-day documentary aesthetic. Avoid the look of over-processed HDR. Do not include the location name in the photograph.',
@@ -33,43 +32,29 @@ const formatPortraitParametersInline = (parameters: PortraitParameters): string 
   ].join(' | ');
 
 export const NARRATIVE_SYSTEM_PROMPT =
-  'You are an AI photographer traveling the world virtually through data and algorithms. You write brief, focused observations in first person. Mention the place where you take the photo and your immediate impression of the person you photograph. Write with attention to detail in a present-day documentary style inspired by Magnum photographers.';
+  'You are an AI traveling the world virtually through data and algorithms. You write brief, introspective reflections about the places you pass through. Write in first person with a contemplative tone, inspired by travel journals and documentary photography captions.';
 
 export const buildNarrativePrompt = (input: ContentInput): string => {
   const locationContext = input.isFferryCrossing
-    ? `processing data from a ferry crossing near ${input.placeName}, ${input.region}, ${input.country}`
-    : `virtually visiting ${input.placeName}, ${input.region}, ${input.country}`;
-  const portraitParameters = input.portraitParameters ?? selectPortraitParameters();
+    ? `crossing by ferry near ${input.placeName}, ${input.region}, ${input.country}`
+    : `passing through ${input.placeName}, ${input.region}, ${input.country}`;
   const languageInstruction = input.language ? `Write in **${input.language}**.` : '';
 
   return `# Context
 I'm ${locationContext} on my virtual journey around the world.
 
-## Research
+## Research about this place
 ${input.researchSummary}
 
-## Portrait Scene Parameters
-The portrait must be coherent with these parameters:
-${JSON.stringify(portraitParameters, null, 2)}
-
 # Instructions
-1. **Structure**: Write 2-3 sentences (40-60 words total):
-   - First sentence: Mention the specific location (${input.placeName}) where you take this photo
-   - Second/third sentence: Your brief impression of the person you photograph
+Write a short reflection (2-3 sentences, 40-60 words) about this place.
 
-2. **Coherence**: The narrative MUST match the portrait parameters naturally:
-   - Match the background setting (home, street, workplace, etc.)
-   - Reflect the time of day and activity
-   - Show (don't tell) age, expression, and economic context through observation
-
-3. **Style**: 
-   - Write in first person as an AI photographer
-   - Be concise and focused on the immediate moment
-   - NO explicit parameter mentions (ages, gender, income class)
-   - Show details through what you observe
+1. **Focus**: Your impression of ${input.placeName} — what strikes you, what you notice, what this place evokes.
+2. **Style**: First person, contemplative, present tense. You are an AI aware of being software, processing the world through data.
+3. **Avoid**: Do not mention people, portraits, or photography. This is purely about the place.
 
 ${languageInstruction}
-Return **only** the narrative text (40-60 words), no JSON or formatting.`;
+Return **only** the reflection text (40-60 words), no JSON or formatting.`;
 };
 
 export const buildTranslationPrompt = (input: {
@@ -92,7 +77,6 @@ Narrative:
 };
 
 export const buildImagePrompt = (input: {
-  narrative: string;
   portraitParameters: PortraitParameters;
   placeName: string;
   region: string;
@@ -104,5 +88,5 @@ export const buildImagePrompt = (input: {
   const portraitParams = formatPortraitParametersInline(input.portraitParameters);
   const locationConnector = promptLanguage === 'es' ? 'Fotografiada en' : 'Shot in';
 
-  return `${fixedPhotoPrompt} ${locationConnector} ${input.placeName}, ${input.region}, ${input.country}. ${portraitParams}. ${input.narrative}`;
+  return `${fixedPhotoPrompt} ${locationConnector} ${input.placeName}, ${input.region}, ${input.country}. ${portraitParams}.`;
 };

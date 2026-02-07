@@ -40,6 +40,7 @@ export class PublisherJob {
         gridThumbnailUrl: routePoint.thumbnailPath || '/images/default_grid.jpg',
         heroThumbnailUrl: routePoint.thumbnailPath?.replace('_grid', '_hero') || '/images/default_hero.jpg',
         narrative: routePoint.narrativePrompt || 'Another day on the road.',
+        imagePrompt: routePoint.imagePrompt || '',
         camera: routePoint.cameraMetadata?.camera || 'Leica M11',
         lens: routePoint.cameraMetadata?.lens || '35mm f/1.4',
         iso: routePoint.cameraMetadata?.iso || 800,

@@ -37,7 +37,6 @@ export class OpenAIAdapter implements ILLMPort {
     try {
       const response = await this.client.responses.create({
         model: NARRATIVE_MODEL,
-        reasoning: { effort: 'medium' },
         instructions: NARRATIVE_SYSTEM_PROMPT,
         input: prompt,
         max_output_tokens: 200,
@@ -46,7 +45,6 @@ export class OpenAIAdapter implements ILLMPort {
       const narrative = this.parseNarrative(response.output_text || '');
       const cameraMetadata = generateCameraMetadata(seed);
       const imagePrompt = buildImagePrompt({
-        narrative,
         portraitParameters,
         placeName: input.placeName,
         region: input.region,
@@ -80,7 +78,6 @@ export class OpenAIAdapter implements ILLMPort {
     try {
       const response = await this.client.responses.create({
         model: TRANSLATION_MODEL,
-        reasoning: { effort: 'medium' },
         instructions: 'You are a translation engine. Return only valid JSON.',
         input: prompt,
         max_output_tokens: 800,
@@ -102,10 +99,9 @@ export class OpenAIAdapter implements ILLMPort {
     portraitParameters: PortraitParameters
   ): GeneratedContent {
     const seed = `${input.placeName}|${input.region}|${input.country}`;
-    const narrative = `Walking through ${input.placeName}, I capture another moment of this endless journey. The light here is different.`;
+    const narrative = `Passing through ${input.placeName}. The data streams in but something about this place resists easy parsing.`;
     const cameraMetadata = generateCameraMetadata(seed);
     const imagePrompt = buildImagePrompt({
-      narrative,
       portraitParameters,
       placeName: input.placeName,
       region: input.region,
