@@ -14,6 +14,7 @@ COPY apps/*/package.json ./apps/
 
 # Copy full package structure
 COPY packages/shared/package.json ./packages/shared/
+COPY packages/map/package.json ./packages/map/
 COPY packages/journey/package.json ./packages/journey/
 COPY packages/route/package.json ./packages/route/
 COPY packages/photo/package.json ./packages/photo/

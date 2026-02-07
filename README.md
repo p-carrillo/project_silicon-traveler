@@ -234,6 +234,8 @@ docker-compose exec mariadb sh
 ./scripts/docker-deploy.sh prod logs
 ```
 
+Production images compile all required workspace artifacts used at runtime, including `@silicon-traveler/map` (API dependency) and `@silicon-traveler/scheduler`.
+
 See full documentation in [docs/agents/DOCKER.md](docs/agents/DOCKER.md)
 
 ## Project Status
