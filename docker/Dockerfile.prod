@@ -32,15 +32,24 @@ RUN pnpm install --frozen-lockfile --prod=false
 # Copy source code
 COPY . .
 
-# Build all packages and apps
+# Build all packages and apps in dependency order
+# Layer 1: Core shared utilities
 RUN pnpm --filter @silicon-traveler/shared build
-RUN pnpm --filter @silicon-traveler/journey build
-RUN pnpm --filter @silicon-traveler/route build
-RUN pnpm --filter @silicon-traveler/photo build
+
+# Layer 2: Independent domain packages
+RUN pnpm --filter @silicon-traveler/research build
 RUN pnpm --filter @silicon-traveler/storage build
 RUN pnpm --filter @silicon-traveler/image build
 RUN pnpm --filter @silicon-traveler/content build
-RUN pnpm --filter @silicon-traveler/research build
+
+# Layer 3: Route and journey (depend on shared)
+RUN pnpm --filter @silicon-traveler/journey build
+RUN pnpm --filter @silicon-traveler/route build
+
+# Layer 4: Photo (depends on research, content, image, storage, route)
+RUN pnpm --filter @silicon-traveler/photo build
+
+# Layer 5: Applications
 RUN pnpm --filter @silicon-traveler/api build
 RUN pnpm --filter @silicon-traveler/web build
 

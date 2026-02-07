@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { IRouteRepository, RoutePointContentTranslation } from '@silicon-traveler/route';
-import { IBraveSearchPort } from '@silicon-traveler/research';
+import { IBraveSearchPort, SearchResult } from '@silicon-traveler/research';
 import { ILLMPort, selectPortraitParameters } from '@silicon-traveler/content';
 import { IImageGeneratorPort, IThumbnailGeneratorPort } from '@silicon-traveler/image';
 import { IStoragePort } from '@silicon-traveler/storage';
@@ -45,7 +45,7 @@ export class PreparePhotoUseCase {
       // 2. Research place
       const query = `${routePoint.placeName || 'Unknown'} ${routePoint.country || ''} history culture tourism`;
       const searchResults = await this.braveSearch.search(query, 3);
-      const researchSummary = searchResults.map((r) => r.description).join(' ');
+      const researchSummary = searchResults.map((r: SearchResult) => r.description).join(' ');
 
       // 3. Update status: researched + store summary
       routePoint.updateResearch(researchSummary, routePoint.osmData);

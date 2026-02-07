@@ -1,5 +1,5 @@
 import { IRouteRepository, RoutePointContentTranslation } from '@silicon-traveler/route';
-import { IBraveSearchPort } from '@silicon-traveler/research';
+import { IBraveSearchPort, SearchResult } from '@silicon-traveler/research';
 import {
   ILLMPort,
   ContentInput,
@@ -53,7 +53,7 @@ export class PreparePhotoPromptsUseCase {
 
     const query = `${routePoint.placeName || 'Unknown'} ${routePoint.country || ''} history culture tourism`;
     const searchResults = await this.braveSearch.search(query, 3);
-    const researchSummary = searchResults.map((r) => r.description).join(' ');
+    const researchSummary = searchResults.map((r: SearchResult) => r.description).join(' ');
 
     routePoint.updateResearch(researchSummary, routePoint.osmData);
     await this.routeRepository.update(routePoint);
