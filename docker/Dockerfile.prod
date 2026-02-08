@@ -52,6 +52,7 @@ RUN pnpm --filter @silicon-traveler/route build
 RUN pnpm --filter @silicon-traveler/photo build
 
 # Layer 5: Applications
+RUN pnpm --filter @silicon-traveler/cli build
 RUN pnpm --filter @silicon-traveler/api build
 RUN pnpm --filter @silicon-traveler/web build
 RUN pnpm --filter @silicon-traveler/scheduler build
