@@ -1,9 +1,12 @@
 import { Photo, JourneyStats, RoutePoint, MapState, MapPin } from '@/types';
 
-// Server-side usa el nombre del contenedor, client-side usa localhost
+// Server-side calls the internal API container directly.
+// Client-side uses relative URLs routed through Next.js API proxy routes
+// (see src/app/api/*/[...path]/route.ts) so the browser never needs
+// to know the API key or the internal container address.
 const API_BASE_URL = typeof window === 'undefined'
   ? (process.env.API_URL || 'http://api:3000')
-  : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000');
+  : '';
 const API_KEY = process.env.API_KEY;
 
 async function fetchWithTimeout(url: string, options: RequestInit = {}, timeout = 5000) {
