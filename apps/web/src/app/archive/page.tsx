@@ -7,6 +7,7 @@ import SearchBar from '@/components/SearchBar';
 import DateRangeAction from '@/components/DateRangeAction';
 import { getServerLocale } from '@/lib/i18n/server';
 import { getTranslations } from '@/lib/i18n/translations';
+import { toProxyImageSrc } from '@/lib/images';
 
 export const dynamic = 'force-dynamic';
 
@@ -216,7 +217,7 @@ export default async function ArchivePage({ searchParams }: PageProps) {
                                 <img
                                   alt={photo.title}
                                   className="w-full h-full object-cover img-bw transition-all duration-700"
-                                  src={`/api/images/${photo.thumbnail_path.replace(/^\//, '')}`}
+                                  src={toProxyImageSrc(photo.thumbnail_path)}
                                 />
                               </div>
                               <div className="mt-4 flex justify-between items-start">

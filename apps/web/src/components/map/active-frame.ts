@@ -1,3 +1,5 @@
+import { toProxyImageSrc } from '../../lib/images';
+
 type ActiveFrameSource = {
   title: string;
   location: string;
@@ -13,11 +15,6 @@ export type ActiveFrame = {
   imageSrc: string;
   publishedAt: string;
 };
-
-function toProxyImageSrc(path: string): string {
-  const normalizedPath = path.replace(/^\//, '').replace(/^images\//, '');
-  return `/api/images/${normalizedPath}`;
-}
 
 function toActiveFrame(source: ActiveFrameSource): ActiveFrame {
   return {

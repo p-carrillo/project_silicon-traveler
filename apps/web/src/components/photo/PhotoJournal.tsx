@@ -4,6 +4,7 @@ import PageContainer from '@/components/layout/PageContainer';
 import SectionTopBar from '@/components/layout/SectionTopBar';
 import type { JourneyStats, Photo } from '@/types';
 import { getTranslations } from '@/lib/i18n/translations';
+import { toProxyImageSrc } from '@/lib/images';
 
 interface PhotoJournalProps {
   photo: Photo;
@@ -62,7 +63,7 @@ export default function PhotoJournal({
               <img
                 alt={photo.title}
                 className="w-full h-full object-cover object-center filter grayscale contrast-125 brightness-90"
-                src={`/api/images/${photo.image_path.replace(/^\//, '')}`}
+                src={toProxyImageSrc(photo.image_path)}
               />
             </div>
             {(technicalPlate || photo.roll_number || photo.frame_number) && (

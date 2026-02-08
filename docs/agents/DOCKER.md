@@ -119,7 +119,14 @@ docker compose -f docker-compose.prod.yml up -d
 # Verify everything is healthy
 docker compose -f docker-compose.prod.yml ps
 docker compose -f docker-compose.prod.yml logs -f api
+
+# Verify Next.js images proxy route is active
+curl -i http://localhost:3001/api/images/images-proxy-smoke-test.jpg
 ```
+
+Expected smoke test response:
+- HTTP status `404`
+- Body `Image not found`
 
 ### Stop production
 

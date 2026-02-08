@@ -46,6 +46,22 @@ jobs:
             --exclude ".next" \
             ./ "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }}/"
 
+      - name: Verify required web image proxy route
+        run: |
+          ssh ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} << 'ENDSSH'
+            set -e
+            REQUIRED_ROUTE="${{ secrets.DEPLOY_PATH }}/apps/web/src/app/api/images/[...path]/route.ts"
+
+            if [ ! -f "$REQUIRED_ROUTE" ]; then
+              echo "❌ Missing required web route: $REQUIRED_ROUTE"
+              echo "📂 Current API route files under apps/web/src/app/api:"
+              find "${{ secrets.DEPLOY_PATH }}/apps/web/src/app/api" -maxdepth 5 -type f -name "route.ts" -print || true
+              exit 1
+            fi
+
+            echo "✅ Found required web route: $REQUIRED_ROUTE"
+          ENDSSH
+
       - name: Create production .env file
         run: |
           ssh ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} "cat > ${{ secrets.DEPLOY_PATH }}/.env << 'EOF'
@@ -114,6 +130,30 @@ jobs:
               docker compose -f docker-compose.prod.yml ps
               exit 1
             fi
+
+            echo "🧪 Verifying Next.js images proxy route..."
+            status_code=000
+            body=""
+            for attempt in $(seq 1 20); do
+              status_code=$(curl -sS -o /tmp/web-images-proxy-body.txt -w "%{http_code}" \
+                "http://localhost:3001/api/images/images-proxy-smoke-test.jpg" || true)
+              body=$(cat /tmp/web-images-proxy-body.txt 2>/dev/null || true)
+
+              if [ "$status_code" -eq 404 ] && [ "$body" = "Image not found" ]; then
+                break
+              fi
+
+              echo "⏳ Waiting for web images proxy (attempt $attempt/20)"
+              sleep 3
+            done
+
+            if [ "$status_code" -ne 404 ] || [ "$body" != "Image not found" ]; then
+              echo "❌ Web images proxy smoke test failed"
+              echo "Status: $status_code"
+              echo "Body: $body"
+              exit 1
+            fi
+            echo "✅ Web images proxy route is active"
             
             # Show logs for verification
             echo "📋 Recent logs:"

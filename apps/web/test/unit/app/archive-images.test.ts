@@ -19,6 +19,7 @@ describe('Archive page', () => {
 
     const page = readFileSync(pagePath, 'utf8');
 
-    expect(page).toContain('/api/images/');
+    expect(page).toContain("from '@/lib/images'");
+    expect(page).toContain('src={toProxyImageSrc(photo.thumbnail_path)}');
   });
 });

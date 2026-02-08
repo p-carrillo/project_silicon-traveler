@@ -236,6 +236,7 @@ docker-compose exec mariadb sh
 
 Production images compile all required workspace artifacts used at runtime, including `@silicon-traveler/map` (API dependency) and `@silicon-traveler/scheduler`.
 TypeScript incremental metadata (`*.tsbuildinfo`) is excluded from Docker context to keep production builds deterministic.
+The production GitHub Actions deploy now fails fast when `apps/web/src/app/api/images/[...path]/route.ts` is missing on the target server and runs a smoke test against `http://localhost:3001/api/images/images-proxy-smoke-test.jpg` to ensure the web image proxy route is active.
 
 See full documentation in [docs/agents/DOCKER.md](docs/agents/DOCKER.md)
 
@@ -300,7 +301,7 @@ All core domain modules implemented with hexagonal architecture:
 ### 📚 Documentation
 
 - ADRs are stored in `.adr/` and track architecture decisions.
-- Latest: ADR 043 (Map side panel defaults to latest published photo).
+- Latest: ADR 046 (Web image proxy path normalization and deploy guardrails).
 
 ## API Keys Required
 

@@ -19,7 +19,8 @@ describe('PhotoJournal', () => {
 
     const component = readFileSync(componentPath, 'utf8');
 
-    expect(component).toContain('/api/images/');
+    expect(component).toContain("from '@/lib/images'");
+    expect(component).toContain('src={toProxyImageSrc(photo.image_path)}');
     expect(component).toContain('aspect-square');
     expect(component).toContain('max-w-[calc(100vh-14rem)]');
     expect(component).toContain('object-cover');
