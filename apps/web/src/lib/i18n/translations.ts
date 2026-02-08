@@ -155,7 +155,7 @@ const translations = {
   },
 } as const;
 
-export type Translations = typeof translations.en;
+export type Translations = (typeof translations)[keyof typeof translations];
 
 export function getTranslations(locale: string, fallbackLocale: string = 'es'): Translations {
   const normalized = normalizeLocale(locale || fallbackLocale);

@@ -12,6 +12,8 @@ dist
 .next
 **/dist
 **/.next
+*.tsbuildinfo
+**/*.tsbuildinfo
 
 # Test files
 test

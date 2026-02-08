@@ -235,6 +235,7 @@ docker-compose exec mariadb sh
 ```
 
 Production images compile all required workspace artifacts used at runtime, including `@silicon-traveler/map` (API dependency) and `@silicon-traveler/scheduler`.
+TypeScript incremental metadata (`*.tsbuildinfo`) is excluded from Docker context to keep production builds deterministic.
 
 See full documentation in [docs/agents/DOCKER.md](docs/agents/DOCKER.md)
 

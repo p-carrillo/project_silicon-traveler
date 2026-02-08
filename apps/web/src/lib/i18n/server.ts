@@ -1,5 +1,6 @@
 import { headers } from 'next/headers';
-import { getI18nConfig, parseAcceptLanguage, resolveLanguage } from '@silicon-traveler/shared';
+import { getI18nConfig } from '@silicon-traveler/shared/dist/i18n/config';
+import { parseAcceptLanguage, resolveLanguage } from '@silicon-traveler/shared/dist/i18n/locale';
 
 export function getServerLocale(): string {
   const header = headers().get('accept-language');

@@ -4,8 +4,8 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
-    "dev": "tsc --watch",
+    "build": "tsc -b",
+    "dev": "tsc -b --watch",
     "test": "pnpm -w vitest -c scripts/vitest.config.mjs run --dir packages/map/test",
     "test:unit": "pnpm -w vitest -c scripts/vitest.config.mjs run --dir packages/map/test/unit",
     "test:integration": "pnpm -w vitest -c scripts/vitest.config.mjs run --dir packages/map/test/integration"

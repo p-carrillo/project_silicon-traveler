@@ -4,6 +4,17 @@ import { IPhotoPinsRepository, PhotoPinsQuery } from '../ports/photo-pins.reposi
 
 export class MariaDBPhotoPinsRepository implements IPhotoPinsRepository {
   async findByBoundingBox(query: PhotoPinsQuery): Promise<PhotoPin[]> {
+    type PhotoPinRow = {
+      id: number;
+      title: string;
+      location: string;
+      narrative: string | null;
+      longitude: number | string;
+      latitude: number | string;
+      thumbnail_path: string;
+      published_at: string | Date;
+    };
+
     const bboxWkt = `POLYGON((${query.bbox.minLng} ${query.bbox.minLat}, ${query.bbox.maxLng} ${query.bbox.minLat}, ${query.bbox.maxLng} ${query.bbox.maxLat}, ${query.bbox.minLng} ${query.bbox.maxLat}, ${query.bbox.minLng} ${query.bbox.minLat}))`;
     const language = query.language ?? null;
 
@@ -27,7 +38,7 @@ export class MariaDBPhotoPinsRepository implements IPhotoPinsRepository {
 
     const whereClause = filters.length ? `WHERE ${filters.join(' AND ')}` : '';
 
-    const rows = await pool.query<any[]>(
+    const rows = await pool.query<PhotoPinRow[]>(
       `SELECT
         p.id,
         COALESCE(pt.title, p.title) as title,
@@ -46,7 +57,7 @@ export class MariaDBPhotoPinsRepository implements IPhotoPinsRepository {
       [...params, query.limit]
     );
 
-    return rows.map((row) => ({
+    return rows.map((row: PhotoPinRow) => ({
       id: row.id,
       title: row.title,
       location: row.location,
