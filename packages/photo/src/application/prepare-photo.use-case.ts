@@ -115,7 +115,7 @@ export class PreparePhotoUseCase {
       ]);
 
       // 9. Save to storage
-      const date = new Date();
+      const date = await this.resolveStorageDate(routePoint.journeyId, routePoint.sequence);
       const filename = `${routePointId}.jpg`;
       const savedImage = await this.storage.saveImage(imageBuffer, filename, date);
 
@@ -166,5 +166,20 @@ export class PreparePhotoUseCase {
     }
 
     return 'A documentary black and white photograph of a street scene';
+  }
+
+  private async resolveStorageDate(journeyId: number, sequence: number): Promise<Date> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const firstScheduled = await this.routeRepository.findFirstScheduledByJourney(journeyId);
+    if (!firstScheduled) {
+      return today;
+    }
+
+    const offsetDays = Math.max(sequence - firstScheduled.sequence, 0);
+    const scheduledDate = new Date(today);
+    scheduledDate.setDate(scheduledDate.getDate() + offsetDays);
+    return scheduledDate;
   }
 }

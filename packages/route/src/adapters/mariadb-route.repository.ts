@@ -107,6 +107,31 @@ export class MariaDBRouteRepository implements IRouteRepository {
     }
   }
 
+  async findFirstScheduledByJourney(journeyId: number): Promise<RoutePoint | null> {
+    const conn = await pool.getConnection();
+    try {
+      const rows = await conn.query(
+        `SELECT id, journey_id, sequence, place_name,
+                ST_AsText(coordinates) as coordinates,
+                country, region, is_ferry_crossing, distance_from_previous,
+                osm_data, research_summary, image_prompt, narrative_prompt,
+                camera_metadata, status, error_message, image_path, thumbnail_path,
+                created_at, published_at, updated_at
+         FROM route_points
+         WHERE journey_id = ?
+           AND status IN ('pending', 'researched', 'content_generated', 'image_ready')
+         ORDER BY sequence ASC
+         LIMIT 1`,
+        [journeyId]
+      );
+
+      if (rows.length === 0) return null;
+      return this.toDomain(rows[0]);
+    } finally {
+      conn.release();
+    }
+  }
+
   async findNextBySequence(journeyId: number): Promise<RoutePoint | null> {
     const conn = await pool.getConnection();
     try {

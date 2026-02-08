@@ -10,6 +10,7 @@ export interface IRouteRepository {
   create(routePoint: Omit<RoutePoint, 'id' | 'createdAt' | 'updatedAt'>): Promise<RoutePoint>;
   findById(id: number): Promise<RoutePoint | null>;
   findByStatus(status: RouteStatus, limit?: number): Promise<RoutePoint[]>;
+  findFirstScheduledByJourney(journeyId: number): Promise<RoutePoint | null>;
   findNextBySequence(journeyId: number): Promise<RoutePoint | null>;
   countByStatuses(statuses: RouteStatus[]): Promise<number>;
   upsertContentTranslations(

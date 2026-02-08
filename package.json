@@ -23,7 +23,9 @@
     "script:test:route": "./scripts/docker-run.sh node scripts/test-route.js",
     "script:test:api": "./scripts/docker-run.sh sh scripts/test-api.sh",
     "script:journey:explore": "./scripts/docker-run.sh node scripts/explore-journey.js",
-    "script:seed:photos": "./scripts/docker-run.sh node scripts/seed-photos.js"
+    "script:seed:photos": "./scripts/docker-run.sh node scripts/seed-photos.js",
+    "script:storage:realign:dry-run": "./scripts/docker-run.sh node scripts/realign-photo-storage-dates.js",
+    "script:storage:realign": "./scripts/docker-run.sh node scripts/realign-photo-storage-dates.js --apply"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",

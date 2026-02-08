@@ -178,6 +178,12 @@ docker-compose exec api pnpm --filter @silicon-traveler/cli prepare-prompts -- 7
 
 # Seed sample photos
 docker-compose exec api node scripts/seed-photos.js
+
+# Realign stored image folders by scheduled/published day (safe preview)
+docker-compose exec api node scripts/realign-photo-storage-dates.js
+
+# Apply realignment (moves files + updates DB paths)
+docker-compose exec api node scripts/realign-photo-storage-dates.js --apply
 ```
 
 Set `SEED_PHOTOS_SOURCE_DIR` to use a different local folder of source images.
