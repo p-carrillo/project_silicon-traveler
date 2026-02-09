@@ -1,4 +1,7 @@
-# GitHub Copilot Instructions
+---
+description: Centralizes agent guidance through AGENTS.md and project standards
+alwaysApply: true
+---
 
 This project centralizes all agent guidance in `AGENTS.md` at the repository root. Read it before making any changes.
 

@@ -1,7 +1,7 @@
 # Agent Docs Index
 
 ## Start Here
-- `AGENTS.md`: Global agent rules and skills ordering.
+- `AGENTS.md`: Global agent rules, standards, and orchestration.
 - `README.md`: Setup and operational commands.
 - `docs/agents/DOCKER.md`: Docker deployment and operations guide.
 - `docs/agents/ENVIRONMENT.md`: Required environment variables and defaults.
@@ -9,9 +9,11 @@
 - `docs/agents/GOLDEN_PATHS.md`: End-to-end flows for the core product.
 - `docs/agents/DEBUGGING.md`: Common issues and how to resolve them.
 
+## Standards
+Project standards (IDE-agnostic): `.ai/standards/` (architecture, coding, database, test, commit, subagents).
+
 ## Skills
-- Core skills: `.ai/skills/` (architecture, database, coding, test, subagents).
-- Specialized skills: `.ai/skills/docker-security-audit.md`.
+Actionable procedures (each in its own folder with `SKILL.md`): `.ai/skills/` (docker-security-audit).
 
 ## Apps
 - `apps/api/AGENTS.md`: HTTP API for photos, journey, and map state.

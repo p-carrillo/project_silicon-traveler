@@ -1,13 +1,8 @@
----
-name: subagents
-description: "Guide for using Cursor subagents in complex tasks. Use when parallel codebase exploration, context isolation, or background command execution is needed."
----
-
-# Skill: subagents.md
+# Standard: Subagents
 
 ## Objective
 
-Provide patterns for using Cursor subagents effectively in this project.
+Provide patterns for using subagents effectively in this project.
 
 ## Scope
 
@@ -74,7 +69,7 @@ Generate unified report
 
 ## Custom Subagents
 
-Custom subagents can be created as markdown files. Check Cursor documentation for the current recommended location:
+Custom subagents can be created as markdown files. Check your IDE documentation for the recommended location:
 
 ```yaml
 ---
@@ -86,8 +81,6 @@ description: "Description of when to use this subagent"
 
 [Detailed instructions for the subagent]
 ```
-
-Note: This project uses Cursor Commands (`.cursor/commands/`) for reusable prompts. Custom subagents may require additional setup.
 
 Custom subagents are useful for:
 - Domain-specific verification tasks

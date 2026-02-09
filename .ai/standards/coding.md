@@ -1,4 +1,4 @@
-# Skill: coding.md
+# Standard: Coding
 
 ## Objective
 Establish consistent TypeScript coding standards, with SOLID and maintainable quality.

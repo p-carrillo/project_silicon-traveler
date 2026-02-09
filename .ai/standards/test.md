@@ -1,4 +1,4 @@
-# TEST SKILL
+# Standard: Test
 
 ## Scope
 Testing strategy and implementation for the Silicon Traveler monorepo.
@@ -196,7 +196,7 @@ pnpm --filter @silicon-traveler/journey test
 
 ## What to Test
 
-### ✅ Always Test
+### Always Test
 - Business logic in domain entities
 - Use case orchestration
 - Error handling and validation
@@ -204,7 +204,7 @@ pnpm --filter @silicon-traveler/journey test
 - Data transformations
 - Complex algorithms (e.g., Haversine calculations)
 
-### ❌ Don't Test
+### Don't Test
 - Third-party libraries
 - Simple getters/setters without logic
 - Framework code

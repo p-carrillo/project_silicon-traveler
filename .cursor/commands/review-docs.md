@@ -14,7 +14,7 @@ Use Explore subagents to analyze each documentation area simultaneously:
 
 1. **Subagent 1**: Analyze `docs/agents/` - agent-facing documentation (INDEX, DOCKER, ENVIRONMENT, DATABASE, GOLDEN_PATHS, DEBUGGING)
 2. **Subagent 2**: Analyze `AGENTS.md` files - root and all modules in `apps/` and `packages/`
-3. **Subagent 3**: Analyze `.ai/skills/` - project skills
+3. **Subagent 3**: Analyze `.ai/standards/` and `.ai/skills/` - project standards and skills
 4. **Subagent 4**: Analyze `.adr/` - Architecture Decision Records
 
 ### Step 2: Verification checklist for each area
@@ -56,7 +56,8 @@ Generate a consolidated report with findings from all subagents:
 |------|------|-------------|
 | Agent docs | `docs/agents/` | INDEX, DOCKER, ENVIRONMENT, DATABASE, GOLDEN_PATHS, DEBUGGING |
 | Module docs | `*/AGENTS.md` | Root + apps/ + packages/ |
-| Skills | `.ai/skills/` | Project skills |
+| Standards | `.ai/standards/` | Project standards (architecture, coding, database, test, commit, subagents) |
+| Skills | `.ai/skills/` | Actionable procedures (each in its own folder with `SKILL.md`) |
 | ADRs | `.adr/` | Architecture Decision Records |
 | Main README | `README.md` | Project overview |
 

@@ -1,10 +1,8 @@
-# Commit Skill
-
-## Commit Conventions
+# Standard: Commit Conventions
 
 Use **Conventional Commits** for all project commits.
 
-### Format
+## Format
 
 ```
 <type>(<scope>): <subject>
@@ -14,7 +12,7 @@ Use **Conventional Commits** for all project commits.
 [optional footer]
 ```
 
-### Types
+## Types
 
 - **feat**: New feature
 - **fix**: Bug fix
@@ -27,7 +25,7 @@ Use **Conventional Commits** for all project commits.
 - **ci**: CI/CD changes
 - **revert**: Revert a previous commit
 
-### Scopes (examples)
+## Scopes (examples)
 
 - `web`: Changes in Next.js frontend
 - `api`: Changes in Express API
@@ -37,7 +35,7 @@ Use **Conventional Commits** for all project commits.
 - `deps`: Dependencies
 - `config`: Configuration
 
-### Rules
+## Rules
 
 1. The `subject` must be lowercase
 2. Don't use a period at the end of the `subject`
@@ -46,7 +44,7 @@ Use **Conventional Commits** for all project commits.
 5. The `body` is optional but useful to explain the "why"
 6. The `footer` is for breaking changes or issue references
 
-### Examples
+## Examples
 
 ```bash
 feat(web): add health check display on homepage
@@ -58,7 +56,7 @@ feat(cli): add new migration command
 fix(scheduler): handle connection timeout gracefully
 ```
 
-### Breaking Changes
+## Breaking Changes
 
 If there are breaking changes:
 

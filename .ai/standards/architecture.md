@@ -1,4 +1,4 @@
-# Skill: architecture.md
+# Standard: Architecture
 
 ## Objective
 Define and maintain a modular hexagonal architecture in the monorepo, with clear boundaries, correct dependencies, and stable contracts.

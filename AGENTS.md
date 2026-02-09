@@ -17,31 +17,35 @@ This repo is a Node.js + TypeScript monorepo with a modular hexagonal architectu
 - `migrations/`: MariaDB schema migrations.
 - `scripts/`: Dev, test, and Docker helpers.
 
-## Available skills and location
-Core skills live in `.ai/skills/`:
-- `.ai/skills/architecture.md`
-- `.ai/skills/database.md`
-- `.ai/skills/coding.md`
-- `.ai/skills/test.md`
-- `.ai/skills/subagents.md`
-Specialized skills:
-- `.ai/skills/docker-security-audit.md`
+## Project standards
+Standards live in `.ai/standards/` (IDE-agnostic). Always consult them before making changes:
+- `.ai/standards/architecture.md`: Hexagonal architecture, layers, ports, and dependency rules.
+- `.ai/standards/coding.md`: TypeScript conventions, SOLID, typing, and error handling.
+- `.ai/standards/database.md`: MariaDB without ORM, pooling, repositories, and migrations.
+- `.ai/standards/test.md`: Vitest strategy, test structure, patterns, and coverage goals.
+- `.ai/standards/commit.md`: Conventional Commits format, types, scopes, and rules.
+- `.ai/standards/subagents.md`: Patterns for using subagents effectively.
 
-## Available commands
-Cursor commands live in `.cursor/commands/`:
-- `.cursor/commands/review-docs.md`: Review project documentation for issues (use with `/review-docs`)
+When work touches more than one area, follow standards in this order:
+1) `.ai/standards/architecture.md`
+2) `.ai/standards/database.md`
+3) `.ai/standards/coding.md`
+4) `.ai/standards/test.md`
 
-## Orchestration
-When work touches more than one area, use the skills in this order:
-1) `.ai/skills/architecture.md`
-2) `.ai/skills/database.md`
-3) `.ai/skills/coding.md`
-4) `.ai/skills/test.md`
+## Available skills
+Skills are actionable procedures. Each skill lives in its own folder with a `SKILL.md` file:
+- `.ai/skills/docker-security-audit/SKILL.md`: Docker security audit workflow.
+
+## IDE-specific configuration
+- **Cursor**: `.cursor/rules/` (rules), `.cursor/commands/` (commands).
+- **GitHub Copilot**: `.github/copilot-instructions.md`.
+
+Both redirect to this file as the single entry point.
 
 ## Global rules
 - README: update `README.md` whenever a change affects setup, architecture, usage, dependencies, configuration, or commands.
 - ADR: every technical or architectural decision must be recorded as an ADR in the `.adr/` folder using the corresponding template.
 - Keep consistency with modular hexagonal architecture and MariaDB without ORM.
-- Tests: every new feature or change must include unit and/or integration tests following `.ai/skills/test.md` guidelines.
+- Tests: every new feature or change must include unit and/or integration tests following `.ai/standards/test.md` guidelines.
 - Language: UI copy and documentation must remain in English for consistency.
 - Agent docs: update `docs/agents/INDEX.md` when adding or removing modules/apps, and keep module-level `AGENTS.md` files current.

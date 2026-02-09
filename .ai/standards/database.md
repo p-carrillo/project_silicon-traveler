@@ -1,4 +1,4 @@
-# Skill: database.md
+# Standard: Database
 
 ## Objective
 Define data access for MariaDB without an ORM, using direct SQL and safe, efficient connections.
