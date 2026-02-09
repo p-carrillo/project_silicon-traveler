@@ -3,6 +3,47 @@
 ## Repository Summary
 This repo is a Node.js + TypeScript monorepo with a modular hexagonal architecture and MariaDB without an ORM (direct SQL and connections). The codebase follows the most widely adopted TypeScript standard and applies SOLID.
 
+## Dos and Don'ts
+
+### Do
+- Use `unknown` with type narrowing instead of `any`.
+- Use parameterized queries for ALL SQL — never concatenate user input.
+- Keep domain layer pure: no framework imports, no IO, no infrastructure dependencies.
+- Use dependency injection: adapters receive ports via constructor.
+- Use cases are the central orchestration unit — all business logic flows through them.
+- Integrate across modules via ports/interfaces, never by importing internals.
+- Always release database connections in a `finally` block (`conn.release()`).
+- Name variables and functions using business domain language.
+- Prefer pure functions in the domain layer.
+- Write tests following AAA pattern (Arrange, Act, Assert) with Vitest.
+- Use Conventional Commits: `<type>(<scope>): <subject>` (lowercase, imperative, max 72 chars).
+- Run all commands inside Docker (see Execution environment below).
+
+### Don't
+- Do NOT import from another package's internal `src/` folders — use the package entry point.
+- Do NOT put SQL queries in route handlers — use a use case + repository.
+- Do NOT use an ORM — this project uses raw SQL with MariaDB intentionally.
+- Do NOT use `any` without explicit justification in a comment.
+- Do NOT add new production dependencies without discussion.
+- Do NOT skip tests — every feature or change needs unit and/or integration tests.
+- Do NOT run `pnpm`, `node`, or `vitest` directly on the host machine.
+
+## Good and bad examples
+
+### Good patterns to follow
+- **Repository with proper connection management**: `packages/journey/src/adapters/mariadb-journey.repository.ts` — parameterized queries, `try/finally` with `conn.release()`, clean row-to-entity mapping via `toDomain()`.
+- **Use case with SRP and DI**: `packages/journey/src/application/create-journey.use-case.ts` — single responsibility, receives repository via constructor, delegates domain logic to entity.
+- **Rich domain entity**: `packages/journey/src/domain/journey.entity.ts` — behavior methods (`updatePosition`), factory method (`create`), proper encapsulation.
+- **Clean port interface**: `packages/journey/src/ports/journey-repository.port.ts` — uses domain types, clear method signatures.
+- **Value object with validation**: `packages/map/src/domain/bounding-box.ts` — validation in constructor, helper functions, constants, pure functions.
+- **Well-structured route handler**: `apps/api/src/routes/map.routes.ts` — delegates to use cases, proper error handling, input validation via utilities.
+- **Next.js component**: `apps/web/src/components/map/MapExplorer.tsx` — proper hooks usage, clean separation of concerns, good TypeScript typing.
+
+### Anti-patterns to avoid
+- **SQL in route handlers**: `apps/api/src/routes/journey.routes.ts` — contains direct SQL queries that bypass use cases and the domain layer. New routes MUST delegate to use cases.
+- **Placeholder implementations**: `packages/journey/src/application/get-journey-stats.use-case.ts` — returns hardcoded values. Complete implementations before merging.
+- **Inconsistent connection management**: some repositories use `pool.query()` directly while others use `pool.getConnection()` + `try/finally` + `conn.release()`. Prefer the explicit pattern.
+
 ## Agent Documentation
 - `docs/agents/INDEX.md`: Entry point for agent-facing documentation.
 - `docs/agents/DOCKER.md`: Docker deployment and operations guide.
@@ -18,6 +59,28 @@ This repo is a Node.js + TypeScript monorepo with a modular hexagonal architectu
 - `scripts/`: Dev, test, and Docker helpers.
 - `.ai/commands/`: IDE-agnostic command definitions (review-code).
 - `.ai/agents/`: IDE-agnostic subagent definitions (review-security, review-duplications, review-dependencies, review-seo, review-bugs, review-refactor).
+
+## API reference
+
+The HTTP API lives in `apps/api/`. Routes are organized by domain in `apps/api/src/routes/`. Entry point: `apps/api/src/index.ts`.
+
+| Method | Path | Description | Handler |
+|--------|------|-------------|---------|
+| GET | `/health` | Health check with DB test | `health.routes.ts` |
+| GET | `/api/photos/latest` | Latest published photo | `photos.routes.ts` |
+| GET | `/api/photos` | Paginated photo list with filters (`limit`, `offset`, `q`, `start_date`, `end_date`, `lang`) | `photos.routes.ts` |
+| GET | `/api/photos/:id` | Photo by ID | `photos.routes.ts` |
+| GET | `/api/journey/stats` | Journey statistics | `journey.routes.ts` |
+| GET | `/api/journey/route` | Paginated route points (`status`, `limit`, `offset`) | `journey.routes.ts` |
+| GET | `/api/journey/route/:id` | Route point by ID | `journey.routes.ts` |
+| GET | `/api/map/state` | Current map state | `map.routes.ts` |
+| PUT | `/api/map/state` | Update map state (bbox, zoom) | `map.routes.ts` |
+| GET | `/api/map/pins` | Photo pins within bounding box (`bbox`, `limit`, `q`, `lang`) | `map.routes.ts` |
+| POST | `/api/map/refresh` | Refresh map state after photo publish | `map.routes.ts` |
+
+**Middleware stack** (applied in order): Helmet, CORS (`CORS_ORIGINS`), JSON parsing, Morgan logging, rate limiting (100 req/15min on `/api/*`), API key auth (non-development), static files (`/images`), 404 handler, error handler.
+
+**Auth**: `Authorization: Bearer <token>` or `x-api-key` header, validated against `API_KEY` env var. Disabled in development.
 
 ## Project standards
 Standards live in `.ai/standards/` (IDE-agnostic). Always consult them before making changes:
@@ -57,6 +120,63 @@ Subagents are specialized agents launched by commands. Cursor wrappers live in `
 - **GitHub Copilot**: `.github/copilot-instructions.md`.
 
 Both redirect to this file as the single entry point.
+
+## Execution environment
+This project runs entirely inside Docker. The host machine does NOT have `pnpm`, `node`, or project dependencies installed. **Every runtime command** (tests, builds, migrations, linting, scripts) MUST be executed inside the Docker containers.
+
+| Task | Command |
+|------|---------|
+| Run all tests | `./scripts/test.sh` or `docker compose exec app pnpm test` |
+| Run unit tests | `docker compose exec app pnpm test:unit` |
+| Run integration tests | `docker compose exec app pnpm test:integration` |
+| Run migrations | `docker compose exec api node scripts/run-migrations.js` or `pnpm script:db:migrate` |
+| Run any script | `./scripts/docker-run.sh <command>` (wraps `docker compose exec app`) |
+| Build | `docker compose exec app pnpm build` |
+| Lint | `docker compose exec app pnpm lint` |
+
+**File-scoped commands** (prefer these for faster feedback):
+
+| Task | Command |
+|------|---------|
+| Type-check a single file | `docker compose exec app npx tsc --noEmit path/to/file.ts` |
+| Lint a single file | `docker compose exec app npx eslint path/to/file.ts` |
+| Run a single test file | `docker compose exec app npx vitest run path/to/file.test.ts` |
+| Run tests matching a name | `docker compose exec app npx vitest run -t "test name"` |
+
+**Rules:**
+- NEVER run `pnpm`, `npm`, `node`, `vitest`, or `tsx` directly on the host.
+- Always use `./scripts/docker-run.sh <command>` or `docker compose exec <service> <command>`.
+- The `app` service is the general-purpose dev container; `api`, `web`, and `scheduler` are service-specific.
+- Ensure containers are running (`docker compose up -d`) before executing commands.
+- Prefer file-scoped commands over project-wide builds for faster validation.
+- See `docs/agents/DOCKER.md` for full Docker operations guide.
+
+## Safety and permissions
+
+**Allowed without asking:**
+- Read files, list directories, search code.
+- Run file-scoped type-check, lint, or single test (via Docker).
+- Run `./scripts/test.sh` to execute the full test suite.
+- Create or modify source files, tests, and documentation.
+- Run git status, git diff, git log.
+
+**Ask the user first:**
+- Install or remove dependencies (`pnpm add`, `pnpm remove`).
+- Run destructive git commands (`git push`, `git reset --hard`, `git rebase`).
+- Delete files or directories.
+- Modify Docker configuration (`Dockerfile`, `docker-compose*.yml`).
+- Run full project-wide builds (`pnpm build`).
+- Change environment variables or `.env` files.
+- Modify CI/CD workflows (`.github/workflows/`).
+- Run database migrations or reset scripts.
+
+## When stuck
+
+- Ask a clarifying question or propose a short plan before making large speculative changes.
+- Do NOT push large rewrites without confirmation — prefer small, focused diffs.
+- If a test fails and the fix is not obvious, report the failure with the error output and ask for guidance.
+- If requirements are ambiguous, propose 2-3 options with trade-offs and let the user choose.
+- If you cannot find a file or pattern, check `docs/agents/INDEX.md` and module-level `AGENTS.md` files before exploring blindly.
 
 ## Global rules
 - README: update `README.md` whenever a change affects setup, architecture, usage, dependencies, configuration, or commands.
