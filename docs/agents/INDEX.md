@@ -10,7 +10,11 @@
 - `docs/agents/DEBUGGING.md`: Common issues and how to resolve them.
 
 ## Standards
-Project standards (IDE-agnostic): `.ai/standards/` (architecture, coding, database, test, commit, subagents).
+Project standards (IDE-agnostic) in `.ai/standards/`, grouped by context:
+
+**Common** (always apply): architecture, coding, test, commit, subagents.
+**Backend** (`apps/api`, `apps/cli`, `apps/scheduler`, `packages/*`): database.
+**Frontend** (`apps/web`): frontend, seo.
 
 ## Skills
 Actionable procedures (each in its own folder with `SKILL.md`): `.ai/skills/` (docker-security-audit, project-foundations).

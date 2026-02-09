@@ -3,46 +3,118 @@
 ## Repository Summary
 This repo is a Node.js + TypeScript monorepo with a modular hexagonal architecture and MariaDB without an ORM (direct SQL and connections). The codebase follows the most widely adopted TypeScript standard and applies SOLID.
 
+## Project standards
+Standards live in `.ai/standards/` (IDE-agnostic). They are grouped by context so agents know which to apply.
+
+### Common standards (always apply)
+- `.ai/standards/coding.md`: TypeScript conventions, SOLID, typing, and error handling.
+- `.ai/standards/test.md`: Vitest strategy, test structure, patterns, and coverage goals.
+- `.ai/standards/commit.md`: Conventional Commits format, types, scopes, and rules.
+- `.ai/standards/subagents.md`: Patterns for using subagents effectively.
+
+### Backend standards (apply when working on `apps/api`, `apps/cli`, `apps/scheduler`, `packages/*`)
+- `.ai/standards/architecture.md`: Hexagonal architecture, layers, ports, and dependency rules.
+- `.ai/standards/database.md`: MariaDB without ORM, pooling, repositories, and migrations.
+
+### Frontend standards (apply when working on `apps/web`)
+- `.ai/standards/frontend.md`: Next.js App Router, React components, accessibility, performance, and Tailwind CSS.
+- `.ai/standards/seo.md`: Metadata, structured data, Core Web Vitals, sitemap, and crawlability.
+
+### How to determine context
+- **Backend context**: the change is inside `apps/api/`, `apps/cli/`, `apps/scheduler/`, or any `packages/*` module.
+- **Frontend context**: the change is inside `apps/web/`.
+- **Both contexts**: the change spans backend and frontend (e.g. adding an API endpoint + a page that consumes it). Apply both sets.
+
+### Priority order
+When work touches more than one standard, follow them in this order:
+
+**Backend path:**
+1) `.ai/standards/architecture.md`
+2) `.ai/standards/database.md`
+3) `.ai/standards/coding.md`
+4) `.ai/standards/test.md`
+
+**Frontend path:**
+1) `.ai/standards/frontend.md`
+2) `.ai/standards/seo.md`
+3) `.ai/standards/coding.md`
+4) `.ai/standards/test.md`
+
 ## Dos and Don'ts
 
 ### Do
+
+**Common (all contexts)**
 - Use `unknown` with type narrowing instead of `any`.
-- Use parameterized queries for ALL SQL — never concatenate user input.
 - Keep domain layer pure: no framework imports, no IO, no infrastructure dependencies.
 - Use dependency injection: adapters receive ports via constructor.
-- Use cases are the central orchestration unit — all business logic flows through them.
 - Integrate across modules via ports/interfaces, never by importing internals.
-- Always release database connections in a `finally` block (`conn.release()`).
 - Name variables and functions using business domain language.
-- Prefer pure functions in the domain layer.
 - Write tests following AAA pattern (Arrange, Act, Assert) with Vitest.
 - Use Conventional Commits: `<type>(<scope>): <subject>` (lowercase, imperative, max 72 chars).
 - Run all commands inside Docker (see Execution environment below).
 
+**Backend (`apps/api`, `apps/cli`, `apps/scheduler`, `packages/*`)**
+- Use parameterized queries for ALL SQL — never concatenate user input.
+- Use cases are the central orchestration unit — all business logic flows through them.
+- Always release database connections in a `finally` block (`conn.release()`).
+- Prefer pure functions in the domain layer.
+
+**Frontend (`apps/web`)**
+- Default to Server Components; use `"use client"` only when browser APIs or hooks are needed.
+- Push the client boundary as far down the component tree as possible.
+- Use `next/image` for all images, with `priority` on above-the-fold (LCP) images.
+- Always provide explicit `width`/`height` on images to prevent layout shifts (CLS).
+- Use semantic HTML (`<nav>`, `<main>`, `<article>`, `<button>`) — not `<div>` for everything.
+- Ensure all interactive elements are keyboard-accessible with visible focus indicators.
+- Respect `prefers-reduced-motion` for animations (Tailwind `motion-reduce:`).
+- Fetch data server-side where possible; client fetches go through Next.js API proxy routes.
+- Every public page MUST have unique metadata (title, description, Open Graph, Twitter Cards).
+- Include JSON-LD structured data on key pages (photo detail, archive, homepage).
+
 ### Don't
+
+**Common (all contexts)**
 - Do NOT import from another package's internal `src/` folders — use the package entry point.
-- Do NOT put SQL queries in route handlers — use a use case + repository.
-- Do NOT use an ORM — this project uses raw SQL with MariaDB intentionally.
 - Do NOT use `any` without explicit justification in a comment.
 - Do NOT add new production dependencies without discussion.
 - Do NOT skip tests — every feature or change needs unit and/or integration tests.
 - Do NOT run `pnpm`, `node`, or `vitest` directly on the host machine.
 
+**Backend (`apps/api`, `apps/cli`, `apps/scheduler`, `packages/*`)**
+- Do NOT put SQL queries in route handlers — use a use case + repository.
+- Do NOT use an ORM — this project uses raw SQL with MariaDB intentionally.
+
+**Frontend (`apps/web`)**
+- Do NOT hardcode UI text — use translation keys.
+- Do NOT use `export const dynamic = 'force-dynamic'` on pages that could be statically generated.
+- Do NOT expose internal API URLs or API keys to the browser.
+- Do NOT mark entire pages as Client Components — isolate interactivity in child components.
+
 ## Good and bad examples
 
-### Good patterns to follow
+### Good patterns — Backend
 - **Repository with proper connection management**: `packages/journey/src/adapters/mariadb-journey.repository.ts` — parameterized queries, `try/finally` with `conn.release()`, clean row-to-entity mapping via `toDomain()`.
 - **Use case with SRP and DI**: `packages/journey/src/application/create-journey.use-case.ts` — single responsibility, receives repository via constructor, delegates domain logic to entity.
 - **Rich domain entity**: `packages/journey/src/domain/journey.entity.ts` — behavior methods (`updatePosition`), factory method (`create`), proper encapsulation.
 - **Clean port interface**: `packages/journey/src/ports/journey-repository.port.ts` — uses domain types, clear method signatures.
 - **Value object with validation**: `packages/map/src/domain/bounding-box.ts` — validation in constructor, helper functions, constants, pure functions.
 - **Well-structured route handler**: `apps/api/src/routes/map.routes.ts` — delegates to use cases, proper error handling, input validation via utilities.
-- **Next.js component**: `apps/web/src/components/map/MapExplorer.tsx` — proper hooks usage, clean separation of concerns, good TypeScript typing.
+
+### Good patterns — Frontend
+- **Server Component with data fetching**: page components fetch data server-side and pass serializable props to Client Components (server wrapper + client island pattern).
+- **Client island component**: `apps/web/src/components/map/MapExplorer.tsx` — `"use client"` only where interactive hooks are needed, proper TypeScript typing, clean separation of concerns.
+- **API proxy for security**: `apps/web/src/lib/api-proxy.ts` — API key injected server-side, internal URLs never exposed to the browser.
+- **Dynamic metadata per route**: `generateMetadata()` in page files with locale-aware title, description, and Open Graph tags.
 
 ### Anti-patterns to avoid
 - **SQL in route handlers**: `apps/api/src/routes/journey.routes.ts` — contains direct SQL queries that bypass use cases and the domain layer. New routes MUST delegate to use cases.
 - **Placeholder implementations**: `packages/journey/src/application/get-journey-stats.use-case.ts` — returns hardcoded values. Complete implementations before merging.
 - **Inconsistent connection management**: some repositories use `pool.query()` directly while others use `pool.getConnection()` + `try/finally` + `conn.release()`. Prefer the explicit pattern.
+- **`"use client"` at page level**: marking an entire page as a Client Component instead of isolating interactivity in a small child component.
+- **Missing image dimensions**: using `<img>` or `next/image` without `width`/`height`, causing CLS.
+- **Hardcoded UI text**: embedding strings directly in JSX instead of using translation keys.
+- **`force-dynamic` on static content**: using `export const dynamic = 'force-dynamic'` when the page could be statically generated or use ISR.
 
 ## Agent Documentation
 - `docs/agents/INDEX.md`: Entry point for agent-facing documentation.
@@ -81,21 +153,6 @@ The HTTP API lives in `apps/api/`. Routes are organized by domain in `apps/api/s
 **Middleware stack** (applied in order): Helmet, CORS (`CORS_ORIGINS`), JSON parsing, Morgan logging, rate limiting (100 req/15min on `/api/*`), API key auth (non-development), static files (`/images`), 404 handler, error handler.
 
 **Auth**: `Authorization: Bearer <token>` or `x-api-key` header, validated against `API_KEY` env var. Disabled in development.
-
-## Project standards
-Standards live in `.ai/standards/` (IDE-agnostic). Always consult them before making changes:
-- `.ai/standards/architecture.md`: Hexagonal architecture, layers, ports, and dependency rules.
-- `.ai/standards/coding.md`: TypeScript conventions, SOLID, typing, and error handling.
-- `.ai/standards/database.md`: MariaDB without ORM, pooling, repositories, and migrations.
-- `.ai/standards/test.md`: Vitest strategy, test structure, patterns, and coverage goals.
-- `.ai/standards/commit.md`: Conventional Commits format, types, scopes, and rules.
-- `.ai/standards/subagents.md`: Patterns for using subagents effectively.
-
-When work touches more than one area, follow standards in this order:
-1) `.ai/standards/architecture.md`
-2) `.ai/standards/database.md`
-3) `.ai/standards/coding.md`
-4) `.ai/standards/test.md`
 
 ## Available skills
 Skills are actionable procedures. Each skill lives in its own folder with a `SKILL.md` file:
