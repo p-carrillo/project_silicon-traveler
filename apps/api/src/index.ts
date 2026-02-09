@@ -4,6 +4,8 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import morgan from 'morgan';
 import { pool } from '@silicon-traveler/shared';
+import { isPrivateIp } from './lib/network';
+import { createApiKeyMiddleware } from './middleware/auth.middleware';
 import { photosRouter } from './routes/photos.routes';
 import { journeyRouter } from './routes/journey.routes';
 import { healthRouter } from './routes/health.routes';
@@ -17,25 +19,8 @@ const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:3001')
   .map((origin) => origin.trim())
   .filter(Boolean);
 
-function requireApiKey(
-  req: express.Request,
-  res: express.Response,
-  next: express.NextFunction
-) {
-  if (!API_KEY) {
-    return res.status(500).json({ error: 'API key not configured' });
-  }
-
-  const authHeader = req.header('authorization');
-  const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
-  const providedKey = bearerToken || req.header('x-api-key');
-
-  if (!providedKey || providedKey !== API_KEY) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-
-  return next();
-}
+const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+const RATE_LIMIT_MAX_REQUESTS = 100;
 
 // Middleware
 app.use(
@@ -43,7 +28,7 @@ app.use(
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        imgSrc: ["'self'", 'data:', 'http://localhost:3000', 'http://localhost:3001'],
+        imgSrc: ["'self'", 'data:', ...allowedOrigins],
       },
     },
   })
@@ -59,15 +44,19 @@ app.use(
 app.use(express.json());
 app.use(morgan('combined'));
 
-// Rate limiting
+// Rate limiting — skip for internal Docker network traffic (web, scheduler, etc.)
+// NOTE: No reverse proxy is configured. If one is added in the future, set
+// app.set('trust proxy', 1) so req.ip reflects the real client IP instead of
+// the proxy's private address (which would bypass rate limiting entirely).
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  windowMs: RATE_LIMIT_WINDOW_MS,
+  max: RATE_LIMIT_MAX_REQUESTS,
   message: 'Too many requests from this IP, please try again later.',
+  skip: (req) => isPrivateIp(req.ip),
 });
 app.use('/api', limiter);
 if (process.env.NODE_ENV !== 'development') {
-  app.use('/api', requireApiKey);
+  app.use('/api', createApiKeyMiddleware(API_KEY));
 }
 
 // Static files - serve images
@@ -96,18 +85,20 @@ const server = app.listen(PORT, () => {
 });
 
 // Graceful shutdown
-process.on('SIGTERM', async () => {
-  console.log('SIGTERM received, closing server...');
-  server.close(async () => {
-    await pool.end();
-    process.exit(0);
-  });
-});
+function onShutdown(cleanup: () => Promise<void>): void {
+  const handler = async (signal: string) => {
+    console.log(`${signal} received, closing server...`);
+    server.close(async () => {
+      try {
+        await cleanup();
+      } catch (error) {
+        console.error('Cleanup error:', error);
+      }
+      process.exit(0);
+    });
+  };
+  process.on('SIGTERM', () => handler('SIGTERM'));
+  process.on('SIGINT', () => handler('SIGINT'));
+}
 
-process.on('SIGINT', async () => {
-  console.log('\nSIGINT received, closing server...');
-  server.close(async () => {
-    await pool.end();
-    process.exit(0);
-  });
-});
+onShutdown(() => pool.end());
