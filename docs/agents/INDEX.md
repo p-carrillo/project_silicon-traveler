@@ -13,7 +13,15 @@
 Project standards (IDE-agnostic): `.ai/standards/` (architecture, coding, database, test, commit, subagents).
 
 ## Skills
-Actionable procedures (each in its own folder with `SKILL.md`): `.ai/skills/` (docker-security-audit).
+Actionable procedures (each in its own folder with `SKILL.md`): `.ai/skills/` (docker-security-audit, project-foundations).
+
+## Commands
+Reusable workflows triggered with `/` in chat. Cursor wrappers in `.cursor/commands/`, real logic in `.ai/commands/`:
+- `/review-code`: Comprehensive code review using parallel subagents.
+
+## Custom Subagents
+Specialized agents used by commands. Cursor wrappers in `.cursor/agents/`, real definitions in `.ai/agents/`:
+- `review-security`, `review-duplications`, `review-dependencies`, `review-seo`, `review-bugs`, `review-refactor`.
 
 ## Apps
 - `apps/api/AGENTS.md`: HTTP API for photos, journey, and map state.

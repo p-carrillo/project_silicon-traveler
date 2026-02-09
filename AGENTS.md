@@ -16,6 +16,8 @@ This repo is a Node.js + TypeScript monorepo with a modular hexagonal architectu
 - `packages/`: Domain modules and shared libraries.
 - `migrations/`: MariaDB schema migrations.
 - `scripts/`: Dev, test, and Docker helpers.
+- `.ai/commands/`: IDE-agnostic command definitions (review-code).
+- `.ai/agents/`: IDE-agnostic subagent definitions (review-security, review-duplications, review-dependencies, review-seo, review-bugs, review-refactor).
 
 ## Project standards
 Standards live in `.ai/standards/` (IDE-agnostic). Always consult them before making changes:
@@ -35,9 +37,23 @@ When work touches more than one area, follow standards in this order:
 ## Available skills
 Skills are actionable procedures. Each skill lives in its own folder with a `SKILL.md` file:
 - `.ai/skills/docker-security-audit/SKILL.md`: Docker security audit workflow.
+- `.ai/skills/project-foundations/SKILL.md`: Project context loader for subagents and review tasks.
+
+## Available commands
+Commands are reusable workflows triggered with `/` in the chat. Cursor wrappers live in `.cursor/commands/`; real logic lives in `.ai/commands/`:
+- `/review-code`: Comprehensive code review using parallel subagents (security, duplications, dependencies, SEO, bugs, refactoring).
+
+## Custom subagents
+Subagents are specialized agents launched by commands. Cursor wrappers live in `.cursor/agents/`; real definitions live in `.ai/agents/`:
+- `review-security`: Security vulnerability analysis.
+- `review-duplications`: Duplicated code and pattern detection.
+- `review-dependencies`: Layer and module dependency violation checks.
+- `review-seo`: SEO, accessibility, and web performance analysis.
+- `review-bugs`: Potential bug and edge case identification.
+- `review-refactor`: Refactoring opportunity detection.
 
 ## IDE-specific configuration
-- **Cursor**: `.cursor/rules/` (rules), `.cursor/commands/` (commands).
+- **Cursor**: `.cursor/rules/` (rules), `.cursor/commands/` (commands), `.cursor/agents/` (subagents).
 - **GitHub Copilot**: `.github/copilot-instructions.md`.
 
 Both redirect to this file as the single entry point.
