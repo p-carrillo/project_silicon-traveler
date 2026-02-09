@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import PageContainer from '@/components/layout/PageContainer';
+import MobileMenu from '@/components/layout/MobileMenu';
 import {
   getArchiveNavItems,
   getNavLinkClass,
@@ -46,7 +47,7 @@ export default function SectionTopBar({
 
   return (
     <header className={headerClassName}>
-      <PageContainer className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between py-8">
+      <PageContainer className="flex items-center justify-between py-8">
         <div className="flex items-center gap-6">
           <div className={`size-8 ${styles.logo}`} aria-hidden>
             <svg
@@ -84,6 +85,7 @@ export default function SectionTopBar({
             </Link>
           ))}
         </nav>
+        <MobileMenu navItems={navItems} activeHref={activeHref} theme={theme} />
       </PageContainer>
     </header>
   );

@@ -128,7 +128,7 @@ export default async function ArchivePage({ searchParams }: PageProps) {
                 }}
               />
             </div>
-            <div className="flex flex-col sm:flex-row w-full md:w-auto">
+            <div className="hidden md:flex flex-col sm:flex-row w-full md:w-auto">
               <DateRangeAction
                 initialStartDate={startDate}
                 initialEndDate={endDate}
@@ -256,12 +256,12 @@ export default async function ArchivePage({ searchParams }: PageProps) {
                       {currentPage > 1 ? (
                         <Link
                           href={buildPageHref(currentPage - 1)}
-                          className="w-12 h-12 flex items-center justify-center border border-black hover:bg-black hover:text-white transition-colors text-xs font-bold"
+                          className="w-20 h-12 flex items-center justify-center border border-black hover:bg-black hover:text-white transition-colors text-xs font-bold"
                         >
                           {t.archive.prev}
                         </Link>
                       ) : (
-                        <div className="w-12 h-12 flex items-center justify-center border border-gray-300 text-gray-300 text-xs font-bold">
+                        <div className="w-20 h-12 flex items-center justify-center border border-gray-300 text-gray-300 text-xs font-bold">
                           {t.archive.prev}
                         </div>
                       )}
@@ -329,12 +329,12 @@ export default async function ArchivePage({ searchParams }: PageProps) {
                       {currentPage < totalPages ? (
                         <Link
                           href={buildPageHref(currentPage + 1)}
-                          className="w-12 h-12 flex items-center justify-center border border-black hover:bg-black hover:text-white transition-colors text-xs font-bold"
+                          className="w-20 h-12 flex items-center justify-center border border-black hover:bg-black hover:text-white transition-colors text-xs font-bold"
                         >
                           {t.archive.next}
                         </Link>
                       ) : (
-                        <div className="w-12 h-12 flex items-center justify-center border border-gray-300 text-gray-300 text-xs font-bold">
+                        <div className="w-20 h-12 flex items-center justify-center border border-gray-300 text-gray-300 text-xs font-bold">
                           {t.archive.next}
                         </div>
                       )}

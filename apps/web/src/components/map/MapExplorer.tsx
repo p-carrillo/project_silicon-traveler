@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState, type PointerEvent, type WheelEvent } from 'react';
+import Link from 'next/link';
 import { geoNaturalEarth1, geoPath } from 'd3-geo';
 import { feature } from 'topojson-client';
 import { getMapPins, getMapState, saveMapState } from '@/lib/api';
@@ -384,13 +385,15 @@ export default function MapExplorer({
             <span className="text-zinc-400">{pinCountLabel}</span>
             {isLoadingPins && <span className="text-zinc-400">{t.map.updating}</span>}
           </div>
-          <div className="flex flex-1 md:flex-none items-center gap-4">
-            <input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder={t.map.filterPlaceholder}
-              className="flex-1 md:w-[280px] bg-transparent border-b border-zinc-300 focus:border-zinc-900 outline-none text-xs uppercase tracking-[0.3em] placeholder:text-zinc-400"
-            />
+          <div className="flex items-center gap-4">
+            <div className="hidden md:flex flex-1 md:flex-none">
+              <input
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder={t.map.filterPlaceholder}
+                className="flex-1 md:w-[280px] bg-transparent border-b border-zinc-300 focus:border-zinc-900 outline-none text-xs uppercase tracking-[0.3em] placeholder:text-zinc-400"
+              />
+            </div>
             <div className="flex items-center gap-2">
               <button
                 type="button"
@@ -411,7 +414,7 @@ export default function MapExplorer({
         </div>
 
         <div className="pt-16">
-          <div className="relative w-full aspect-[2/1] max-h-[70vh]">
+          <div className="relative w-full aspect-[2/1] min-h-[60vh] max-h-[85vh] lg:max-h-[70vh]">
             <svg
               ref={svgRef}
               viewBox={viewBox}
@@ -519,13 +522,13 @@ export default function MapExplorer({
           <p className="text-[10px] uppercase tracking-[0.4em] text-zinc-400">{t.map.selectedFrame}</p>
           {activeFrame ? (
             <div className="mt-4 space-y-4">
-              <div className="aspect-[4/3] overflow-hidden rounded-2xl border border-zinc-800 bg-black">
+              <Link href={`/photo/${activeFrame.dateSlug}`} className="block aspect-[4/3] overflow-hidden rounded-2xl border border-zinc-800 bg-black hover:border-zinc-600 transition-colors">
                 <img
                   src={activeFrame.imageSrc}
                   alt={activeFrame.title}
                   className="w-full h-full object-cover filter grayscale"
                 />
-              </div>
+              </Link>
               <div>
                 <h3 className="text-lg font-serif leading-tight">{activeFrame.title}</h3>
                 <p className="text-xs uppercase tracking-[0.3em] text-zinc-400 mt-2">

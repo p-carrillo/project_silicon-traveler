@@ -30,6 +30,6 @@ export const getNavLinkClass = (
   }
 
   return isActive
-    ? `${base} text-black border-b-2 border-black pb-1`
+    ? `${base} text-black`
     : `${base} text-black/50 hover:text-black transition-colors`;
 };

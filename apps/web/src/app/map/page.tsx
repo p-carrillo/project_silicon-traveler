@@ -21,7 +21,7 @@ export default async function MapPage() {
         className="border-b border-zinc-200 bg-zinc-100/95"
         navLabels={t.nav}
       />
-      <PageContainer className="py-10">
+      <PageContainer className="py-2 md:py-10">
         <MapExplorer locale={locale} latestPhoto={latestPhoto} />
       </PageContainer>
     </div>

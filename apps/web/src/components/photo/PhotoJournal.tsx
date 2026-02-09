@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ArrowRightIcon, MapPinIcon } from '@heroicons/react/24/outline';
+import { ArrowLeftIcon, ArrowRightIcon, MapPinIcon } from '@heroicons/react/24/outline';
 import PageContainer from '@/components/layout/PageContainer';
 import SectionTopBar from '@/components/layout/SectionTopBar';
 import type { JourneyStats, Photo } from '@/types';
@@ -11,6 +11,8 @@ interface PhotoJournalProps {
   stats: JourneyStats | null;
   activeHref?: string;
   locale?: string;
+  prevPhotoDate?: string;
+  nextPhotoDate?: string;
 }
 
 export default function PhotoJournal({
@@ -18,6 +20,8 @@ export default function PhotoJournal({
   stats,
   activeHref = '/',
   locale = 'es',
+  prevPhotoDate,
+  nextPhotoDate,
 }: PhotoJournalProps) {
   const t = getTranslations(locale);
   const formatDate = (dateString: string) => {
@@ -119,42 +123,43 @@ export default function PhotoJournal({
                 </p>
               </div>
               <div className="flex flex-col gap-8 border-t border-white/10 pt-10">
-                {photo.location ? (
-                  <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
-                    <div className="flex items-start gap-4">
-                      <MapPinIcon className="h-5 w-5 text-white/30 mt-1" />
-                      <div className="flex flex-col">
-                        <span className="text-white/40 text-[9px] uppercase tracking-widest mb-1">
-                          {t.photo.location}
-                        </span>
-                        <span className="text-white/80 text-sm font-light tracking-wide">
-                          {photo.location}
-                        </span>
-                      </div>
-                    </div>
-                    <Link
-                      href="/archive"
-                      className="group relative inline-flex items-center gap-6 py-4 pr-12 text-white border-b border-white/20 hover:border-white transition-all sm:self-start"
-                    >
-                      <span className="text-[10px] font-bold uppercase tracking-[0.4em]">
-                        {t.photo.expandArchive}
+                {photo.location && (
+                  <div className="flex items-start gap-4">
+                    <MapPinIcon className="h-5 w-5 text-white/30 mt-1" />
+                    <div className="flex flex-col">
+                      <span className="text-white/40 text-[9px] uppercase tracking-widest mb-1">
+                        {t.photo.location}
                       </span>
-                      <ArrowRightIcon className="absolute right-0 h-5 w-5 group-hover:translate-x-2 transition-transform" />
-                    </Link>
+                      <span className="text-white/80 text-sm font-light tracking-wide">
+                        {photo.location}
+                      </span>
+                    </div>
                   </div>
-                ) : (
-                  <div className="mt-4">
+                )}
+                <div className="flex items-center gap-6">
+                  {prevPhotoDate && (
                     <Link
-                      href="/archive"
+                      href={`/photo/${prevPhotoDate}`}
+                      className="group relative inline-flex items-center gap-6 py-4 pl-12 text-white border-b border-white/20 hover:border-white transition-all"
+                    >
+                      <ArrowLeftIcon className="absolute left-0 h-5 w-5 group-hover:-translate-x-2 transition-transform" />
+                      <span className="text-[10px] font-bold uppercase tracking-[0.4em]">
+                        {t.photo.prevPhoto}
+                      </span>
+                    </Link>
+                  )}
+                  {nextPhotoDate && (
+                    <Link
+                      href={`/photo/${nextPhotoDate}`}
                       className="group relative inline-flex items-center gap-6 py-4 pr-12 text-white border-b border-white/20 hover:border-white transition-all"
                     >
                       <span className="text-[10px] font-bold uppercase tracking-[0.4em]">
-                        {t.photo.expandArchive}
+                        {t.photo.nextPhoto}
                       </span>
                       <ArrowRightIcon className="absolute right-0 h-5 w-5 group-hover:translate-x-2 transition-transform" />
                     </Link>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             </div>
           </div>

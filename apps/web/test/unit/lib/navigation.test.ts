@@ -30,7 +30,7 @@ describe('getNavLinkClass', () => {
 
   it('returns active and inactive classes for light theme', () => {
     expect(getNavLinkClass('/archive', '/archive', 'light')).toBe(
-      'text-xs font-semibold uppercase tracking-[0.3em] text-black border-b-2 border-black pb-1'
+      'text-xs font-semibold uppercase tracking-[0.3em] text-black'
     );
     expect(getNavLinkClass('/', '/archive', 'light')).toBe(
       'text-xs font-semibold uppercase tracking-[0.3em] text-black/50 hover:text-black transition-colors'

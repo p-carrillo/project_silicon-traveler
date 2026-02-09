@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { getLatestPhoto, getJourneyStats } from '@/lib/api';
+import { getLatestPhoto, getJourneyStats, getPhotos } from '@/lib/api';
 import PageContainer from '@/components/layout/PageContainer';
 import SectionTopBar from '@/components/layout/SectionTopBar';
 import PhotoJournal from '@/components/photo/PhotoJournal';
@@ -7,6 +7,20 @@ import { getServerLocale } from '@/lib/i18n/server';
 import { getTranslations } from '@/lib/i18n/translations';
 
 export const dynamic = 'force-dynamic';
+
+function formatDateSlug(publishedAt: string): string {
+  const match = publishedAt.match(/^\d{4}-\d{2}-\d{2}/);
+  if (match) return match[0];
+  const parsed = new Date(publishedAt);
+  if (Number.isNaN(parsed.getTime())) return '';
+  return parsed.toISOString().slice(0, 10);
+}
+
+function dayBefore(dateSlug: string): string {
+  const date = new Date(dateSlug + 'T00:00:00Z');
+  date.setUTCDate(date.getUTCDate() - 1);
+  return date.toISOString().slice(0, 10);
+}
 
 export default async function HomePage() {
   const locale = getServerLocale();
@@ -47,5 +61,23 @@ export default async function HomePage() {
     );
   }
 
-  return <PhotoJournal photo={photo} stats={stats} activeHref="/" locale={locale} />;
+  const currentDateSlug = formatDateSlug(photo.published_at);
+  const { photos: prevPhotos } = await getPhotos(
+    1, 0, undefined,
+    { endDate: dayBefore(currentDateSlug) },
+    locale
+  );
+  const prevPhotoDate = prevPhotos.length > 0
+    ? formatDateSlug(prevPhotos[0].published_at)
+    : undefined;
+
+  return (
+    <PhotoJournal
+      photo={photo}
+      stats={stats}
+      activeHref="/"
+      locale={locale}
+      prevPhotoDate={prevPhotoDate}
+    />
+  );
 }
