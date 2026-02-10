@@ -78,6 +78,79 @@ const translations = {
       line: (photos: number | string, distanceKm: number | string, locations: number | string) =>
         `${photos} photos | ${distanceKm}km traveled | ${locations} locations`,
     },
+    cookie: {
+      message: 'This website uses cookies to enhance your browsing experience.',
+      accept: 'Accept',
+      reject: 'Reject',
+      learnMore: 'Cookie Policy',
+    },
+    legal: {
+      title: 'Legal',
+      lastUpdated: 'Last updated: February 2026',
+      tableOfContents: 'On this page',
+      // Legal Notice
+      noticeTitle: 'Legal Notice',
+      noticeIntro:
+        'In compliance with the duty of information set out in Article 10 of Law 34/2002, of July 11, on Information Society Services and Electronic Commerce (LSSI-CE), the following general information about this website is provided below.',
+      noticeOwnerTitle: 'Owner Information',
+      noticeOwnerName: 'Owner: Diteria',
+      noticeOwnerEmail: 'Email: contact@silcontraveler.com',
+      noticeOwnerDomain: 'Domain: silicontraveler.com',
+      noticePurposeTitle: 'Purpose of the Website',
+      noticePurposeText:
+        'This website hosts Silicon Traveler, a creative project that presents a virtual journey around the world through AI-generated photography. Its purpose is artistic and informational, with no commercial transactions involved.',
+      noticeIpTitle: 'Intellectual Property',
+      noticeIpText:
+        'All content on this website, including but not limited to images, texts, graphic designs, source code, logos, and trademarks, is the property of its owner or has been licensed for use. Reproduction, distribution, public communication, or transformation of any content without express written consent is prohibited. The AI-generated images published on this site are original works created under the direction of the project author.',
+      noticeLiabilityTitle: 'Limitation of Liability',
+      noticeLiabilityText:
+        'The owner is not responsible for any errors or omissions in the content of this website. The owner reserves the right to modify, update, or remove content at any time without prior notice. The website is provided on an "as is" basis and the owner makes no warranties regarding its availability, accuracy, or completeness.',
+      noticeLawTitle: 'Applicable Law and Jurisdiction',
+      noticeLawText:
+        'This legal notice is governed by Spanish law. For any disputes arising from or related to the use of this website, the courts of Spain shall have jurisdiction.',
+      // Privacy Policy
+      privacyTitle: 'Privacy Policy',
+      privacyIntro:
+        'This Privacy Policy describes how your personal data is collected, used, and protected when you visit this website, in compliance with Regulation (EU) 2016/679 (GDPR) and Organic Law 3/2018 on the Protection of Personal Data (LOPDGDD).',
+      privacyControllerTitle: 'Data Controller',
+      privacyControllerText:
+        'The entity responsible for processing your data is Diteria. You may contact us at contact@silicontraveler.com for any privacy-related matter.',
+      privacyDataTitle: 'Data Collected',
+      privacyDataText:
+        'This website may collect the following data: technical information such as IP address, browser type, and operating system transmitted automatically when you visit; and cookie-related data as described in our Cookie Policy. We do not collect personal data through contact forms, registration, or user accounts, as none are available on this website.',
+      privacyPurposeTitle: 'Purpose of Processing',
+      privacyPurposeText:
+        'The technical data collected is used solely to ensure the proper functioning of the website, analyze aggregate usage patterns, and improve the user experience. No personal data is used for commercial or marketing purposes.',
+      privacyBasisTitle: 'Legal Basis',
+      privacyBasisText:
+        'The legal basis for processing technical data is our legitimate interest in maintaining and improving the website (Article 6.1.f GDPR). For cookies that are not strictly necessary, the legal basis is your consent (Article 6.1.a GDPR).',
+      privacyRightsTitle: 'Your Rights',
+      privacyRightsText:
+        'You have the right to access, rectify, erase, restrict processing, data portability, and object to the processing of your personal data. To exercise these rights, contact us at contact@silicontraveler.com. You also have the right to lodge a complaint with the Spanish Data Protection Agency (AEPD) at www.aepd.es.',
+      privacyRetentionTitle: 'Data Retention',
+      privacyRetentionText:
+        'Technical data is retained only for as long as necessary to fulfill the purposes described above. Cookie preferences are stored locally on your device.',
+      // Cookie Policy
+      cookiesTitle: 'Cookie Policy',
+      cookiesIntro:
+        'This Cookie Policy explains what cookies are, how we use them on this website, and how you can manage your preferences, in compliance with the LSSI-CE and GDPR.',
+      cookiesWhatTitle: 'What are Cookies?',
+      cookiesWhatText:
+        'Cookies are small text files that are stored on your device when you visit a website. They serve various functions such as remembering your preferences, analyzing how the site is used, and improving performance.',
+      cookiesTypesTitle: 'Types of Cookies Used',
+      cookiesTechnicalLabel: 'Technical cookies',
+      cookiesTechnicalText:
+        'Essential for the proper functioning of the website. They allow basic features such as navigation and access to secure areas. The website cannot function properly without these cookies. They do not require user consent.',
+      cookiesPreferenceLabel: 'Preference cookies',
+      cookiesPreferenceText:
+        'Store your choices (such as cookie consent) to provide a more personalized experience. These are stored locally on your device.',
+      cookiesManageTitle: 'How to Manage Cookies',
+      cookiesManageText:
+        'You can accept or reject non-essential cookies using the banner displayed when you first visit the website. You can also configure your browser to block or delete cookies. Note that disabling cookies may affect website functionality. To change your cookie preferences, clear your browser data for this site and the consent banner will appear again.',
+      cookiesChangesTitle: 'Changes to this Policy',
+      cookiesChangesText:
+        'We may update this Cookie Policy to reflect changes in our practices or for legal, regulatory, or operational reasons. The date of the last update is indicated at the top of this page.',
+    },
   },
   es: {
     meta: {
@@ -155,6 +228,79 @@ const translations = {
     stats: {
       line: (photos: number | string, distanceKm: number | string, locations: number | string) =>
         `${photos} fotos | ${distanceKm}km recorridos | ${locations} lugares`,
+    },
+    cookie: {
+      message: 'Este sitio web utiliza cookies para mejorar tu experiencia de navegación.',
+      accept: 'Aceptar',
+      reject: 'Rechazar',
+      learnMore: 'Política de cookies',
+    },
+    legal: {
+      title: 'Legal',
+      lastUpdated: 'Última actualización: febrero 2026',
+      tableOfContents: 'En esta página',
+      // Aviso Legal
+      noticeTitle: 'Aviso Legal',
+      noticeIntro:
+        'En cumplimiento del deber de información recogido en el artículo 10 de la Ley 34/2002, de 11 de julio, de Servicios de la Sociedad de la Información y del Comercio Electrónico (LSSI-CE), se facilitan a continuación los datos de información general de este sitio web.',
+      noticeOwnerTitle: 'Datos identificativos del titular',
+      noticeOwnerName: 'Titular: Diteria',
+      noticeOwnerEmail: 'Correo electrónico: contact@silicontraveler.com',
+      noticeOwnerDomain: 'Dominio: silicontraveler.com',
+      noticePurposeTitle: 'Objeto del sitio web',
+      noticePurposeText:
+        'Este sitio web aloja Silicon Traveler, un proyecto creativo que presenta un viaje virtual alrededor del mundo a través de fotografía generada por inteligencia artificial. Su finalidad es artística e informativa, sin que se realicen transacciones comerciales.',
+      noticeIpTitle: 'Propiedad intelectual',
+      noticeIpText:
+        'Todos los contenidos de este sitio web, incluyendo pero no limitado a imágenes, textos, diseños gráficos, código fuente, logotipos y marcas, son propiedad de su titular o han sido licenciados para su uso. Queda prohibida su reproducción, distribución, comunicación pública o transformación sin consentimiento expreso por escrito. Las imágenes generadas por IA publicadas en este sitio son obras originales creadas bajo la dirección del autor del proyecto.',
+      noticeLiabilityTitle: 'Limitación de responsabilidad',
+      noticeLiabilityText:
+        'El titular no se hace responsable de posibles errores u omisiones en los contenidos de este sitio web. Se reserva el derecho de modificar, actualizar o eliminar contenidos en cualquier momento sin previo aviso. El sitio web se ofrece tal cual y el titular no garantiza su disponibilidad, exactitud ni integridad.',
+      noticeLawTitle: 'Legislación aplicable y jurisdicción',
+      noticeLawText:
+        'El presente aviso legal se rige por la legislación española. Para cualquier controversia derivada del uso de este sitio web serán competentes los juzgados y tribunales de España.',
+      // Política de Privacidad
+      privacyTitle: 'Política de Privacidad',
+      privacyIntro:
+        'Esta Política de Privacidad describe cómo se recogen, utilizan y protegen tus datos personales cuando visitas este sitio web, en cumplimiento del Reglamento (UE) 2016/679 (RGPD) y la Ley Orgánica 3/2018 de Protección de Datos Personales (LOPDGDD).',
+      privacyControllerTitle: 'Responsable del tratamiento',
+      privacyControllerText:
+        'El responsable del tratamiento de tus datos es Diteria. Puedes contactarnos en contact@silicontraveler.com para cualquier asunto relacionado con la privacidad.',
+      privacyDataTitle: 'Datos recogidos',
+      privacyDataText:
+        'Este sitio web puede recoger los siguientes datos: información técnica como dirección IP, tipo de navegador y sistema operativo transmitidos automáticamente al visitar el sitio; y datos relacionados con cookies según se describe en nuestra Política de Cookies. No recogemos datos personales mediante formularios de contacto, registro ni cuentas de usuario, ya que no están disponibles en este sitio web.',
+      privacyPurposeTitle: 'Finalidad del tratamiento',
+      privacyPurposeText:
+        'Los datos técnicos recogidos se utilizan exclusivamente para garantizar el correcto funcionamiento del sitio web, analizar patrones de uso agregados y mejorar la experiencia del usuario. No se utilizan datos personales con fines comerciales ni de marketing.',
+      privacyBasisTitle: 'Base legal',
+      privacyBasisText:
+        'La base legal para el tratamiento de datos técnicos es nuestro interés legítimo en mantener y mejorar el sitio web (artículo 6.1.f RGPD). Para las cookies no estrictamente necesarias, la base legal es tu consentimiento (artículo 6.1.a RGPD).',
+      privacyRightsTitle: 'Tus derechos',
+      privacyRightsText:
+        'Tienes derecho a acceder, rectificar, suprimir, limitar el tratamiento, a la portabilidad y a oponerte al tratamiento de tus datos personales. Para ejercer estos derechos, contacta con nosotros en contact@silicontraveler.com. También tienes derecho a presentar una reclamación ante la Agencia Española de Protección de Datos (AEPD) en www.aepd.es.',
+      privacyRetentionTitle: 'Conservación de datos',
+      privacyRetentionText:
+        'Los datos técnicos se conservan únicamente durante el tiempo necesario para cumplir las finalidades descritas anteriormente. Las preferencias de cookies se almacenan localmente en tu dispositivo.',
+      // Política de Cookies
+      cookiesTitle: 'Política de Cookies',
+      cookiesIntro:
+        'Esta Política de Cookies explica qué son las cookies, cómo las utilizamos en este sitio web y cómo puedes gestionar tus preferencias, en cumplimiento de la LSSI-CE y el RGPD.',
+      cookiesWhatTitle: '¿Qué son las cookies?',
+      cookiesWhatText:
+        'Las cookies son pequeños archivos de texto que se almacenan en tu dispositivo cuando visitas un sitio web. Cumplen diversas funciones como recordar tus preferencias, analizar el uso del sitio y mejorar el rendimiento.',
+      cookiesTypesTitle: 'Tipos de cookies utilizadas',
+      cookiesTechnicalLabel: 'Cookies técnicas',
+      cookiesTechnicalText:
+        'Esenciales para el correcto funcionamiento del sitio web. Permiten funciones básicas como la navegación y el acceso a áreas seguras. El sitio web no puede funcionar correctamente sin ellas. No requieren consentimiento del usuario.',
+      cookiesPreferenceLabel: 'Cookies de preferencias',
+      cookiesPreferenceText:
+        'Almacenan tus elecciones (como el consentimiento de cookies) para ofrecer una experiencia más personalizada. Se almacenan localmente en tu dispositivo.',
+      cookiesManageTitle: 'Cómo gestionar las cookies',
+      cookiesManageText:
+        'Puedes aceptar o rechazar las cookies no esenciales mediante el banner que se muestra al visitar el sitio web por primera vez. También puedes configurar tu navegador para bloquear o eliminar cookies. Ten en cuenta que desactivar las cookies puede afectar a la funcionalidad del sitio web. Para cambiar tus preferencias de cookies, borra los datos de navegación de este sitio y el banner de consentimiento volverá a aparecer.',
+      cookiesChangesTitle: 'Cambios en esta política',
+      cookiesChangesText:
+        'Podemos actualizar esta Política de Cookies para reflejar cambios en nuestras prácticas o por motivos legales, regulatorios u operativos. La fecha de la última actualización se indica al inicio de esta página.',
     },
   },
 } as const;
