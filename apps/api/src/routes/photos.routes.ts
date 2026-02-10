@@ -93,6 +93,12 @@ photosRouter.get('/', async (req, res) => {
       return res.status(400).json({ error: 'Offset must be non-negative' });
     }
 
+    const orderParam = typeof req.query.order === 'string' ? req.query.order.toLowerCase() : 'desc';
+    if (orderParam !== 'asc' && orderParam !== 'desc') {
+      return res.status(400).json({ error: 'Order must be "asc" or "desc"' });
+    }
+    const orderDirection = orderParam === 'asc' ? 'ASC' : 'DESC';
+
     const startDateResult = parseDateParam(req.query.start_date, 'start_date');
     if (startDateResult.error) {
       return res.status(400).json({ error: startDateResult.error });
@@ -155,7 +161,7 @@ photosRouter.get('/', async (req, res) => {
       LEFT JOIN photo_translations pt
         ON pt.photo_id = p.id AND pt.language = ?
       ${searchFilter.whereClause}
-      ORDER BY p.published_at DESC
+      ORDER BY p.published_at ${orderDirection}
       LIMIT ? OFFSET ?`,
       [language, ...searchFilter.params, limit, offset]
     );
