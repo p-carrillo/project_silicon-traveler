@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Inter, Playfair_Display, Crimson_Pro, Lora } from 'next/font/google'
 import { getServerLocale } from '@/lib/i18n/server';
 import { getTranslations } from '@/lib/i18n/translations';
+import CookieBanner from '@/components/layout/CookieBanner';
 import './globals.css'
 
 const inter = Inter({
@@ -55,6 +56,7 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         {children}
+        <CookieBanner locale={locale} />
       </body>
     </html>
   )
