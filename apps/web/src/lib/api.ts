@@ -61,7 +61,8 @@ export async function getPhotos(
   offset = 0,
   query?: string,
   dateRange?: { startDate?: string; endDate?: string },
-  locale?: string
+  locale?: string,
+  order?: 'asc' | 'desc'
 ): Promise<{
   photos: Photo[];
   pagination: { limit: number; offset: number; count: number };
@@ -76,6 +77,7 @@ export async function getPhotos(
     if (dateRange?.startDate) params.append('start_date', dateRange.startDate);
     if (dateRange?.endDate) params.append('end_date', dateRange.endDate);
     if (locale) params.append('lang', locale);
+    if (order) params.append('order', order);
 
     const res = await fetchWithTimeout(
       `${API_BASE_URL}/api/photos?${params.toString()}`,

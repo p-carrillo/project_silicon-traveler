@@ -11,6 +11,7 @@ const config: Config = {
       fontFamily: {
         serif: ['var(--font-serif)', 'Georgia', 'serif'],
         archive: ['var(--font-archive-serif)', 'Georgia', 'serif'],
+        narrative: ['var(--font-narrative)', 'Georgia', 'serif'],
         sans: [
           'var(--font-sans)',
           'system-ui',

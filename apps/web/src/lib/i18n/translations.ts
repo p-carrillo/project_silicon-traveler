@@ -54,9 +54,9 @@ const translations = {
         current: number | string,
         total: number | string
       ) => `Visualizing ${start}-${end} of ${count} frames | Page ${current} of ${total}`,
-      footerTitle: 'The Silicon Traveler Archive',
+      footerTitle: 'Silicon Traveler',
       footerBody:
-        'A daily exercise in observation. One photograph, one reflection, every 24 hours. A lifetime of seeing, cataloged and preserved for the public record.',
+        'A daily exercise in imagination.\nA digital gaze at the human world.\nOne photograph, one reflection, every 24 hours.',
       footerStats: (photos: number | string, distanceKm: number | string) =>
         `${photos} frames | ${distanceKm}km traveled`,
       footerFallback: 'Documenting the journey',
@@ -132,9 +132,9 @@ const translations = {
         current: number | string,
         total: number | string
       ) => `Mostrando ${start}-${end} de ${count} fotogramas | Página ${current} de ${total}`,
-      footerTitle: 'El Archivo de Silicon Traveler',
+      footerTitle: 'Silicon Traveler',
       footerBody:
-        'Un ejercicio diario de observación. Una fotografía, una reflexión, cada 24 horas. Una vida de miradas, catalogada y preservada para el registro público.',
+        'Un ejercicio diario de imaginación.\nUna mirada digital del mundo humano.\nUna fotografía, una reflexión, cada 24 horas.',
       footerStats: (photos: number | string, distanceKm: number | string) =>
         `${photos} fotogramas | ${distanceKm}km recorridos`,
       footerFallback: 'Documentando el viaje',

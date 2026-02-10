@@ -5,8 +5,10 @@ import PageContainer from '@/components/layout/PageContainer';
 import SectionTopBar from '@/components/layout/SectionTopBar';
 import SearchBar from '@/components/SearchBar';
 import DateRangeAction from '@/components/DateRangeAction';
+import Footer from '@/components/layout/Footer';
 import { getServerLocale } from '@/lib/i18n/server';
 import { getTranslations } from '@/lib/i18n/translations';
+import ProgressiveImage from '@/components/photo/ProgressiveImage';
 import { toProxyImageSrc } from '@/lib/images';
 
 export const dynamic = 'force-dynamic';
@@ -213,11 +215,12 @@ export default async function ArchivePage({ searchParams }: PageProps) {
                                   {rollLabel} - {frameLabel}
                                 </span>
                               </div>
-                              <div className="aspect-square bg-gray-100 overflow-hidden">
-                                <img
+                              <div className="relative aspect-square bg-gray-100 overflow-hidden">
+                                <ProgressiveImage
                                   alt={photo.title}
                                   className="w-full h-full object-cover img-bw transition-all duration-700"
                                   src={toProxyImageSrc(photo.thumbnail_path)}
+                                  skeletonClassName="bg-gray-200"
                                 />
                               </div>
                               <div className="mt-4 flex justify-between items-start">
@@ -356,42 +359,7 @@ export default async function ArchivePage({ searchParams }: PageProps) {
         </section>
       </main>
 
-      <footer className="border-t border-black bg-white">
-        <PageContainer className="py-8 flex flex-col md:flex-row justify-between items-start gap-12">
-          <div className="max-w-md">
-            <h4 className="text-xs font-black uppercase tracking-widest mb-4">
-              {t.archive.footerTitle}
-            </h4>
-            <p className="text-sm font-archive leading-relaxed text-gray-600">
-              {t.archive.footerBody}
-            </p>
-          </div>
-          <div className="flex flex-col md:items-end gap-6">
-            <div className="flex gap-8">
-              <Link
-                className="text-xs font-black uppercase tracking-widest hover:underline"
-                href="/"
-              >
-                {t.nav.journal}
-              </Link>
-              <Link
-                className="text-xs font-black uppercase tracking-widest hover:underline"
-                href="/archive"
-              >
-                {t.nav.archive}
-              </Link>
-            </div>
-            <div className="text-[10px] font-bold tracking-widest text-gray-400 uppercase">
-              {stats
-                ? t.archive.footerStats(
-                    numberFormatter.format(stats.stats.photos_published),
-                    numberFormatter.format(Math.round(stats.stats.total_distance_km))
-                  )
-                : t.archive.footerFallback}
-            </div>
-          </div>
-        </PageContainer>
-      </footer>
+      <Footer theme="light" stats={stats} t={t} locale={locale} />
     </div>
   );
 }

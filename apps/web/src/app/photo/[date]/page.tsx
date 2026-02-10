@@ -46,7 +46,7 @@ export default async function PhotoByDatePage({ params }: PageProps) {
       getPhotos(1, 0, undefined, { startDate: dateSlug, endDate: dateSlug }, locale),
       getJourneyStats(),
       getPhotos(1, 0, undefined, { endDate: dayBefore(dateSlug) }, locale),
-      getPhotos(1, 0, undefined, { startDate: dayAfter(dateSlug) }, locale),
+      getPhotos(1, 0, undefined, { startDate: dayAfter(dateSlug) }, locale, 'asc'),
     ]);
 
   if (!photos.length) {
