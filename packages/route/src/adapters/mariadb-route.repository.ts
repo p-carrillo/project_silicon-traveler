@@ -1,9 +1,14 @@
 import { pool, Point, pointToWKT } from '@silicon-traveler/shared';
-import { IRouteRepository, RoutePointContentTranslation } from '../ports/route-repository.port';
+import {
+  FindRoutePointsByJourneyParams,
+  IRouteRepository,
+  RoutePointContentTranslation,
+  RoutePointCreateParams,
+} from '../ports/route-repository.port';
 import { RoutePoint, RouteStatus } from '../domain/route-point.entity';
 
 export class MariaDBRouteRepository implements IRouteRepository {
-  async create(routePoint: Omit<RoutePoint, 'id' | 'createdAt' | 'updatedAt'>): Promise<RoutePoint> {
+  async create(routePoint: RoutePointCreateParams): Promise<RoutePoint> {
     const conn = await pool.getConnection();
     try {
       const result = await conn.query(
@@ -156,6 +161,64 @@ export class MariaDBRouteRepository implements IRouteRepository {
     }
   }
 
+  async findByJourney(journeyId: number, params: FindRoutePointsByJourneyParams): Promise<RoutePoint[]> {
+    const conn = await pool.getConnection();
+    try {
+      const statuses = params.statuses?.length ? params.statuses : undefined;
+      const where: string[] = ['journey_id = ?'];
+      const queryParams: any[] = [journeyId];
+
+      if (statuses) {
+        const placeholders = statuses.map(() => '?').join(',');
+        where.push(`status IN (${placeholders})`);
+        queryParams.push(...statuses);
+      }
+
+      const rows = await conn.query(
+        `SELECT id, journey_id, sequence, place_name,
+                ST_AsText(coordinates) as coordinates,
+                country, region, is_ferry_crossing, distance_from_previous,
+                osm_data, research_summary, image_prompt, narrative_prompt,
+                camera_metadata, status, error_message, image_path, thumbnail_path,
+                created_at, published_at, updated_at
+         FROM route_points
+         WHERE ${where.join(' AND ')}
+         ORDER BY sequence ASC
+         LIMIT ? OFFSET ?`,
+        [...queryParams, params.limit, params.offset]
+      );
+
+      return rows.map((row: any) => this.toDomain(row));
+    } finally {
+      conn.release();
+    }
+  }
+
+  async countByJourney(journeyId: number, statuses?: RouteStatus[]): Promise<number> {
+    const conn = await pool.getConnection();
+    try {
+      const where: string[] = ['journey_id = ?'];
+      const queryParams: any[] = [journeyId];
+
+      if (statuses?.length) {
+        const placeholders = statuses.map(() => '?').join(',');
+        where.push(`status IN (${placeholders})`);
+        queryParams.push(...statuses);
+      }
+
+      const rows = await conn.query(
+        `SELECT COUNT(*) as count
+         FROM route_points
+         WHERE ${where.join(' AND ')}`,
+        queryParams
+      );
+
+      return Number(rows[0]?.count ?? 0);
+    } finally {
+      conn.release();
+    }
+  }
+
   async countByStatuses(statuses: RouteStatus[]): Promise<number> {
     const conn = await pool.getConnection();
     try {
@@ -229,7 +292,7 @@ export class MariaDBRouteRepository implements IRouteRepository {
     try {
       await conn.query(
         `UPDATE route_points
-         SET place_name = ?, country = ?, region = ?,
+         SET place_name = ?, coordinates = ST_GeomFromText(?, 4326), country = ?, region = ?,
              osm_data = ?, research_summary = ?,
              image_prompt = ?, narrative_prompt = ?, camera_metadata = ?,
              status = ?, error_message = ?,
@@ -238,6 +301,7 @@ export class MariaDBRouteRepository implements IRouteRepository {
          WHERE id = ?`,
         [
           routePoint.placeName,
+          pointToWKT(routePoint.coordinates),
           routePoint.country,
           routePoint.region,
           this.safeStringify(routePoint.osmData),
@@ -305,7 +369,7 @@ export class MariaDBRouteRepository implements IRouteRepository {
   }
 
   private safeJsonParse(data: string | object): any {
-    if (data && typeof data !== 'string') {
+    if (typeof data !== 'string') {
       return data;
     }
 

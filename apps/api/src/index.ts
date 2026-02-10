@@ -10,6 +10,7 @@ import { photosRouter } from './routes/photos.routes';
 import { journeyRouter } from './routes/journey.routes';
 import { healthRouter } from './routes/health.routes';
 import { mapRouter } from './routes/map.routes';
+import { adminRouter } from './routes/admin.routes';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -66,6 +67,7 @@ app.use('/images', express.static('/app/images'));
 app.use('/api/photos', photosRouter);
 app.use('/api/journey', journeyRouter);
 app.use('/api/map', mapRouter);
+app.use('/api/admin', adminRouter);
 app.use('/health', healthRouter);
 
 // 404 handler

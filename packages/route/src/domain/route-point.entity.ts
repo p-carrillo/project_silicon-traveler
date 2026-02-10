@@ -1,4 +1,5 @@
 import { Point } from '@silicon-traveler/shared';
+import type { RoutePointCreateParams } from '../ports/route-repository.port';
 
 export type RouteStatus = 'pending' | 'researched' | 'content_generated' | 'image_ready' | 'published' | 'failed';
 
@@ -8,7 +9,7 @@ export class RoutePoint {
     public readonly journeyId: number,
     public readonly sequence: number,
     public placeName: string | null,
-    public readonly coordinates: Point,
+    public coordinates: Point,
     public country: string | null,
     public region: string | null,
     public readonly isFferryCrossing: boolean,
@@ -67,7 +68,7 @@ export class RoutePoint {
     coordinates: Point,
     isFerry: boolean = false,
     distance: number | null = null
-  ): Omit<RoutePoint, 'id' | 'createdAt' | 'updatedAt'> {
+  ): RoutePointCreateParams {
     return {
       journeyId,
       sequence,
@@ -87,6 +88,6 @@ export class RoutePoint {
       imagePath: null,
       thumbnailPath: null,
       publishedAt: null,
-    } as any;
+    };
   }
 }

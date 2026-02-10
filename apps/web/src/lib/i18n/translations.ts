@@ -78,6 +78,78 @@ const translations = {
       line: (photos: number | string, distanceKm: number | string, locations: number | string) =>
         `${photos} photos | ${distanceKm}km traveled | ${locations} locations`,
     },
+    admin: {
+      title: 'Admin',
+      empty: 'No route points found.',
+      filters: {
+        status: 'Status',
+      },
+      status: {
+        all: 'All',
+        pending: 'Pending',
+        researched: 'Researched',
+        content_generated: 'Content generated',
+        image_ready: 'Image ready',
+        published: 'Published',
+        failed: 'Failed',
+      },
+      table: {
+        sequence: 'Seq',
+        status: 'Status',
+        city: 'City',
+        country: 'Country',
+        updated: 'Updated',
+        actions: 'Actions',
+      },
+      fields: {
+        city: 'City',
+        country: 'Country',
+        region: 'Region',
+        lat: 'Lat',
+        lng: 'Lng',
+        prompt: 'Prompt',
+        text: 'Text',
+        photo: 'Photo',
+      },
+      placeholders: {
+        city: 'e.g. Tokyo',
+        country: 'e.g. Japan',
+        region: 'e.g. Kanto',
+        prompt: 'Image prompt...',
+        text: 'Narrative / text...',
+      },
+      actions: {
+        apply: 'Apply',
+        edit: 'Edit',
+        save: 'Save',
+        back: 'Back',
+        cancel: 'Cancel',
+        create: 'Create',
+        addRoutePoint: 'Add Route Point',
+        uploadJpeg: 'Upload JPEG',
+      },
+      new: {
+        title: 'New Route Point',
+      },
+      edit: {
+        title: 'Edit Route Point',
+      },
+      fallback: {
+        unknown: 'Unknown',
+        noPhoto: 'No photo',
+      },
+      alt: {
+        routePointPhoto: 'Route point photo',
+      },
+      errors: {
+        invalidCoordinates: 'Invalid coordinates.',
+        saveFailed: 'Could not save changes.',
+        photoRequired: 'Please select a JPEG file.',
+        photoType: 'Only JPEG is supported right now.',
+        photoFailed: 'Could not upload the photo.',
+        unknown: 'Something went wrong.',
+      },
+    },
   },
   es: {
     meta: {
@@ -155,6 +227,78 @@ const translations = {
     stats: {
       line: (photos: number | string, distanceKm: number | string, locations: number | string) =>
         `${photos} fotos | ${distanceKm}km recorridos | ${locations} lugares`,
+    },
+    admin: {
+      title: 'Admin',
+      empty: 'No se encontraron puntos de ruta.',
+      filters: {
+        status: 'Estado',
+      },
+      status: {
+        all: 'Todos',
+        pending: 'Pendiente',
+        researched: 'Investigado',
+        content_generated: 'Contenido generado',
+        image_ready: 'Imagen lista',
+        published: 'Publicado',
+        failed: 'Fallido',
+      },
+      table: {
+        sequence: 'Sec',
+        status: 'Estado',
+        city: 'Ciudad',
+        country: 'Pais',
+        updated: 'Actualizado',
+        actions: 'Acciones',
+      },
+      fields: {
+        city: 'Ciudad',
+        country: 'Pais',
+        region: 'Region',
+        lat: 'Lat',
+        lng: 'Lng',
+        prompt: 'Prompt',
+        text: 'Texto',
+        photo: 'Foto',
+      },
+      placeholders: {
+        city: 'p.ej. Tokyo',
+        country: 'p.ej. Japon',
+        region: 'p.ej. Kanto',
+        prompt: 'Prompt de imagen...',
+        text: 'Narrativa / texto...',
+      },
+      actions: {
+        apply: 'Aplicar',
+        edit: 'Editar',
+        save: 'Guardar',
+        back: 'Volver',
+        cancel: 'Cancelar',
+        create: 'Crear',
+        addRoutePoint: 'Nuevo punto',
+        uploadJpeg: 'Subir JPEG',
+      },
+      new: {
+        title: 'Nuevo punto de ruta',
+      },
+      edit: {
+        title: 'Editar punto de ruta',
+      },
+      fallback: {
+        unknown: 'Desconocido',
+        noPhoto: 'Sin foto',
+      },
+      alt: {
+        routePointPhoto: 'Foto del punto de ruta',
+      },
+      errors: {
+        invalidCoordinates: 'Coordenadas invalidas.',
+        saveFailed: 'No se pudieron guardar los cambios.',
+        photoRequired: 'Selecciona un archivo JPEG.',
+        photoType: 'Por ahora solo se admite JPEG.',
+        photoFailed: 'No se pudo subir la foto.',
+        unknown: 'Algo fallo.',
+      },
     },
   },
 } as const;

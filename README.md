@@ -25,6 +25,13 @@ The system maintains a buffer of 10 pre-generated photos and displays them in a 
 - LLM base generation language uses `I18N_CONTENT_BASE_LANGUAGE` (default `en`), with translations stored for every enabled language.
 - Photo APIs support `?lang=es` (or other enabled language) to fetch localized copy.
 
+## Admin
+
+- Admin UI: `GET /admin` (served by the `web` app).
+- In production, `/admin` is protected with HTTP Basic Auth:
+  - `ADMIN_BASIC_USER`
+  - `ADMIN_BASIC_PASSWORD`
+
 ## Architecture
 
 - **Monorepo**: TypeScript packages organized by domain

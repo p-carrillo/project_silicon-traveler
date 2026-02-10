@@ -23,6 +23,9 @@ importers:
 
   apps/api:
     dependencies:
+      '@silicon-traveler/image':
+        specifier: workspace:*
+        version: link:../../packages/image
       '@silicon-traveler/journey':
         specifier: workspace:*
         version: link:../../packages/journey
@@ -38,6 +41,9 @@ importers:
       '@silicon-traveler/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      '@silicon-traveler/storage':
+        specifier: workspace:*
+        version: link:../../packages/storage
       cors:
         specifier: ^2.8.5
         version: 2.8.6
@@ -167,12 +173,12 @@ importers:
 
   apps/web:
     dependencies:
-      '@silicon-traveler/shared':
-        specifier: workspace:*
-        version: link:../../packages/shared
       '@heroicons/react':
         specifier: ^2.2.0
         version: 2.2.0(react@18.3.1)
+      '@silicon-traveler/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       d3-geo:
         specifier: ^3.1.1
         version: 3.1.1
