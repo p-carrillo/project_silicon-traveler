@@ -129,7 +129,7 @@ When work touches more than one standard, follow them in this order:
 - `packages/`: Domain modules and shared libraries.
 - `migrations/`: MariaDB schema migrations.
 - `scripts/`: Dev, test, and Docker helpers.
-- `.ai/commands/`: IDE-agnostic command definitions (review-code).
+- `.ai/commands/`: IDE-agnostic command definitions (review-code, review-seo).
 - `.ai/agents/`: IDE-agnostic subagent definitions (review-security, review-duplications, review-dependencies, review-seo, review-bugs, review-refactor).
 
 ## API reference
@@ -158,10 +158,12 @@ The HTTP API lives in `apps/api/`. Routes are organized by domain in `apps/api/s
 Skills are actionable procedures. Each skill lives in its own folder with a `SKILL.md` file:
 - `.ai/skills/docker-security-audit/SKILL.md`: Docker security audit workflow.
 - `.ai/skills/project-foundations/SKILL.md`: Project context loader for subagents and review tasks.
+- `.ai/skills/seo-audit/SKILL.md`: Coordinator workflow to run SEO subagents and consolidate a single SEO audit report for `apps/web/`.
 
 ## Available commands
 Commands are reusable workflows triggered with `/` in the chat. Cursor wrappers live in `.cursor/commands/`; real logic lives in `.ai/commands/`:
 - `/review-code`: Comprehensive code review using parallel subagents (security, duplications, dependencies, SEO, bugs, refactoring).
+- `/review-seo`: SEO audit for `apps/web/` using parallel SEO-focused subagents (metadata, structured data, technical SEO, Core Web Vitals, a11y).
 
 ## Custom subagents
 Subagents are specialized agents launched by commands. Cursor wrappers live in `.cursor/agents/`; real definitions live in `.ai/agents/`:
@@ -169,6 +171,12 @@ Subagents are specialized agents launched by commands. Cursor wrappers live in `
 - `review-duplications`: Duplicated code and pattern detection.
 - `review-dependencies`: Layer and module dependency violation checks.
 - `review-seo`: SEO, accessibility, and web performance analysis.
+- `review-seo-technical`: Crawl/index technical SEO checks for `apps/web/`.
+- `review-seo-canonicals`: Canonicals, duplicates consolidation, and locale signals for `apps/web/`.
+- `review-seo-metadata`: Metadata, Open Graph, and Twitter Cards checks for `apps/web/`.
+- `review-seo-structured-data`: JSON-LD / Schema.org checks for key pages in `apps/web/`.
+- `review-seo-web-vitals`: Code-level Core Web Vitals risk checks (LCP/INP/CLS) for `apps/web/`.
+- `review-seo-a11y`: Semantic HTML + accessibility checks for `apps/web/` that impact SEO.
 - `review-bugs`: Potential bug and edge case identification.
 - `review-refactor`: Refactoring opportunity detection.
 

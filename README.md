@@ -218,6 +218,10 @@ curl -H "Authorization: Bearer YOUR_API_KEY" http://localhost:3010/api/journey/s
 curl -H "Authorization: Bearer YOUR_API_KEY" http://localhost:3010/api/photos/latest
 ```
 
+## AI Review Commands
+
+If you use Cursor/Codex with this repo, agent review workflows are defined in `AGENTS.md` and implemented under `.ai/commands/` with wrappers in `.cursor/commands/` (for example: `/review-code`, `/review-seo`).
+
 ### Shell Access
 
 ```bash
