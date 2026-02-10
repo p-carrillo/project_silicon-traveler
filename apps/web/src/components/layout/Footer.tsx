@@ -59,6 +59,16 @@ export default function Footer({ theme, stats, t, locale }: FooterProps) {
             >
               {t.nav.archive}
             </Link>
+            <Link
+              className={`text-xs font-black uppercase tracking-widest ${
+                isDark
+                  ? 'text-white/30 hover:text-white transition-colors'
+                  : 'hover:underline'
+              }`}
+              href="/legal"
+            >
+              {t.legal.title}
+            </Link>
           </div>
           <div
             className={`text-[10px] font-bold tracking-widest uppercase ${

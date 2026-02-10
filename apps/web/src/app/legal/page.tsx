@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import PageContainer from '@/components/layout/PageContainer';
 import SectionTopBar from '@/components/layout/SectionTopBar';
+import Footer from '@/components/layout/Footer';
 import { getServerLocale } from '@/lib/i18n/server';
 import { getTranslations } from '@/lib/i18n/translations';
 
@@ -173,34 +174,7 @@ export default function LegalPage() {
         </PageContainer>
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-black bg-white">
-        <PageContainer className="py-8 flex flex-col md:flex-row justify-between items-center gap-6">
-          <p className="text-[10px] font-bold tracking-[0.3em] uppercase text-black/40">
-            &copy; {new Date().getFullYear()} Silicon Traveler
-          </p>
-          <div className="flex gap-8">
-            <Link
-              className="text-xs font-black uppercase tracking-widest hover:underline"
-              href="/"
-            >
-              {t.nav.journal}
-            </Link>
-            <Link
-              className="text-xs font-black uppercase tracking-widest hover:underline"
-              href="/archive"
-            >
-              {t.nav.archive}
-            </Link>
-            <Link
-              className="text-xs font-black uppercase tracking-widest hover:underline"
-              href="/map"
-            >
-              {t.nav.map}
-            </Link>
-          </div>
-        </PageContainer>
-      </footer>
+      <Footer theme="light" stats={null} t={t} locale={locale} />
     </div>
   );
 }
