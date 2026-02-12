@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { ArrowLeftIcon, ArrowRightIcon, MapPinIcon } from '@heroicons/react/24/outline';
 import PageContainer from '@/components/layout/PageContainer';
 import SectionTopBar from '@/components/layout/SectionTopBar';
+import Footer from '@/components/layout/Footer';
+import ProgressiveImage from '@/components/photo/ProgressiveImage';
 import type { JourneyStats, Photo } from '@/types';
 import { getTranslations } from '@/lib/i18n/translations';
 import { toProxyImageSrc } from '@/lib/images';
@@ -38,7 +40,6 @@ export default function PhotoJournal({
     : [];
   const locationPrimary = locationParts[0];
   const locationSecondary = locationParts.slice(1).join(', ');
-  const currentYear = new Date().getFullYear();
 
   const technicalPlate = [
     photo.camera_model,
@@ -48,7 +49,6 @@ export default function PhotoJournal({
   ]
     .filter(Boolean)
     .join(' / ');
-  const numberFormatter = new Intl.NumberFormat(locale);
 
   return (
     <div className="min-h-screen bg-black text-white selection:bg-white selection:text-black">
@@ -62,12 +62,13 @@ export default function PhotoJournal({
 
       <PageContainer className="flex flex-col py-6">
         <main className="mt-8 flex flex-col lg:flex-row gap-12">
-          <div className="lg:flex-none">
-            <div className="w-full max-w-[calc(100vh-14rem)] max-h-[calc(100vh-14rem)] bg-zinc-900 overflow-hidden aspect-square min-h-[320px] ring-1 ring-white/10 animate-fade-up">
-              <img
+          <div className="lg:flex-none lg:w-[calc(100vh-14rem)] lg:max-w-[60vw]">
+            <div className="relative w-full bg-zinc-900 overflow-hidden aspect-square min-h-[320px] ring-1 ring-white/10 animate-fade-up">
+              <ProgressiveImage
                 alt={photo.title}
                 className="w-full h-full object-cover object-center filter grayscale contrast-125 brightness-90"
                 src={toProxyImageSrc(photo.image_path)}
+                skeletonClassName="bg-zinc-800"
               />
             </div>
             {(technicalPlate || photo.roll_number || photo.frame_number) && (
@@ -118,7 +119,7 @@ export default function PhotoJournal({
                 </p>
               )}
               <div className="mb-10">
-                <p className="font-serif text-white/90 text-xl leading-relaxed italic whitespace-pre-wrap">
+                <p className="font-narrative text-white/90 text-lg leading-relaxed italic whitespace-pre-wrap">
                   {photo.narrative}
                 </p>
               </div>
@@ -165,49 +166,9 @@ export default function PhotoJournal({
           </div>
         </main>
 
-        <footer className="mt-16 border-t border-white/10 py-8 flex flex-col md:flex-row justify-between items-center gap-8">
-          <div className="text-white/30 text-[9px] uppercase tracking-[0.4em]">
-            (c) {currentYear} Silicon Traveler - {t.photo.allRights}
-          </div>
-          <div className="flex items-center gap-12">
-            <div className="flex gap-8">
-              <Link
-                className="text-white/30 hover:text-white transition-colors text-[9px] uppercase tracking-[0.3em]"
-                href="/archive"
-              >
-                {t.nav.archive}
-              </Link>
-              <Link
-                className="text-white/30 hover:text-white transition-colors text-[9px] uppercase tracking-[0.3em]"
-                href="/"
-              >
-                {t.nav.journal}
-              </Link>
-            </div>
-            <div className="h-8 w-px bg-white/10 hidden md:block"></div>
-            <div className="flex items-center gap-2">
-              <span className="text-white/30 text-[9px] uppercase tracking-[0.3em]">
-                {t.photo.volume}
-              </span>
-              <span className="text-white text-[9px] font-bold">
-                {photo.volume_issue || '01 // 26'}
-              </span>
-            </div>
-          </div>
-        </footer>
-
-        {stats && (
-          <div className="pb-4 text-center text-xs text-white/40 tracking-[0.2em] uppercase">
-            {t.stats.line(
-              numberFormatter.format(stats.stats.photos_published),
-              numberFormatter.format(Math.round(stats.stats.total_distance_km)),
-              numberFormatter.format(
-                stats.stats.route_points.reduce((sum, item) => sum + item.count, 0)
-              )
-            )}
-          </div>
-        )}
       </PageContainer>
+
+      <Footer theme="dark" stats={stats} t={t} locale={locale} />
     </div>
   );
 }
