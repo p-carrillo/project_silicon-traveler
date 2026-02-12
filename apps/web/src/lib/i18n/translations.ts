@@ -196,6 +196,7 @@ const translations = {
         photoFailed: 'Could not upload the photo.',
         unknown: 'Something went wrong.',
       },
+    },
     cookie: {
       message: 'This website uses cookies to enhance your browsing experience.',
       accept: 'Accept',
@@ -465,6 +466,7 @@ const translations = {
         photoFailed: 'No se pudo subir la foto.',
         unknown: 'Algo fallo.',
       },
+    },
     cookie: {
       message: 'Este sitio web utiliza cookies para mejorar tu experiencia de navegación.',
       accept: 'Aceptar',
@@ -538,7 +540,7 @@ const translations = {
       cookiesChangesText:
         'Podemos actualizar esta Política de Cookies para reflejar cambios en nuestras prácticas o por motivos legales, regulatorios u operativos. La fecha de la última actualización se indica al inicio de esta página.',
     },
-  },
+  }
 } as const;
 
 export type Translations = (typeof translations)[keyof typeof translations];
