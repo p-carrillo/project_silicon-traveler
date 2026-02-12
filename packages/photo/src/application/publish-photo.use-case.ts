@@ -1,5 +1,5 @@
 import { IRouteRepository } from '@silicon-traveler/route';
-import { getI18nConfig } from '@silicon-traveler/shared';
+import { getI18nConfig, type QueryExecutor } from '@silicon-traveler/shared';
 import {
   IPhotoRepository,
   CreatePhotoInput,
@@ -16,8 +16,12 @@ export class PublishPhotoUseCase {
     private readonly routeRepository: IRouteRepository
   ) {}
 
-  async execute(routePointId: number, preparedPhoto: PreparePhotoResult): Promise<number> {
-    const routePoint = await this.routeRepository.findById(routePointId);
+  async execute(
+    routePointId: number,
+    preparedPhoto: PreparePhotoResult,
+    options?: { queryExecutor?: QueryExecutor }
+  ): Promise<number> {
+    const routePoint = await this.routeRepository.findById(routePointId, options?.queryExecutor);
     if (!routePoint) {
       throw new Error(`RoutePoint ${routePointId} not found`);
     }
@@ -27,7 +31,10 @@ export class PublishPhotoUseCase {
     }
 
     const { supportedLanguages, defaultLanguage } = getI18nConfig();
-    const translations = await this.routeRepository.findContentTranslations(routePoint.id);
+    const translations = await this.routeRepository.findContentTranslations(
+      routePoint.id,
+      options?.queryExecutor
+    );
     const translationMap = new Map(
       translations.map((translation) => [translation.language, translation])
     );
@@ -80,10 +87,10 @@ export class PublishPhotoUseCase {
       publishedAt: new Date(),
     };
 
-    const photoId = await this.photoRepository.create(photoInput);
+    const photoId = await this.photoRepository.create(photoInput, options?.queryExecutor);
     
     routePoint.updateStatus('published');
-    await this.routeRepository.update(routePoint);
+    await this.routeRepository.update(routePoint, options?.queryExecutor);
 
     return photoId;
   }

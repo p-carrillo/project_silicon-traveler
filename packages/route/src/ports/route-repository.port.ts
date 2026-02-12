@@ -1,5 +1,6 @@
 import { RoutePoint, RouteStatus } from '../domain/route-point.entity';
 import { Point } from '@silicon-traveler/shared';
+import type { QueryExecutor } from '@silicon-traveler/shared';
 
 export interface RoutePointContentTranslation {
   language: string;
@@ -36,7 +37,7 @@ export interface FindRoutePointsByJourneyParams {
 
 export interface IRouteRepository {
   create(routePoint: RoutePointCreateParams): Promise<RoutePoint>;
-  findById(id: number): Promise<RoutePoint | null>;
+  findById(id: number, queryExecutor?: QueryExecutor): Promise<RoutePoint | null>;
   findByStatus(status: RouteStatus, limit?: number): Promise<RoutePoint[]>;
   findFirstScheduledByJourney(journeyId: number): Promise<RoutePoint | null>;
   findNextBySequence(journeyId: number): Promise<RoutePoint | null>;
@@ -45,10 +46,11 @@ export interface IRouteRepository {
   countByStatuses(statuses: RouteStatus[]): Promise<number>;
   upsertContentTranslations(
     routePointId: number,
-    translations: RoutePointContentTranslation[]
+    translations: RoutePointContentTranslation[],
+    queryExecutor?: QueryExecutor
   ): Promise<void>;
-  findContentTranslations(routePointId: number): Promise<RoutePointContentTranslation[]>;
-  update(routePoint: RoutePoint): Promise<void>;
-  deleteById(id: number): Promise<boolean>;
+  findContentTranslations(routePointId: number, queryExecutor?: QueryExecutor): Promise<RoutePointContentTranslation[]>;
+  update(routePoint: RoutePoint, queryExecutor?: QueryExecutor): Promise<void>;
+  deleteById(id: number, queryExecutor?: QueryExecutor): Promise<boolean>;
   getLastSequence(journeyId: number): Promise<number>;
 }

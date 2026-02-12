@@ -165,6 +165,7 @@ const translations = {
         },
         errors: {
           invalidCredentials: 'Invalid credentials.',
+          tooManyAttempts: 'Too many failed attempts. Please try again later.',
         },
       },
       deleteModal: {
@@ -361,6 +362,7 @@ const translations = {
         },
         errors: {
           invalidCredentials: 'Credenciales invalidas.',
+          tooManyAttempts: 'Demasiados intentos fallidos. Intentalo mas tarde.',
         },
       },
       deleteModal: {

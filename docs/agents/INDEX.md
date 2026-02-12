@@ -9,6 +9,10 @@
 - `docs/agents/GOLDEN_PATHS.md`: End-to-end flows for the core product.
 - `docs/agents/DEBUGGING.md`: Common issues and how to resolve them.
 
+## Recent Decisions
+- `.adr/056-admin-transactional-route-point-update-and-delete.md`: Transactional admin update/delete orchestration with post-commit storage cleanup.
+- `.adr/057-admin-session-secret-and-login-rate-limit.md`: Dedicated admin session secret and login brute-force mitigation policy.
+
 ## Standards
 Project standards (IDE-agnostic) in `.ai/standards/`, grouped by context:
 

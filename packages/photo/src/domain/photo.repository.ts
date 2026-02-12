@@ -1,4 +1,5 @@
 import type { Point } from '@silicon-traveler/shared';
+import type { QueryExecutor } from '@silicon-traveler/shared';
 
 export interface PhotoMetadata {
   aperture?: string | null;
@@ -77,11 +78,14 @@ export interface CreatePhotoInput {
 }
 
 export interface IPhotoRepository {
-  create(input: CreatePhotoInput): Promise<number>;
+  create(input: CreatePhotoInput, queryExecutor?: QueryExecutor): Promise<number>;
   findById(id: number): Promise<Photo | null>;
   findByJourneyId(journeyId: number, limit?: number, offset?: number): Promise<Photo[]>;
   findLatest(limit?: number): Promise<Photo[]>;
-  hasByRoutePointId(routePointId: number): Promise<boolean>;
-  deleteByRoutePointId(routePointId: number): Promise<boolean>;
-  syncPublishedPhotoFromRoutePoint(input: SyncPublishedPhotoFromRoutePointInput): Promise<void>;
+  hasByRoutePointId(routePointId: number, queryExecutor?: QueryExecutor): Promise<boolean>;
+  deleteByRoutePointId(routePointId: number, queryExecutor?: QueryExecutor): Promise<boolean>;
+  syncPublishedPhotoFromRoutePoint(
+    input: SyncPublishedPhotoFromRoutePointInput,
+    queryExecutor?: QueryExecutor
+  ): Promise<void>;
 }

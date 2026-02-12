@@ -1,4 +1,4 @@
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
 import PageContainer from '@/components/layout/PageContainer';
 import SectionTopBar from '@/components/layout/SectionTopBar';
@@ -7,8 +7,16 @@ import {
   createAdminSessionCookie,
   createAdminSessionToken,
   getAdminCredentials,
+  getAdminSessionSecret,
   isValidAdminSessionToken,
 } from '@/lib/admin-auth';
+import {
+  clearAdminLoginAttempts,
+  createAdminLoginRateLimitKey,
+  isAdminLoginRateLimited,
+  registerFailedAdminLoginAttempt,
+  resolveClientIpFromHeaders,
+} from '@/lib/admin-login-rate-limit';
 import { getServerLocale } from '@/lib/i18n/server';
 import { getTranslations } from '@/lib/i18n/translations';
 
@@ -25,8 +33,9 @@ export default async function AdminLoginPage({
   const locale = getServerLocale();
   const t = getTranslations(locale);
   const credentials = getAdminCredentials();
+  const sessionSecret = getAdminSessionSecret();
 
-  if (!credentials) {
+  if (!credentials || !sessionSecret) {
     notFound();
   }
 
@@ -34,46 +43,48 @@ export default async function AdminLoginPage({
   const cookieStore = cookies();
   const existingSession = cookieStore.get(ADMIN_SESSION_COOKIE_NAME)?.value;
   if (existingSession) {
-    const hasValidSession = await isValidAdminSessionToken(
-      existingSession,
-      credentials.user,
-      credentials.password
-    );
+    const hasValidSession = await isValidAdminSessionToken(existingSession, credentials.user);
     if (hasValidSession) {
       redirect(nextPath);
     }
   }
 
   const hasInvalidCredentialsError = searchParams?.error === 'invalid_credentials';
+  const hasTooManyAttemptsError = searchParams?.error === 'too_many_attempts';
 
   async function loginAction(formData: FormData) {
     'use server';
 
     const configuredCredentials = getAdminCredentials();
-    if (!configuredCredentials) {
+    const configuredSecret = getAdminSessionSecret();
+    if (!configuredCredentials || !configuredSecret) {
       notFound();
     }
 
     const providedUser = readString(formData.get('username'));
     const providedPassword = readString(formData.get('password'));
     const redirectTarget = normalizeNextPath(formData.get('next'));
+    const clientIp = resolveClientIpFromHeaders(headers());
+    const rateLimitKey = createAdminLoginRateLimitKey(clientIp, providedUser);
+
+    if (isAdminLoginRateLimited(rateLimitKey)) {
+      redirectToLoginWithError('too_many_attempts', redirectTarget);
+    }
 
     if (
       providedUser !== configuredCredentials.user ||
       providedPassword !== configuredCredentials.password
     ) {
-      const loginUrl = new URL('/admin/login', 'http://localhost');
-      loginUrl.searchParams.set('error', 'invalid_credentials');
-      if (redirectTarget !== '/admin') {
-        loginUrl.searchParams.set('next', redirectTarget);
-      }
-      redirect(`${loginUrl.pathname}${loginUrl.search}`);
+      const failure = registerFailedAdminLoginAttempt(rateLimitKey);
+      redirectToLoginWithError(
+        failure.blocked ? 'too_many_attempts' : 'invalid_credentials',
+        redirectTarget
+      );
     }
 
-    const sessionToken = await createAdminSessionToken(
-      configuredCredentials.user,
-      configuredCredentials.password
-    );
+    clearAdminLoginAttempts(rateLimitKey);
+
+    const sessionToken = await createAdminSessionToken(configuredCredentials.user);
 
     cookies().set(createAdminSessionCookie(sessionToken));
 
@@ -96,6 +107,11 @@ export default async function AdminLoginPage({
           {hasInvalidCredentialsError ? (
             <div className="mb-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-800">
               {t.admin.login.errors.invalidCredentials}
+            </div>
+          ) : null}
+          {hasTooManyAttemptsError ? (
+            <div className="mb-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+              {t.admin.login.errors.tooManyAttempts}
             </div>
           ) : null}
 
@@ -146,4 +162,14 @@ function normalizeNextPath(value: FormDataEntryValue | string | undefined): stri
 
 function readString(value: FormDataEntryValue | null): string {
   return typeof value === 'string' ? value.trim() : '';
+}
+
+function redirectToLoginWithError(errorCode: string, redirectTarget: string): never {
+  const loginUrl = new URL('/admin/login', 'http://localhost');
+  loginUrl.searchParams.set('error', errorCode);
+  if (redirectTarget !== '/admin') {
+    loginUrl.searchParams.set('next', redirectTarget);
+  }
+
+  redirect(`${loginUrl.pathname}${loginUrl.search}`);
 }

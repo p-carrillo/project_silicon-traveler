@@ -1,5 +1,5 @@
 import type { Pool } from 'mariadb';
-import { pointToWKT, wktToPoint } from '@silicon-traveler/shared';
+import { pointToWKT, wktToPoint, type QueryExecutor } from '@silicon-traveler/shared';
 import {
   IPhotoRepository,
   Photo,
@@ -10,11 +10,12 @@ import {
 export class MariaDBPhotoRepository implements IPhotoRepository {
   constructor(private readonly pool: Pool) {}
 
-  async create(input: CreatePhotoInput): Promise<number> {
+  async create(input: CreatePhotoInput, queryExecutor?: QueryExecutor): Promise<number> {
     const tagsValue = input.tags?.length ? input.tags.join(', ') : null;
     const metadataValue = input.metadata ? JSON.stringify(input.metadata) : null;
+    const executor = queryExecutor ?? this.pool;
 
-    const result = await this.pool.query(
+    const result = await executor.query(
       `INSERT INTO photos (
         route_point_id, title, narrative, location, coordinates,
         camera_model, lens, iso, shutter_speed,
@@ -55,7 +56,7 @@ export class MariaDBPhotoRepository implements IPhotoRepository {
         translation.location,
       ]);
 
-      await this.pool.query(
+      await executor.query(
         `INSERT INTO photo_translations
          (photo_id, language, title, narrative, location)
          VALUES ${values}
@@ -121,8 +122,9 @@ export class MariaDBPhotoRepository implements IPhotoRepository {
     return rows.map((row) => this.mapToPhoto(row));
   }
 
-  async hasByRoutePointId(routePointId: number): Promise<boolean> {
-    const rows = await this.pool.query<any[]>(
+  async hasByRoutePointId(routePointId: number, queryExecutor?: QueryExecutor): Promise<boolean> {
+    const executor = queryExecutor ?? this.pool;
+    const rows = await executor.query<any[]>(
       `SELECT 1
        FROM photos
        WHERE route_point_id = ?
@@ -133,8 +135,9 @@ export class MariaDBPhotoRepository implements IPhotoRepository {
     return rows.length > 0;
   }
 
-  async deleteByRoutePointId(routePointId: number): Promise<boolean> {
-    const result = await this.pool.query(
+  async deleteByRoutePointId(routePointId: number, queryExecutor?: QueryExecutor): Promise<boolean> {
+    const executor = queryExecutor ?? this.pool;
+    const result = await executor.query(
       `DELETE FROM photos
        WHERE route_point_id = ?`,
       [routePointId]
@@ -143,8 +146,12 @@ export class MariaDBPhotoRepository implements IPhotoRepository {
     return Number(result.affectedRows ?? 0) > 0;
   }
 
-  async syncPublishedPhotoFromRoutePoint(input: SyncPublishedPhotoFromRoutePointInput): Promise<void> {
-    await this.pool.query(
+  async syncPublishedPhotoFromRoutePoint(
+    input: SyncPublishedPhotoFromRoutePointInput,
+    queryExecutor?: QueryExecutor
+  ): Promise<void> {
+    const executor = queryExecutor ?? this.pool;
+    await executor.query(
       `UPDATE photos
        SET title = ?,
            location = ?,
@@ -159,7 +166,7 @@ export class MariaDBPhotoRepository implements IPhotoRepository {
     );
 
     for (const translation of input.translations) {
-      await this.pool.query(
+      await executor.query(
         `UPDATE photo_translations pt
          INNER JOIN photos p ON p.id = pt.photo_id
          SET pt.title = ?,

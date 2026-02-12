@@ -1,4 +1,4 @@
-import { Point } from '@silicon-traveler/shared';
+import { Point, type QueryExecutor } from '@silicon-traveler/shared';
 import { IRouteRepository } from '../ports/route-repository.port';
 import { RoutePoint, RouteStatus } from '../domain/route-point.entity';
 
@@ -19,8 +19,11 @@ export interface UpdateRoutePointAdminInput {
 export class UpdateRoutePointAdminUseCase {
   constructor(private readonly routeRepository: IRouteRepository) {}
 
-  async execute(input: UpdateRoutePointAdminInput): Promise<RoutePoint> {
-    const routePoint = await this.routeRepository.findById(input.id);
+  async execute(
+    input: UpdateRoutePointAdminInput,
+    options?: { queryExecutor?: QueryExecutor }
+  ): Promise<RoutePoint> {
+    const routePoint = await this.routeRepository.findById(input.id, options?.queryExecutor);
     if (!routePoint) {
       throw new Error(`RoutePoint ${input.id} not found`);
     }
@@ -47,7 +50,7 @@ export class UpdateRoutePointAdminUseCase {
 
     routePoint.updatedAt = new Date();
 
-    await this.routeRepository.update(routePoint);
+    await this.routeRepository.update(routePoint, options?.queryExecutor);
     return routePoint;
   }
 }

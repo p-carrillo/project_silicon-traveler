@@ -6,11 +6,13 @@ import { middleware } from '../../../src/middleware';
 const originalNodeEnv = process.env.NODE_ENV;
 const originalAdminBasicUser = process.env.ADMIN_BASIC_USER;
 const originalAdminBasicPassword = process.env.ADMIN_BASIC_PASSWORD;
+const originalAdminSessionSecret = process.env.ADMIN_SESSION_SECRET;
 
 afterEach(() => {
   process.env.NODE_ENV = originalNodeEnv;
   process.env.ADMIN_BASIC_USER = originalAdminBasicUser;
   process.env.ADMIN_BASIC_PASSWORD = originalAdminBasicPassword;
+  process.env.ADMIN_SESSION_SECRET = originalAdminSessionSecret;
 });
 
 describe('admin middleware auth', () => {
@@ -30,6 +32,7 @@ describe('admin middleware auth', () => {
     process.env.NODE_ENV = 'development';
     process.env.ADMIN_BASIC_USER = 'admin';
     process.env.ADMIN_BASIC_PASSWORD = 'secret';
+    process.env.ADMIN_SESSION_SECRET = 'session-secret';
     const request = createRequest('/admin/login');
 
     // Act
@@ -44,6 +47,7 @@ describe('admin middleware auth', () => {
     process.env.NODE_ENV = 'development';
     process.env.ADMIN_BASIC_USER = 'admin';
     process.env.ADMIN_BASIC_PASSWORD = 'secret';
+    process.env.ADMIN_SESSION_SECRET = 'session-secret';
     const request = createRequest('/admin?status=published');
 
     // Act
@@ -59,6 +63,7 @@ describe('admin middleware auth', () => {
     process.env.NODE_ENV = 'development';
     delete process.env.ADMIN_BASIC_USER;
     delete process.env.ADMIN_BASIC_PASSWORD;
+    process.env.ADMIN_SESSION_SECRET = 'session-secret';
     const request = createRequest('/admin');
 
     // Act
@@ -68,12 +73,25 @@ describe('admin middleware auth', () => {
     expect(response.status).toBe(404);
   });
 
+  it('returns 404 when session secret is missing', async () => {
+    process.env.NODE_ENV = 'development';
+    process.env.ADMIN_BASIC_USER = 'admin';
+    process.env.ADMIN_BASIC_PASSWORD = 'secret';
+    delete process.env.ADMIN_SESSION_SECRET;
+    const request = createRequest('/admin');
+
+    const response = await middleware(request);
+
+    expect(response.status).toBe(404);
+  });
+
   it('allows admin route with valid session cookie', async () => {
     // Arrange
     process.env.NODE_ENV = 'development';
     process.env.ADMIN_BASIC_USER = 'admin';
     process.env.ADMIN_BASIC_PASSWORD = 'secret';
-    const token = await createAdminSessionToken('admin', 'secret');
+    process.env.ADMIN_SESSION_SECRET = 'session-secret';
+    const token = await createAdminSessionToken('admin');
     const request = createRequest('/admin', {
       [ADMIN_SESSION_COOKIE_NAME]: token,
     });
@@ -90,6 +108,7 @@ describe('admin middleware auth', () => {
     process.env.NODE_ENV = 'development';
     process.env.ADMIN_BASIC_USER = 'admin';
     process.env.ADMIN_BASIC_PASSWORD = 'secret';
+    process.env.ADMIN_SESSION_SECRET = 'session-secret';
     const request = createRequest('/admin', {
       [ADMIN_SESSION_COOKIE_NAME]: 'invalid.token',
     });

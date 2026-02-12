@@ -56,7 +56,7 @@ describe('UpdateRoutePointAdminUseCase', () => {
     expect(updated.coordinates).toEqual({ lat: 9, lng: 8 });
     expect(updated.imagePrompt).toBe('New prompt');
     expect(updated.narrativePrompt).toBe('New text');
-    expect(routeRepository.update).toHaveBeenCalledWith(routePoint);
+    expect(routeRepository.update).toHaveBeenCalledWith(routePoint, undefined);
   });
 
   it('throws when route point is missing', async () => {

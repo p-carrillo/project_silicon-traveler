@@ -29,15 +29,19 @@ The system maintains a buffer of 10 pre-generated photos and displays them in a 
 
 - Admin UI: `GET /admin` (served by the `web` app).
 - In all environments (including development), `/admin` requires login at `GET /admin/login`.
-- Login credentials are configured with:
+- Login credentials and session signing are configured with:
   - `ADMIN_BASIC_USER`
   - `ADMIN_BASIC_PASSWORD`
+  - `ADMIN_SESSION_SECRET`
+- If any of the three admin variables is missing, `/admin` and `/admin/login` return `404` (fail-closed).
+- Login is rate-limited in web app memory: `5` failed attempts in `15` minutes blocks the key (`IP + username`) for `15` minutes, returning `error=too_many_attempts`.
 - Authenticated sessions can be closed from the admin `Logout` button.
 - Admin forms can calculate coordinates from city/country/region using the `Calculate coordinates` button.
 - Admin coordinate inputs accept dot or comma decimals (e.g. `43.36` or `43,36`) and show a success message after saving edits.
 - Editing a published route point in admin also syncs the linked `photos` record, so changes appear in `archive` and `map`.
 - The route-point editor shows current status and includes a `Published` switch to publish/unpublish from the same form.
 - The edit screen includes a `Delete` button with confirmation modal before removing a route point.
+- Admin update/publish/unpublish/delete DB writes are orchestrated transactionally to avoid partial state across `route_points` and `photos`.
 
 ### Admin Smoke Test Checklist
 

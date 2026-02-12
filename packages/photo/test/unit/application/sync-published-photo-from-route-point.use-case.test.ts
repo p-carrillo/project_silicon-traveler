@@ -45,7 +45,7 @@ describe('SyncPublishedPhotoFromRoutePointUseCase', () => {
           location: 'Gijon, Asturias, Spain',
         },
       ],
-    });
+    }, undefined);
   });
 
   it('uses language fallback values when place fields are empty', async () => {

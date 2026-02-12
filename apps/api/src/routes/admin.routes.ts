@@ -18,24 +18,39 @@ import {
 import { LocalStorageAdapter } from '@silicon-traveler/storage';
 import { SharpAdapter } from '@silicon-traveler/image';
 import { parseOffsetInt, parsePoint, parsePositiveInt, parseStatusesParam } from './admin.utils';
+import { DeleteAdminRoutePointUseCase } from '../application/admin/delete-admin-route-point.use-case';
+import { deriveThumbnailPath } from '../application/admin/photo-prepared.factory';
+import { UpdateAdminRoutePointUseCase } from '../application/admin/update-admin-route-point.use-case';
 
 export const adminRouter: Router = Router();
 
 const JOURNEY_ID = 1;
 
 const routeRepository = new MariaDBRouteRepository();
+const photoRepository = new MariaDBPhotoRepository(pool);
 
 const listRoutePointsUseCase = new ListRoutePointsUseCase(routeRepository);
 const createFutureRoutePointUseCase = new CreateFutureRoutePointUseCase(routeRepository);
 const updateRoutePointAdminUseCase = new UpdateRoutePointAdminUseCase(routeRepository);
 const deleteRoutePointAdminUseCase = new DeleteRoutePointAdminUseCase(routeRepository);
 const geocodePlaceUseCase = new GeocodePlaceUseCase(new NominatimAdapter());
-const photoRepository = new MariaDBPhotoRepository(pool as any);
 const publishPhotoUseCase = new PublishPhotoUseCase(photoRepository, routeRepository);
 const syncPublishedPhotoFromRoutePointUseCase = new SyncPublishedPhotoFromRoutePointUseCase(photoRepository);
 
 const storage = new LocalStorageAdapter();
 const thumbnailGenerator = new SharpAdapter();
+const updateAdminRoutePointUseCase = new UpdateAdminRoutePointUseCase(
+  routeRepository,
+  photoRepository,
+  updateRoutePointAdminUseCase,
+  publishPhotoUseCase,
+  syncPublishedPhotoFromRoutePointUseCase
+);
+const deleteAdminRoutePointUseCase = new DeleteAdminRoutePointUseCase(
+  routeRepository,
+  deleteRoutePointAdminUseCase,
+  storage
+);
 
 adminRouter.get('/route-points', async (req: Request, res: Response) => {
   try {
@@ -201,11 +216,6 @@ adminRouter.put('/route-points/:id', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Invalid route point ID' });
     }
 
-    const currentRoutePoint = await routeRepository.findById(id);
-    if (!currentRoutePoint) {
-      return res.status(404).json({ error: 'Route point not found' });
-    }
-
     const body = (req.body ?? {}) as Record<string, unknown>;
 
     let coordinatesValue: { lat: number; lng: number } | undefined;
@@ -222,17 +232,29 @@ adminRouter.put('/route-points/:id', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Invalid status' });
     }
 
-    const requestedStatus = status as RouteStatus | undefined;
-    const isPublishingTransition = requestedStatus === 'published' && currentRoutePoint.status !== 'published';
-    const hasExistingPhoto = isPublishingTransition
-      ? await photoRepository.hasByRoutePointId(id)
-      : false;
-    const statusForUpdate =
-      isPublishingTransition && !hasExistingPhoto
-        ? undefined
-        : requestedStatus;
+    const rawTranslations = body.translations;
+    const translations = Array.isArray(rawTranslations)
+      ? rawTranslations
+          .map((translation) =>
+            translation && typeof translation === 'object'
+              ? (translation as Record<string, unknown>)
+              : null
+          )
+          .filter(Boolean)
+          .map((translation) => ({
+            language: String(translation!.language),
+            imagePrompt:
+              translation!.imagePrompt === null || translation!.imagePrompt === undefined
+                ? null
+                : String(translation!.imagePrompt),
+            narrative:
+              translation!.narrative === null || translation!.narrative === undefined
+                ? null
+                : String(translation!.narrative),
+          }))
+      : undefined;
 
-    const updated = await updateRoutePointAdminUseCase.execute({
+    const updated = await updateAdminRoutePointUseCase.execute({
       id,
       placeName: body.place_name as string | null | undefined,
       country: body.country as string | null | undefined,
@@ -242,53 +264,22 @@ adminRouter.put('/route-points/:id', async (req: Request, res: Response) => {
       narrativePrompt: body.narrative_prompt as string | null | undefined,
       imagePath: body.image_path as string | null | undefined,
       thumbnailPath: body.thumbnail_path as string | null | undefined,
-      status: statusForUpdate,
+      status: status as RouteStatus | undefined,
       errorMessage: body.error_message as string | null | undefined,
+      translations,
     });
-
-    const rawTranslations = body.translations;
-    if (Array.isArray(rawTranslations)) {
-      const translations = rawTranslations
-        .map((t) => (t && typeof t === 'object' ? (t as Record<string, unknown>) : null))
-        .filter(Boolean)
-        .map((t) => ({
-          language: String(t!.language),
-          imagePrompt: t!.imagePrompt === null || t!.imagePrompt === undefined ? null : String(t!.imagePrompt),
-          narrative: t!.narrative === null || t!.narrative === undefined ? null : String(t!.narrative),
-        }));
-
-      await routeRepository.upsertContentTranslations(id, translations);
-    }
-
-    if (currentRoutePoint.status === 'published' && updated.status !== 'published') {
-      await photoRepository.deleteByRoutePointId(updated.id);
-    }
-
-    if (isPublishingTransition && !hasExistingPhoto) {
-      if (updated.status !== 'image_ready') {
-        return res.status(400).json({ error: 'Route point must be image_ready to publish' });
-      }
-      if (!updated.imagePath || !updated.thumbnailPath) {
-        return res.status(400).json({ error: 'Route point requires image assets before publishing' });
-      }
-
-      await publishPhotoUseCase.execute(updated.id, buildPreparedPhotoFromRoutePoint(updated));
-    } else if (updated.status === 'published') {
-      await syncPublishedPhotoFromRoutePointUseCase.execute({
-        routePointId: updated.id,
-        placeName: updated.placeName,
-        country: updated.country,
-        region: updated.region,
-        coordinates: updated.coordinates,
-      });
-    }
 
     return res.json({
       id: Number(updated.id),
     });
-  } catch (error: any) {
-    const message = error?.message || 'Failed to update route point';
-    const status = message.includes('not found') ? 404 : 500;
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Failed to update route point';
+    const status =
+      message.includes('not found')
+        ? 404
+        : message.includes('image_ready') || message.includes('image assets')
+          ? 400
+          : 500;
     console.error('Error updating route point (admin):', error);
     return res.status(status).json({ error: message });
   }
@@ -301,10 +292,10 @@ adminRouter.delete('/route-points/:id', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Invalid route point ID' });
     }
 
-    await deleteRoutePointAdminUseCase.execute(id);
+    await deleteAdminRoutePointUseCase.execute(id);
     return res.status(204).send();
-  } catch (error: any) {
-    const message = error?.message || 'Failed to delete route point';
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Failed to delete route point';
     const status = message.includes('not found') ? 404 : 500;
     console.error('Error deleting route point (admin):', error);
     return res.status(status).json({ error: message });
@@ -400,35 +391,6 @@ async function deletePreviousImages(imagePath: string | null, thumbnailPath: str
   }
 
   await Promise.allSettled(deletions);
-}
-
-function deriveThumbnailPath(relativeImagePath: string, suffix: string): string {
-  const lastDot = relativeImagePath.lastIndexOf('.');
-  if (lastDot === -1) return `${relativeImagePath}${suffix}`;
-  return `${relativeImagePath.substring(0, lastDot)}${suffix}${relativeImagePath.substring(lastDot)}`;
-}
-
-function buildPreparedPhotoFromRoutePoint(routePoint: RoutePoint) {
-  const heroThumbnailUrl =
-    routePoint.thumbnailPath && routePoint.thumbnailPath.includes('_grid')
-      ? routePoint.thumbnailPath.replace('_grid', '_hero')
-      : routePoint.imagePath
-        ? deriveThumbnailPath(routePoint.imagePath, '_hero')
-        : '/images/default_hero.jpg';
-
-  return {
-    imageUrl: routePoint.imagePath ?? '/images/default.jpg',
-    gridThumbnailUrl: routePoint.thumbnailPath ?? '/images/default_grid.jpg',
-    heroThumbnailUrl,
-    narrative: routePoint.narrativePrompt || 'Another day on the road.',
-    imagePrompt: routePoint.imagePrompt || '',
-    camera: routePoint.cameraMetadata?.camera || 'Leica M11',
-    lens: routePoint.cameraMetadata?.lens || '35mm f/1.4',
-    iso: routePoint.cameraMetadata?.iso || 800,
-    shutterSpeed: routePoint.cameraMetadata?.shutterSpeed || '1/125',
-    aperture: routePoint.cameraMetadata?.aperture || 'f/2.8',
-    revisedPrompt: null,
-  };
 }
 
 async function resolveStorageDate(journeyId: number, sequence: number): Promise<Date> {

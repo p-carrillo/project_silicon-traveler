@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import {
   ADMIN_SESSION_COOKIE_NAME,
   getAdminCredentials,
+  getAdminSessionSecret,
   isValidAdminSessionToken,
 } from './lib/admin-auth';
 
@@ -11,7 +12,8 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
   }
 
   const credentials = getAdminCredentials();
-  if (!credentials) {
+  const sessionSecret = getAdminSessionSecret();
+  if (!credentials || !sessionSecret) {
     return new NextResponse('Not Found', { status: 404 });
   }
 
@@ -23,8 +25,7 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
   if (sessionToken) {
     const isValid = await isValidAdminSessionToken(
       sessionToken,
-      credentials.user,
-      credentials.password
+      credentials.user
     );
 
     if (isValid) {

@@ -31,11 +31,24 @@ export function getAdminCredentials(): { user: string; password: string } | null
   return { user, password };
 }
 
+export function getAdminSessionSecret(): string | null {
+  const secret = process.env.ADMIN_SESSION_SECRET;
+  if (!secret || secret.trim().length === 0) {
+    return null;
+  }
+
+  return secret;
+}
+
 export async function createAdminSessionToken(
   user: string,
-  signingSecret: string,
   options?: { nowMs?: number; ttlSeconds?: number }
 ): Promise<string> {
+  const signingSecret = getAdminSessionSecret();
+  if (!signingSecret) {
+    throw new Error('Missing required ADMIN_SESSION_SECRET');
+  }
+
   const nowMs = options?.nowMs ?? Date.now();
   const ttlSeconds = options?.ttlSeconds ?? DEFAULT_SESSION_TTL_SECONDS;
 
@@ -54,9 +67,13 @@ export async function createAdminSessionToken(
 export async function isValidAdminSessionToken(
   token: string,
   expectedUser: string,
-  signingSecret: string,
   nowMs: number = Date.now()
 ): Promise<boolean> {
+  const signingSecret = getAdminSessionSecret();
+  if (!signingSecret) {
+    return false;
+  }
+
   const [payloadEncoded, signature] = token.split('.');
   if (!payloadEncoded || !signature) {
     return false;

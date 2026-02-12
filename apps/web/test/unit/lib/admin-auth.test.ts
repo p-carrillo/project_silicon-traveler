@@ -1,56 +1,63 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   createAdminSessionCookie,
   createAdminSessionToken,
+  getAdminSessionSecret,
   isValidAdminSessionToken,
 } from '../../../src/lib/admin-auth';
 
+const originalSessionSecret = process.env.ADMIN_SESSION_SECRET;
+
 describe('admin-auth', () => {
-  it('creates tokens that validate for the same user and secret', async () => {
-    // Arrange
-    const token = await createAdminSessionToken('admin', 'secret');
+  beforeEach(() => {
+    process.env.ADMIN_SESSION_SECRET = 'session-secret';
+  });
 
-    // Act
-    const isValid = await isValidAdminSessionToken(token, 'admin', 'secret');
+  afterEach(() => {
+    process.env.ADMIN_SESSION_SECRET = originalSessionSecret;
+  });
 
-    // Assert
+  it('creates tokens that validate for the same user and configured session secret', async () => {
+    const token = await createAdminSessionToken('admin');
+    const isValid = await isValidAdminSessionToken(token, 'admin');
     expect(isValid).toBe(true);
   });
 
-  it('rejects tokens for another signing secret', async () => {
-    // Arrange
-    const token = await createAdminSessionToken('admin', 'secret');
+  it('rejects tokens after secret rotation', async () => {
+    const token = await createAdminSessionToken('admin');
+    process.env.ADMIN_SESSION_SECRET = 'rotated-secret';
 
-    // Act
-    const isValid = await isValidAdminSessionToken(token, 'admin', 'different-secret');
-
-    // Assert
+    const isValid = await isValidAdminSessionToken(token, 'admin');
     expect(isValid).toBe(false);
   });
 
   it('rejects expired tokens', async () => {
-    // Arrange
     const nowMs = Date.now();
-    const token = await createAdminSessionToken('admin', 'secret', {
+    const token = await createAdminSessionToken('admin', {
       nowMs,
       ttlSeconds: 1,
     });
 
-    // Act
-    const isValid = await isValidAdminSessionToken(token, 'admin', 'secret', nowMs + 10_000);
-
-    // Assert
+    const isValid = await isValidAdminSessionToken(token, 'admin', nowMs + 10_000);
     expect(isValid).toBe(false);
   });
 
+  it('returns null when ADMIN_SESSION_SECRET is missing', () => {
+    delete process.env.ADMIN_SESSION_SECRET;
+    expect(getAdminSessionSecret()).toBeNull();
+  });
+
+  it('throws when trying to create tokens without ADMIN_SESSION_SECRET', async () => {
+    delete process.env.ADMIN_SESSION_SECRET;
+    await expect(createAdminSessionToken('admin')).rejects.toThrow('Missing required ADMIN_SESSION_SECRET');
+  });
+
   it('builds logout cookie with immediate expiration', () => {
-    // Arrange
     const cookie = createAdminSessionCookie('', {
       nodeEnv: 'development',
       maxAge: 0,
     });
 
-    // Assert
     expect(cookie.name).toBe('admin_session');
     expect(cookie.path).toBe('/admin');
     expect(cookie.maxAge).toBe(0);

@@ -17,6 +17,7 @@
 | `API_KEY` | API, scheduler | API auth for non-dev and map refresh | Required in production.
 | `ADMIN_BASIC_USER` | Web | Admin login username for `/admin/login` | Required to expose admin UI.
 | `ADMIN_BASIC_PASSWORD` | Web | Admin login password for `/admin/login` | Required to expose admin UI.
+| `ADMIN_SESSION_SECRET` | Web | HMAC signing secret for admin session cookie | Required; admin routes return 404 when missing.
 | `CORS_ORIGINS` | API | Allowed origins for CORS | Comma-separated list.
 | `API_URL` | Scheduler, web | Base API URL | Default `http://api:3000` in Docker.
 | `NEXT_PUBLIC_API_URL` | Web | Public API URL for browser | Example `http://localhost:3010`.
@@ -36,4 +37,6 @@
 ## Notes
 - API key enforcement is disabled when `NODE_ENV=development` in the API service.
 - Web middleware enforces authenticated sessions on `/admin` in all environments.
+- `/admin` and `/admin/login` are fail-closed (404) if `ADMIN_BASIC_USER`, `ADMIN_BASIC_PASSWORD`, or `ADMIN_SESSION_SECRET` is missing.
+- Admin login attempts are rate-limited in web app memory: 5 failed attempts in 15 minutes block for 15 minutes.
 - Scheduler calls `API_URL` to refresh map state after publishing.
