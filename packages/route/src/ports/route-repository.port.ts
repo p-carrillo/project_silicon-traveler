@@ -49,5 +49,6 @@ export interface IRouteRepository {
   ): Promise<void>;
   findContentTranslations(routePointId: number): Promise<RoutePointContentTranslation[]>;
   update(routePoint: RoutePoint): Promise<void>;
+  deleteById(id: number): Promise<boolean>;
   getLastSequence(journeyId: number): Promise<number>;
 }

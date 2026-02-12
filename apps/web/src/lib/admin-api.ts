@@ -78,7 +78,27 @@ export async function updateAdminRoutePoint(id: number, input: AdminRoutePointUp
   });
 
   if (!res.ok) {
+    try {
+      const payload = (await res.json()) as { error?: string };
+      if (typeof payload.error === 'string' && payload.error.trim().length > 0) {
+        throw new Error(payload.error);
+      }
+    } catch (error) {
+      if (error instanceof Error && error.message.trim().length > 0) {
+        throw error;
+      }
+    }
     throw new Error('Failed to update route point');
+  }
+}
+
+export async function deleteAdminRoutePoint(id: number): Promise<void> {
+  const res = await adminFetch(`/api/admin/route-points/${id}`, {
+    method: 'DELETE',
+  });
+
+  if (!res.ok) {
+    throw new Error('Failed to delete route point');
   }
 }
 

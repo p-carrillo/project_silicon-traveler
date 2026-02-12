@@ -1,11 +1,20 @@
 import express, { Router, type Request, type Response } from 'express';
+import { pool } from '@silicon-traveler/shared';
 import {
   CreateFutureRoutePointUseCase,
+  DeleteRoutePointAdminUseCase,
+  GeocodePlaceUseCase,
   ListRoutePointsUseCase,
   MariaDBRouteRepository,
+  NominatimAdapter,
   UpdateRoutePointAdminUseCase,
 } from '@silicon-traveler/route';
 import type { RoutePoint, RouteStatus } from '@silicon-traveler/route';
+import {
+  MariaDBPhotoRepository,
+  PublishPhotoUseCase,
+  SyncPublishedPhotoFromRoutePointUseCase,
+} from '@silicon-traveler/photo';
 import { LocalStorageAdapter } from '@silicon-traveler/storage';
 import { SharpAdapter } from '@silicon-traveler/image';
 import { parseOffsetInt, parsePoint, parsePositiveInt, parseStatusesParam } from './admin.utils';
@@ -19,6 +28,11 @@ const routeRepository = new MariaDBRouteRepository();
 const listRoutePointsUseCase = new ListRoutePointsUseCase(routeRepository);
 const createFutureRoutePointUseCase = new CreateFutureRoutePointUseCase(routeRepository);
 const updateRoutePointAdminUseCase = new UpdateRoutePointAdminUseCase(routeRepository);
+const deleteRoutePointAdminUseCase = new DeleteRoutePointAdminUseCase(routeRepository);
+const geocodePlaceUseCase = new GeocodePlaceUseCase(new NominatimAdapter());
+const photoRepository = new MariaDBPhotoRepository(pool as any);
+const publishPhotoUseCase = new PublishPhotoUseCase(photoRepository, routeRepository);
+const syncPublishedPhotoFromRoutePointUseCase = new SyncPublishedPhotoFromRoutePointUseCase(photoRepository);
 
 const storage = new LocalStorageAdapter();
 const thumbnailGenerator = new SharpAdapter();
@@ -75,6 +89,36 @@ adminRouter.get('/route-points', async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Error listing route points (admin):', error);
     return res.status(500).json({ error: 'Failed to list route points' });
+  }
+});
+
+adminRouter.get('/geocode', async (req: Request, res: Response) => {
+  try {
+    const placeName = normalizeQueryString(req.query.place_name ?? req.query.city);
+    if (!placeName) {
+      return res.status(400).json({ error: 'place_name is required' });
+    }
+
+    const country = normalizeQueryString(req.query.country);
+    const region = normalizeQueryString(req.query.region);
+    const query = [placeName, region, country].filter(Boolean).join(', ');
+
+    const result = await geocodePlaceUseCase.execute(query);
+    if (!result) {
+      return res.status(404).json({ error: 'Location not found' });
+    }
+
+    return res.json({
+      query,
+      coordinates: result.coordinates,
+      place_name: result.placeName,
+      country: result.country,
+      region: result.region,
+      display_name: result.displayName,
+    });
+  } catch (error) {
+    console.error('Error geocoding admin place:', error);
+    return res.status(500).json({ error: 'Failed to geocode place' });
   }
 });
 
@@ -141,7 +185,7 @@ adminRouter.post('/route-points', async (req: Request, res: Response) => {
     });
 
     return res.status(201).json({
-      id: created.id,
+      id: Number(created.id),
     });
   } catch (error: any) {
     const message = error?.message || 'Failed to create route point';
@@ -155,6 +199,11 @@ adminRouter.put('/route-points/:id', async (req: Request, res: Response) => {
     const id = Number.parseInt(req.params.id, 10);
     if (!Number.isFinite(id)) {
       return res.status(400).json({ error: 'Invalid route point ID' });
+    }
+
+    const currentRoutePoint = await routeRepository.findById(id);
+    if (!currentRoutePoint) {
+      return res.status(404).json({ error: 'Route point not found' });
     }
 
     const body = (req.body ?? {}) as Record<string, unknown>;
@@ -173,6 +222,16 @@ adminRouter.put('/route-points/:id', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Invalid status' });
     }
 
+    const requestedStatus = status as RouteStatus | undefined;
+    const isPublishingTransition = requestedStatus === 'published' && currentRoutePoint.status !== 'published';
+    const hasExistingPhoto = isPublishingTransition
+      ? await photoRepository.hasByRoutePointId(id)
+      : false;
+    const statusForUpdate =
+      isPublishingTransition && !hasExistingPhoto
+        ? undefined
+        : requestedStatus;
+
     const updated = await updateRoutePointAdminUseCase.execute({
       id,
       placeName: body.place_name as string | null | undefined,
@@ -183,7 +242,7 @@ adminRouter.put('/route-points/:id', async (req: Request, res: Response) => {
       narrativePrompt: body.narrative_prompt as string | null | undefined,
       imagePath: body.image_path as string | null | undefined,
       thumbnailPath: body.thumbnail_path as string | null | undefined,
-      status: status as RouteStatus | undefined,
+      status: statusForUpdate,
       errorMessage: body.error_message as string | null | undefined,
     });
 
@@ -201,13 +260,53 @@ adminRouter.put('/route-points/:id', async (req: Request, res: Response) => {
       await routeRepository.upsertContentTranslations(id, translations);
     }
 
+    if (currentRoutePoint.status === 'published' && updated.status !== 'published') {
+      await photoRepository.deleteByRoutePointId(updated.id);
+    }
+
+    if (isPublishingTransition && !hasExistingPhoto) {
+      if (updated.status !== 'image_ready') {
+        return res.status(400).json({ error: 'Route point must be image_ready to publish' });
+      }
+      if (!updated.imagePath || !updated.thumbnailPath) {
+        return res.status(400).json({ error: 'Route point requires image assets before publishing' });
+      }
+
+      await publishPhotoUseCase.execute(updated.id, buildPreparedPhotoFromRoutePoint(updated));
+    } else if (updated.status === 'published') {
+      await syncPublishedPhotoFromRoutePointUseCase.execute({
+        routePointId: updated.id,
+        placeName: updated.placeName,
+        country: updated.country,
+        region: updated.region,
+        coordinates: updated.coordinates,
+      });
+    }
+
     return res.json({
-      id: updated.id,
+      id: Number(updated.id),
     });
   } catch (error: any) {
     const message = error?.message || 'Failed to update route point';
     const status = message.includes('not found') ? 404 : 500;
     console.error('Error updating route point (admin):', error);
+    return res.status(status).json({ error: message });
+  }
+});
+
+adminRouter.delete('/route-points/:id', async (req: Request, res: Response) => {
+  try {
+    const id = Number.parseInt(req.params.id, 10);
+    if (!Number.isFinite(id)) {
+      return res.status(400).json({ error: 'Invalid route point ID' });
+    }
+
+    await deleteRoutePointAdminUseCase.execute(id);
+    return res.status(204).send();
+  } catch (error: any) {
+    const message = error?.message || 'Failed to delete route point';
+    const status = message.includes('not found') ? 404 : 500;
+    console.error('Error deleting route point (admin):', error);
     return res.status(status).json({ error: message });
   }
 });
@@ -309,6 +408,29 @@ function deriveThumbnailPath(relativeImagePath: string, suffix: string): string 
   return `${relativeImagePath.substring(0, lastDot)}${suffix}${relativeImagePath.substring(lastDot)}`;
 }
 
+function buildPreparedPhotoFromRoutePoint(routePoint: RoutePoint) {
+  const heroThumbnailUrl =
+    routePoint.thumbnailPath && routePoint.thumbnailPath.includes('_grid')
+      ? routePoint.thumbnailPath.replace('_grid', '_hero')
+      : routePoint.imagePath
+        ? deriveThumbnailPath(routePoint.imagePath, '_hero')
+        : '/images/default_hero.jpg';
+
+  return {
+    imageUrl: routePoint.imagePath ?? '/images/default.jpg',
+    gridThumbnailUrl: routePoint.thumbnailPath ?? '/images/default_grid.jpg',
+    heroThumbnailUrl,
+    narrative: routePoint.narrativePrompt || 'Another day on the road.',
+    imagePrompt: routePoint.imagePrompt || '',
+    camera: routePoint.cameraMetadata?.camera || 'Leica M11',
+    lens: routePoint.cameraMetadata?.lens || '35mm f/1.4',
+    iso: routePoint.cameraMetadata?.iso || 800,
+    shutterSpeed: routePoint.cameraMetadata?.shutterSpeed || '1/125',
+    aperture: routePoint.cameraMetadata?.aperture || 'f/2.8',
+    revisedPrompt: null,
+  };
+}
+
 async function resolveStorageDate(journeyId: number, sequence: number): Promise<Date> {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -322,4 +444,13 @@ async function resolveStorageDate(journeyId: number, sequence: number): Promise<
   const scheduledDate = new Date(today);
   scheduledDate.setDate(scheduledDate.getDate() + offsetDays);
   return scheduledDate;
+}
+
+function normalizeQueryString(value: unknown): string | undefined {
+  if (typeof value !== 'string') {
+    return undefined;
+  }
+
+  const normalized = value.trim();
+  return normalized.length ? normalized : undefined;
 }

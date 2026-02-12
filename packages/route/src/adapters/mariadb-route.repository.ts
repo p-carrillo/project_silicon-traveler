@@ -41,7 +41,7 @@ export class MariaDBRouteRepository implements IRouteRepository {
       );
 
       return new RoutePoint(
-        result.insertId,
+        this.toNumber(result.insertId),
         routePoint.journeyId,
         routePoint.sequence,
         routePoint.placeName,
@@ -322,6 +322,21 @@ export class MariaDBRouteRepository implements IRouteRepository {
     }
   }
 
+  async deleteById(id: number): Promise<boolean> {
+    const conn = await pool.getConnection();
+    try {
+      const result = await conn.query(
+        `DELETE FROM route_points
+         WHERE id = ?`,
+        [id]
+      );
+
+      return this.toNumber(result.affectedRows) > 0;
+    } finally {
+      conn.release();
+    }
+  }
+
   async getLastSequence(journeyId: number): Promise<number> {
     const conn = await pool.getConnection();
     try {
@@ -330,7 +345,7 @@ export class MariaDBRouteRepository implements IRouteRepository {
         [journeyId]
       );
 
-      return rows[0].max_seq || 0;
+      return this.toNumber(rows[0].max_seq, 0);
     } finally {
       conn.release();
     }
@@ -338,9 +353,9 @@ export class MariaDBRouteRepository implements IRouteRepository {
 
   private toDomain(row: any): RoutePoint {
     return new RoutePoint(
-      row.id,
-      row.journey_id,
-      row.sequence,
+      this.toNumber(row.id),
+      this.toNumber(row.journey_id),
+      this.toNumber(row.sequence),
       row.place_name,
       this.parsePoint(row.coordinates),
       row.country,
@@ -390,5 +405,24 @@ export class MariaDBRouteRepository implements IRouteRepository {
       console.warn(`Failed to stringify data: ${error instanceof Error ? error.message : String(error)}`);
       return null;
     }
+  }
+
+  private toNumber(value: unknown, fallback: number = 0): number {
+    if (typeof value === 'number' && Number.isFinite(value)) {
+      return value;
+    }
+
+    if (typeof value === 'bigint') {
+      return Number(value);
+    }
+
+    if (typeof value === 'string' && value.trim().length > 0) {
+      const parsed = Number(value);
+      if (Number.isFinite(parsed)) {
+        return parsed;
+      }
+    }
+
+    return fallback;
   }
 }

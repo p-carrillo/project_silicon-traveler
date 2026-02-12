@@ -1,8 +1,17 @@
 import Image from 'next/image';
 import { redirect } from 'next/navigation';
+import AdminDeleteRoutePointButton from '@/components/admin/AdminDeleteRoutePointButton';
+import AdminLocationFields from '@/components/admin/AdminLocationFields';
+import AdminLogoutButton from '@/components/admin/AdminLogoutButton';
 import PageContainer from '@/components/layout/PageContainer';
 import SectionTopBar from '@/components/layout/SectionTopBar';
-import { getAdminRoutePoint, updateAdminRoutePoint, uploadAdminRoutePointPhoto } from '@/lib/admin-api';
+import {
+  deleteAdminRoutePoint,
+  getAdminRoutePoint,
+  updateAdminRoutePoint,
+  uploadAdminRoutePointPhoto,
+} from '@/lib/admin-api';
+import { normalizeOptionalString, parseCoordinateInput, resolvePublishStatus } from '@/lib/admin-form';
 import { toProxyImageSrc } from '@/lib/images';
 import { getServerLocale } from '@/lib/i18n/server';
 import { getTranslations, type Translations } from '@/lib/i18n/translations';
@@ -17,12 +26,13 @@ export default async function EditRoutePointPage({
   searchParams,
 }: {
   params: { id: string };
-  searchParams?: { error?: string };
+  searchParams?: { error?: string; saved?: string };
 }) {
   const locale = getServerLocale();
   const t = getTranslations(locale);
   const id = Number(params.id);
   const error = typeof searchParams?.error === 'string' ? searchParams.error : '';
+  const saved = searchParams?.saved === '1';
 
   if (!Number.isFinite(id)) {
     redirect('/admin?error=invalid_id');
@@ -33,13 +43,15 @@ export default async function EditRoutePointPage({
   async function saveAction(formData: FormData) {
     'use server';
 
-    const placeName = normalizeString(formData.get('place_name'));
-    const country = normalizeString(formData.get('country'));
-    const region = normalizeString(formData.get('region'));
-    const imagePrompt = normalizeString(formData.get('image_prompt'));
-    const narrativePrompt = normalizeString(formData.get('narrative_prompt'));
-    const lat = Number(formData.get('lat'));
-    const lng = Number(formData.get('lng'));
+    const placeName = normalizeOptionalString(formData.get('place_name'));
+    const country = normalizeOptionalString(formData.get('country'));
+    const region = normalizeOptionalString(formData.get('region'));
+    const imagePrompt = normalizeOptionalString(formData.get('image_prompt'));
+    const narrativePrompt = normalizeOptionalString(formData.get('narrative_prompt'));
+    const lat = parseCoordinateInput(formData.get('lat'));
+    const lng = parseCoordinateInput(formData.get('lng'));
+    const isPublished = formData.get('is_published') === 'on';
+    const status = resolvePublishStatus(routePoint.status, isPublished);
 
     if (!Number.isFinite(lat) || !Number.isFinite(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
       redirect(`/admin/route-points/${id}?error=invalid_coordinates`);
@@ -53,12 +65,20 @@ export default async function EditRoutePointPage({
         coordinates: { lat, lng },
         image_prompt: imagePrompt,
         narrative_prompt: narrativePrompt,
+        status,
       });
-    } catch {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '';
+      if (message.includes('image_ready')) {
+        redirect(`/admin/route-points/${id}?error=publish_not_ready`);
+      }
+      if (message.includes('image assets')) {
+        redirect(`/admin/route-points/${id}?error=publish_missing_image`);
+      }
       redirect(`/admin/route-points/${id}?error=save_failed`);
     }
 
-    redirect(`/admin/route-points/${id}`);
+    redirect(`/admin/route-points/${id}?saved=1`);
   }
 
   async function uploadPhotoAction(formData: FormData) {
@@ -86,6 +106,18 @@ export default async function EditRoutePointPage({
     redirect(`/admin/route-points/${id}`);
   }
 
+  async function deleteAction() {
+    'use server';
+
+    try {
+      await deleteAdminRoutePoint(id);
+    } catch {
+      redirect(`/admin/route-points/${id}?error=delete_failed`);
+    }
+
+    redirect('/admin?deleted=1');
+  }
+
   const imageSrc = routePoint.thumbnail_path || routePoint.image_path;
 
   return (
@@ -99,9 +131,18 @@ export default async function EditRoutePointPage({
       />
       <PageContainer className="py-6 md:py-10">
         <div className="flex flex-col gap-6">
+          <div className="flex justify-end">
+            <AdminLogoutButton label={t.admin.actions.logout} />
+          </div>
+
           {error ? (
             <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-800">
               {errorMessage(t, error)}
+            </div>
+          ) : null}
+          {saved ? (
+            <div className="rounded-md border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
+              {t.admin.success.saved}
             </div>
           ) : null}
 
@@ -138,60 +179,31 @@ export default async function EditRoutePointPage({
               </form>
             </div>
 
-            <form action={saveAction} className="rounded-lg border border-zinc-200 bg-white p-6">
+            <form
+              id="admin-route-point-edit-form"
+              action={saveAction}
+              className="rounded-lg border border-zinc-200 bg-white p-6"
+            >
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <label className="flex flex-col gap-1 text-xs uppercase tracking-[0.2em] text-zinc-600">
-                  {t.admin.fields.city}
-                  <input
-                    name="place_name"
-                    defaultValue={routePoint.place_name || ''}
-                    className="h-10 rounded-md border border-zinc-300 bg-white px-3 text-sm text-zinc-900"
-                    placeholder={t.admin.placeholders.city}
-                  />
-                </label>
-
-                <label className="flex flex-col gap-1 text-xs uppercase tracking-[0.2em] text-zinc-600">
-                  {t.admin.fields.country}
-                  <input
-                    name="country"
-                    defaultValue={routePoint.country || ''}
-                    className="h-10 rounded-md border border-zinc-300 bg-white px-3 text-sm text-zinc-900"
-                    placeholder={t.admin.placeholders.country}
-                  />
-                </label>
-
-                <label className="flex flex-col gap-1 text-xs uppercase tracking-[0.2em] text-zinc-600">
-                  {t.admin.fields.region}
-                  <input
-                    name="region"
-                    defaultValue={routePoint.region || ''}
-                    className="h-10 rounded-md border border-zinc-300 bg-white px-3 text-sm text-zinc-900"
-                    placeholder={t.admin.placeholders.region}
-                  />
-                </label>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <label className="flex flex-col gap-1 text-xs uppercase tracking-[0.2em] text-zinc-600">
-                    {t.admin.fields.lat}
-                    <input
-                      name="lat"
-                      inputMode="decimal"
-                      defaultValue={String(routePoint.coordinates.lat)}
-                      className="h-10 rounded-md border border-zinc-300 bg-white px-3 text-sm text-zinc-900"
-                      required
-                    />
-                  </label>
-                  <label className="flex flex-col gap-1 text-xs uppercase tracking-[0.2em] text-zinc-600">
-                    {t.admin.fields.lng}
-                    <input
-                      name="lng"
-                      inputMode="decimal"
-                      defaultValue={String(routePoint.coordinates.lng)}
-                      className="h-10 rounded-md border border-zinc-300 bg-white px-3 text-sm text-zinc-900"
-                      required
-                    />
-                  </label>
-                </div>
+                <AdminLocationFields
+                  key={`${routePoint.id}-${routePoint.updated_at}`}
+                  fields={t.admin.fields}
+                  placeholders={t.admin.placeholders}
+                  geocode={t.admin.geocode}
+                  initial={{
+                    placeName: routePoint.place_name || '',
+                    country: routePoint.country || '',
+                    region: routePoint.region || '',
+                    lat: String(routePoint.coordinates.lat),
+                    lng: String(routePoint.coordinates.lng),
+                  }}
+                  publishControl={{
+                    label: t.admin.publishSwitch.label,
+                    checked: routePoint.status === 'published',
+                    checkedLabel: t.admin.publishSwitch.checkedLabel,
+                    uncheckedLabel: t.admin.publishSwitch.uncheckedLabel,
+                  }}
+                />
 
                 <label className="md:col-span-2 flex flex-col gap-1 text-xs uppercase tracking-[0.2em] text-zinc-600">
                   {t.admin.fields.prompt}
@@ -218,6 +230,15 @@ export default async function EditRoutePointPage({
                 <button type="submit" className="h-10 rounded-md bg-zinc-900 px-4 text-sm font-semibold text-white">
                   {t.admin.actions.save}
                 </button>
+                <AdminDeleteRoutePointButton
+                  formId="admin-route-point-edit-form"
+                  triggerLabel={t.admin.actions.delete}
+                  title={t.admin.deleteModal.title}
+                  description={t.admin.deleteModal.description}
+                  confirmLabel={t.admin.deleteModal.confirm}
+                  cancelLabel={t.admin.deleteModal.cancel}
+                  action={deleteAction}
+                />
                 <a
                   href="/admin"
                   className="h-10 rounded-md border border-zinc-300 bg-white px-4 text-sm font-semibold text-zinc-900 inline-flex items-center"
@@ -233,15 +254,12 @@ export default async function EditRoutePointPage({
   );
 }
 
-function normalizeString(value: FormDataEntryValue | null): string | null {
-  if (typeof value !== 'string') return null;
-  const trimmed = value.trim();
-  return trimmed.length ? trimmed : null;
-}
-
 function errorMessage(t: Translations, code: string): string {
   if (code === 'invalid_coordinates') return t.admin.errors.invalidCoordinates;
   if (code === 'save_failed') return t.admin.errors.saveFailed;
+  if (code === 'publish_not_ready') return t.admin.errors.publishNotReady;
+  if (code === 'publish_missing_image') return t.admin.errors.publishMissingImage;
+  if (code === 'delete_failed') return t.admin.errors.deleteFailed;
   if (code === 'photo_required') return t.admin.errors.photoRequired;
   if (code === 'photo_type') return t.admin.errors.photoType;
   if (code === 'photo_failed') return t.admin.errors.photoFailed;

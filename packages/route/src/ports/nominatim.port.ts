@@ -7,6 +7,11 @@ export interface GeocodingResult {
   placeName: string;
 }
 
+export interface PlaceGeocodingResult extends GeocodingResult {
+  coordinates: Point;
+}
+
 export interface INominatimPort {
   reverseGeocode(point: Point): Promise<GeocodingResult | null>;
+  geocodePlace(query: string): Promise<PlaceGeocodingResult | null>;
 }

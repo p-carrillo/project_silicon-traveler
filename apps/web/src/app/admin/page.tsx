@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import AdminLogoutButton from '@/components/admin/AdminLogoutButton';
 import PageContainer from '@/components/layout/PageContainer';
 import SectionTopBar from '@/components/layout/SectionTopBar';
 import { getAdminRoutePoints } from '@/lib/admin-api';
@@ -23,7 +24,7 @@ const STATUS_OPTIONS = [
 export default async function AdminPage({
   searchParams,
 }: {
-  searchParams?: { status?: string; offset?: string; limit?: string };
+  searchParams?: { status?: string; offset?: string; limit?: string; deleted?: string };
 }) {
   const locale = getServerLocale();
   const t = getTranslations(locale);
@@ -31,6 +32,7 @@ export default async function AdminPage({
   const status = typeof searchParams?.status === 'string' ? searchParams.status : '';
   const limit = typeof searchParams?.limit === 'string' ? Number(searchParams.limit) : 100;
   const offset = typeof searchParams?.offset === 'string' ? Number(searchParams.offset) : 0;
+  const deleted = searchParams?.deleted === '1';
 
   const list = await getAdminRoutePoints({
     statuses: status || undefined,
@@ -49,6 +51,11 @@ export default async function AdminPage({
       />
       <PageContainer className="py-6 md:py-10">
         <div className="flex flex-col gap-6">
+          {deleted ? (
+            <div className="rounded-md border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
+              {t.admin.success.deleted}
+            </div>
+          ) : null}
           <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
             <form className="flex items-end gap-3" method="get" action="/admin">
               <label className="flex flex-col gap-1 text-xs uppercase tracking-[0.2em] text-zinc-600">
@@ -73,12 +80,15 @@ export default async function AdminPage({
               </button>
             </form>
 
-            <Link
-              href="/admin/route-points/new"
-              className="inline-flex h-10 items-center justify-center rounded-md border border-zinc-300 bg-white px-4 text-sm font-semibold text-zinc-900"
-            >
-              {t.admin.actions.addRoutePoint}
-            </Link>
+            <div className="flex items-center gap-3">
+              <Link
+                href="/admin/route-points/new"
+                className="inline-flex h-10 items-center justify-center rounded-md border border-zinc-300 bg-white px-4 text-sm font-semibold text-zinc-900"
+              >
+                {t.admin.actions.addRoutePoint}
+              </Link>
+              <AdminLogoutButton label={t.admin.actions.logout} />
+            </div>
           </div>
 
           <div className="overflow-x-auto rounded-lg border border-zinc-200 bg-white">

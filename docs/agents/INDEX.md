@@ -22,6 +22,8 @@ Actionable procedures (each in its own folder with `SKILL.md`): `.ai/skills/` (d
 ## Commands
 Reusable workflows triggered with `/` in chat. Cursor wrappers in `.cursor/commands/`, real logic in `.ai/commands/`:
 - `/review-code`: Comprehensive code review using parallel subagents.
+- `/prueba`: Minimal smoke test command that returns a fixed success message.
+- `/prueba-codex`: Minimal smoke test command that returns a fixed success message.
 
 ## Custom Subagents
 Specialized agents used by commands. Cursor wrappers in `.cursor/agents/`, real definitions in `.ai/agents/`:

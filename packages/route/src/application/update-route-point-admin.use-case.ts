@@ -33,7 +33,16 @@ export class UpdateRoutePointAdminUseCase {
     if (input.narrativePrompt !== undefined) routePoint.narrativePrompt = input.narrativePrompt;
     if (input.imagePath !== undefined) routePoint.imagePath = input.imagePath;
     if (input.thumbnailPath !== undefined) routePoint.thumbnailPath = input.thumbnailPath;
-    if (input.status !== undefined) routePoint.status = input.status;
+    if (input.status !== undefined) {
+      if (input.status === 'published' && routePoint.status !== 'published') {
+        routePoint.markPublished();
+      } else if (input.status !== 'published' && routePoint.status === 'published') {
+        routePoint.status = input.status;
+        routePoint.publishedAt = null;
+      } else {
+        routePoint.status = input.status;
+      }
+    }
     if (input.errorMessage !== undefined) routePoint.errorMessage = input.errorMessage;
 
     routePoint.updatedAt = new Date();
@@ -42,4 +51,3 @@ export class UpdateRoutePointAdminUseCase {
     return routePoint;
   }
 }
-

@@ -105,11 +105,18 @@ const translations = {
         city: 'City',
         country: 'Country',
         region: 'Region',
+        status: 'Status',
         lat: 'Lat',
         lng: 'Lng',
         prompt: 'Prompt',
         text: 'Text',
         photo: 'Photo',
+      },
+      publishSwitch: {
+        label: 'Published',
+        help: 'Toggle visibility in public archive and map.',
+        checkedLabel: 'Visible',
+        uncheckedLabel: 'Hidden',
       },
       placeholders: {
         city: 'e.g. Tokyo',
@@ -122,17 +129,49 @@ const translations = {
         apply: 'Apply',
         edit: 'Edit',
         save: 'Save',
+        delete: 'Delete',
         back: 'Back',
+        logout: 'Logout',
         cancel: 'Cancel',
         create: 'Create',
         addRoutePoint: 'Add Route Point',
         uploadJpeg: 'Upload JPEG',
+      },
+      geocode: {
+        calculate: 'Calculate coordinates',
+        calculating: 'Calculating...',
+        success: 'Coordinates updated.',
+        errors: {
+          cityRequired: 'Enter a city first.',
+          notFound: 'Location not found.',
+          failed: 'Could not calculate coordinates.',
+        },
       },
       new: {
         title: 'New Route Point',
       },
       edit: {
         title: 'Edit Route Point',
+      },
+      login: {
+        title: 'Admin Login',
+        description: 'Restricted area. Sign in to manage route points.',
+        fields: {
+          username: 'Username',
+          password: 'Password',
+        },
+        actions: {
+          signIn: 'Sign in',
+        },
+        errors: {
+          invalidCredentials: 'Invalid credentials.',
+        },
+      },
+      deleteModal: {
+        title: 'Delete route point?',
+        description: 'This action cannot be undone.',
+        confirm: 'Delete permanently',
+        cancel: 'Cancel',
       },
       fallback: {
         unknown: 'Unknown',
@@ -141,9 +180,16 @@ const translations = {
       alt: {
         routePointPhoto: 'Route point photo',
       },
+      success: {
+        saved: 'Changes saved.',
+        deleted: 'Route point deleted.',
+      },
       errors: {
         invalidCoordinates: 'Invalid coordinates.',
         saveFailed: 'Could not save changes.',
+        publishNotReady: 'Route point must be image-ready before publishing.',
+        publishMissingImage: 'Upload a route-point image before publishing.',
+        deleteFailed: 'Could not delete route point.',
         photoRequired: 'Please select a JPEG file.',
         photoType: 'Only JPEG is supported right now.',
         photoFailed: 'Could not upload the photo.',
@@ -255,11 +301,18 @@ const translations = {
         city: 'Ciudad',
         country: 'Pais',
         region: 'Region',
+        status: 'Estado',
         lat: 'Lat',
         lng: 'Lng',
         prompt: 'Prompt',
         text: 'Texto',
         photo: 'Foto',
+      },
+      publishSwitch: {
+        label: 'Publicado',
+        help: 'Activa o desactiva su visibilidad en archivo y mapa.',
+        checkedLabel: 'Visible',
+        uncheckedLabel: 'Oculto',
       },
       placeholders: {
         city: 'p.ej. Tokyo',
@@ -272,17 +325,49 @@ const translations = {
         apply: 'Aplicar',
         edit: 'Editar',
         save: 'Guardar',
+        delete: 'Borrar',
         back: 'Volver',
+        logout: 'Salir',
         cancel: 'Cancelar',
         create: 'Crear',
         addRoutePoint: 'Nuevo punto',
         uploadJpeg: 'Subir JPEG',
+      },
+      geocode: {
+        calculate: 'Calcular coordenadas',
+        calculating: 'Calculando...',
+        success: 'Coordenadas actualizadas.',
+        errors: {
+          cityRequired: 'Primero indica una ciudad.',
+          notFound: 'No se encontro la ubicacion.',
+          failed: 'No se pudieron calcular las coordenadas.',
+        },
       },
       new: {
         title: 'Nuevo punto de ruta',
       },
       edit: {
         title: 'Editar punto de ruta',
+      },
+      login: {
+        title: 'Acceso Admin',
+        description: 'Area restringida. Inicia sesion para gestionar puntos de ruta.',
+        fields: {
+          username: 'Usuario',
+          password: 'Contrasena',
+        },
+        actions: {
+          signIn: 'Entrar',
+        },
+        errors: {
+          invalidCredentials: 'Credenciales invalidas.',
+        },
+      },
+      deleteModal: {
+        title: 'Borrar punto de ruta?',
+        description: 'Esta accion no se puede deshacer.',
+        confirm: 'Borrar definitivamente',
+        cancel: 'Cancelar',
       },
       fallback: {
         unknown: 'Desconocido',
@@ -291,9 +376,16 @@ const translations = {
       alt: {
         routePointPhoto: 'Foto del punto de ruta',
       },
+      success: {
+        saved: 'Cambios guardados.',
+        deleted: 'Punto de ruta borrado.',
+      },
       errors: {
         invalidCoordinates: 'Coordenadas invalidas.',
         saveFailed: 'No se pudieron guardar los cambios.',
+        publishNotReady: 'El punto debe estar en estado imagen lista para publicarse.',
+        publishMissingImage: 'Sube una imagen del punto antes de publicarlo.',
+        deleteFailed: 'No se pudo borrar el punto de ruta.',
         photoRequired: 'Selecciona un archivo JPEG.',
         photoType: 'Por ahora solo se admite JPEG.',
         photoFailed: 'No se pudo subir la foto.',

@@ -15,6 +15,8 @@
 | `DB_POOL_SIZE` | `@silicon-traveler/shared` | MariaDB pool size | Default `10` in Docker.
 | `DB_ROOT_PASSWORD` | MariaDB container | Root password | Required for container bootstrap.
 | `API_KEY` | API, scheduler | API auth for non-dev and map refresh | Required in production.
+| `ADMIN_BASIC_USER` | Web | Admin login username for `/admin/login` | Required to expose admin UI.
+| `ADMIN_BASIC_PASSWORD` | Web | Admin login password for `/admin/login` | Required to expose admin UI.
 | `CORS_ORIGINS` | API | Allowed origins for CORS | Comma-separated list.
 | `API_URL` | Scheduler, web | Base API URL | Default `http://api:3000` in Docker.
 | `NEXT_PUBLIC_API_URL` | Web | Public API URL for browser | Example `http://localhost:3010`.
@@ -33,4 +35,5 @@
 
 ## Notes
 - API key enforcement is disabled when `NODE_ENV=development` in the API service.
+- Web middleware enforces authenticated sessions on `/admin` in all environments.
 - Scheduler calls `API_URL` to refresh map state after publishing.

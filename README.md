@@ -28,9 +28,28 @@ The system maintains a buffer of 10 pre-generated photos and displays them in a 
 ## Admin
 
 - Admin UI: `GET /admin` (served by the `web` app).
-- In production, `/admin` is protected with HTTP Basic Auth:
+- In all environments (including development), `/admin` requires login at `GET /admin/login`.
+- Login credentials are configured with:
   - `ADMIN_BASIC_USER`
   - `ADMIN_BASIC_PASSWORD`
+- Authenticated sessions can be closed from the admin `Logout` button.
+- Admin forms can calculate coordinates from city/country/region using the `Calculate coordinates` button.
+- Admin coordinate inputs accept dot or comma decimals (e.g. `43.36` or `43,36`) and show a success message after saving edits.
+- Editing a published route point in admin also syncs the linked `photos` record, so changes appear in `archive` and `map`.
+- The route-point editor shows current status and includes a `Published` switch to publish/unpublish from the same form.
+- The edit screen includes a `Delete` button with confirmation modal before removing a route point.
+
+### Admin Smoke Test Checklist
+
+Use this quick checklist after admin changes:
+
+1. Open `GET /admin` and sign in.
+2. Open an existing route point that has a JPEG image uploaded.
+3. Toggle `Published` on and click `Save`.
+4. Confirm the point appears in `archive` and `map`.
+5. Edit location text (city/country/region), save again, and confirm changes are reflected in `archive` and `map`.
+6. Toggle `Published` off and click `Save`.
+7. Confirm the point no longer appears in `archive` and `map`.
 
 ## Architecture
 
@@ -427,6 +446,14 @@ All architectural decisions are documented as ADRs in [`.adr/`](.adr/) directory
 ## Contributing
 
 See [AGENTS.md](AGENTS.md) and `docs/agents/INDEX.md` for AI agent guidelines when modifying this codebase.
+
+## AI Slash Commands
+
+Reusable slash commands for AI workflows live in `.cursor/commands/` (wrappers) and `.ai/commands/` (logic).
+
+- `/review-code`: comprehensive multi-subagent code review.
+- `/prueba`: smoke test command that returns a fixed success message.
+- `/prueba-codex`: smoke test command that returns a fixed success message.
 
 ## License
 

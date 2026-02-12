@@ -68,5 +68,28 @@ describe('UpdateRoutePointAdminUseCase', () => {
     );
     expect(routeRepository.update).not.toHaveBeenCalled();
   });
-});
 
+  it('sets publishedAt when status changes to published', async () => {
+    const routePoint = createRoutePoint();
+    routeRepository.findById.mockResolvedValue(routePoint);
+
+    const useCase = new UpdateRoutePointAdminUseCase(routeRepository as any);
+    const updated = await useCase.execute({ id: 10, status: 'published' });
+
+    expect(updated.status).toBe('published');
+    expect(updated.publishedAt).toBeInstanceOf(Date);
+  });
+
+  it('clears publishedAt when status changes from published to non-published', async () => {
+    const routePoint = createRoutePoint();
+    routePoint.status = 'published';
+    routePoint.publishedAt = new Date('2026-02-12T00:00:00Z');
+    routeRepository.findById.mockResolvedValue(routePoint);
+
+    const useCase = new UpdateRoutePointAdminUseCase(routeRepository as any);
+    const updated = await useCase.execute({ id: 10, status: 'image_ready' });
+
+    expect(updated.status).toBe('image_ready');
+    expect(updated.publishedAt).toBeNull();
+  });
+});

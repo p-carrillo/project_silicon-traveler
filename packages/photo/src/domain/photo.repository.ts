@@ -15,6 +15,20 @@ export interface PhotoTranslation {
   location: string;
 }
 
+export interface SyncPublishedPhotoTranslationInput {
+  language: string;
+  title: string;
+  location: string;
+}
+
+export interface SyncPublishedPhotoFromRoutePointInput {
+  routePointId: number;
+  title: string;
+  location: string;
+  coordinates: Point;
+  translations: SyncPublishedPhotoTranslationInput[];
+}
+
 export interface Photo {
   id: number;
   journeyId: number;
@@ -67,4 +81,7 @@ export interface IPhotoRepository {
   findById(id: number): Promise<Photo | null>;
   findByJourneyId(journeyId: number, limit?: number, offset?: number): Promise<Photo[]>;
   findLatest(limit?: number): Promise<Photo[]>;
+  hasByRoutePointId(routePointId: number): Promise<boolean>;
+  deleteByRoutePointId(routePointId: number): Promise<boolean>;
+  syncPublishedPhotoFromRoutePoint(input: SyncPublishedPhotoFromRoutePointInput): Promise<void>;
 }
