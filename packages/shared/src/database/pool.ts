@@ -1,4 +1,4 @@
-import mariadb from 'mariadb';
+import mariadb, { type PoolConnection } from 'mariadb';
 
 function requireEnv(name: string): string {
   const value = process.env[name];
@@ -25,6 +25,23 @@ export const pool = mariadb.createPool({
   acquireTimeout: 30000,
   timezone: 'Z', // UTC
 });
+
+export type QueryExecutor = Pick<PoolConnection, 'query'>;
+
+export async function runInTransaction<T>(work: (connection: PoolConnection) => Promise<T>): Promise<T> {
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+    const result = await work(connection);
+    await connection.commit();
+    return result;
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+}
 
 export async function healthCheck(): Promise<boolean> {
   try {

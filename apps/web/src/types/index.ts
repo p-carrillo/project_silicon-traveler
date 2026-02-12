@@ -80,3 +80,5 @@ export interface MapPin {
   thumbnail_path: string;
   published_at: string;
 }
+
+export * from './admin';

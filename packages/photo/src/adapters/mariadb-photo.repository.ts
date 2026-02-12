@@ -1,15 +1,21 @@
 import type { Pool } from 'mariadb';
-import { pointToWKT, wktToPoint } from '@silicon-traveler/shared';
-import { IPhotoRepository, Photo, CreatePhotoInput } from '../domain/photo.repository';
+import { pointToWKT, wktToPoint, type QueryExecutor } from '@silicon-traveler/shared';
+import {
+  IPhotoRepository,
+  Photo,
+  CreatePhotoInput,
+  SyncPublishedPhotoFromRoutePointInput,
+} from '../domain/photo.repository';
 
 export class MariaDBPhotoRepository implements IPhotoRepository {
   constructor(private readonly pool: Pool) {}
 
-  async create(input: CreatePhotoInput): Promise<number> {
+  async create(input: CreatePhotoInput, queryExecutor?: QueryExecutor): Promise<number> {
     const tagsValue = input.tags?.length ? input.tags.join(', ') : null;
     const metadataValue = input.metadata ? JSON.stringify(input.metadata) : null;
+    const executor = queryExecutor ?? this.pool;
 
-    const result = await this.pool.query(
+    const result = await executor.query(
       `INSERT INTO photos (
         route_point_id, title, narrative, location, coordinates,
         camera_model, lens, iso, shutter_speed,
@@ -50,7 +56,7 @@ export class MariaDBPhotoRepository implements IPhotoRepository {
         translation.location,
       ]);
 
-      await this.pool.query(
+      await executor.query(
         `INSERT INTO photo_translations
          (photo_id, language, title, narrative, location)
          VALUES ${values}
@@ -114,6 +120,68 @@ export class MariaDBPhotoRepository implements IPhotoRepository {
     );
 
     return rows.map((row) => this.mapToPhoto(row));
+  }
+
+  async hasByRoutePointId(routePointId: number, queryExecutor?: QueryExecutor): Promise<boolean> {
+    const executor = queryExecutor ?? this.pool;
+    const rows = await executor.query<any[]>(
+      `SELECT 1
+       FROM photos
+       WHERE route_point_id = ?
+       LIMIT 1`,
+      [routePointId]
+    );
+
+    return rows.length > 0;
+  }
+
+  async deleteByRoutePointId(routePointId: number, queryExecutor?: QueryExecutor): Promise<boolean> {
+    const executor = queryExecutor ?? this.pool;
+    const result = await executor.query(
+      `DELETE FROM photos
+       WHERE route_point_id = ?`,
+      [routePointId]
+    );
+
+    return Number(result.affectedRows ?? 0) > 0;
+  }
+
+  async syncPublishedPhotoFromRoutePoint(
+    input: SyncPublishedPhotoFromRoutePointInput,
+    queryExecutor?: QueryExecutor
+  ): Promise<void> {
+    const executor = queryExecutor ?? this.pool;
+    await executor.query(
+      `UPDATE photos
+       SET title = ?,
+           location = ?,
+           coordinates = ST_GeomFromText(?, 4326)
+       WHERE route_point_id = ?`,
+      [
+        input.title,
+        input.location,
+        pointToWKT(input.coordinates),
+        input.routePointId,
+      ]
+    );
+
+    for (const translation of input.translations) {
+      await executor.query(
+        `UPDATE photo_translations pt
+         INNER JOIN photos p ON p.id = pt.photo_id
+         SET pt.title = ?,
+             pt.location = ?,
+             pt.updated_at = CURRENT_TIMESTAMP
+         WHERE p.route_point_id = ?
+           AND pt.language = ?`,
+        [
+          translation.title,
+          translation.location,
+          input.routePointId,
+          translation.language,
+        ]
+      );
+    }
   }
 
   private mapToPhoto(row: any): Photo {

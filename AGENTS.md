@@ -149,6 +149,8 @@ The HTTP API lives in `apps/api/`. Routes are organized by domain in `apps/api/s
 | PUT | `/api/map/state` | Update map state (bbox, zoom) | `map.routes.ts` |
 | GET | `/api/map/pins` | Photo pins within bounding box (`bbox`, `limit`, `q`, `lang`) | `map.routes.ts` |
 | POST | `/api/map/refresh` | Refresh map state after photo publish | `map.routes.ts` |
+| GET | `/api/admin/geocode` | Resolve coordinates from admin place input (`place_name`, `country`, `region`) | `admin.routes.ts` |
+| DELETE | `/api/admin/route-points/:id` | Delete route point by ID (cascades related rows via FK constraints) | `admin.routes.ts` |
 
 **Middleware stack** (applied in order): Helmet, CORS (`CORS_ORIGINS`), JSON parsing, Morgan logging, rate limiting (100 req/15min on `/api/*`), API key auth (non-development), static files (`/images`), 404 handler, error handler.
 

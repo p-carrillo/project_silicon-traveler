@@ -11,6 +11,8 @@
     "@silicon-traveler/shared": "workspace:*",
     "@silicon-traveler/journey": "workspace:*",
     "@silicon-traveler/route": "workspace:*",
+    "@silicon-traveler/image": "workspace:*",
+    "@silicon-traveler/storage": "workspace:*",
     "@silicon-traveler/photo": "workspace:*",
     "@silicon-traveler/map": "workspace:*",
     "express": "^4.18.2",

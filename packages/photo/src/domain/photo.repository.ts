@@ -1,4 +1,5 @@
 import type { Point } from '@silicon-traveler/shared';
+import type { QueryExecutor } from '@silicon-traveler/shared';
 
 export interface PhotoMetadata {
   aperture?: string | null;
@@ -13,6 +14,20 @@ export interface PhotoTranslation {
   title: string;
   narrative: string;
   location: string;
+}
+
+export interface SyncPublishedPhotoTranslationInput {
+  language: string;
+  title: string;
+  location: string;
+}
+
+export interface SyncPublishedPhotoFromRoutePointInput {
+  routePointId: number;
+  title: string;
+  location: string;
+  coordinates: Point;
+  translations: SyncPublishedPhotoTranslationInput[];
 }
 
 export interface Photo {
@@ -63,8 +78,14 @@ export interface CreatePhotoInput {
 }
 
 export interface IPhotoRepository {
-  create(input: CreatePhotoInput): Promise<number>;
+  create(input: CreatePhotoInput, queryExecutor?: QueryExecutor): Promise<number>;
   findById(id: number): Promise<Photo | null>;
   findByJourneyId(journeyId: number, limit?: number, offset?: number): Promise<Photo[]>;
   findLatest(limit?: number): Promise<Photo[]>;
+  hasByRoutePointId(routePointId: number, queryExecutor?: QueryExecutor): Promise<boolean>;
+  deleteByRoutePointId(routePointId: number, queryExecutor?: QueryExecutor): Promise<boolean>;
+  syncPublishedPhotoFromRoutePoint(
+    input: SyncPublishedPhotoFromRoutePointInput,
+    queryExecutor?: QueryExecutor
+  ): Promise<void>;
 }

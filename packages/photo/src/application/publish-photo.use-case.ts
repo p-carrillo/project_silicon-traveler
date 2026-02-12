@@ -1,5 +1,5 @@
 import { IRouteRepository } from '@silicon-traveler/route';
-import { getI18nConfig } from '@silicon-traveler/shared';
+import { getI18nConfig, type QueryExecutor } from '@silicon-traveler/shared';
 import {
   IPhotoRepository,
   CreatePhotoInput,
@@ -8,6 +8,7 @@ import {
 } from '../domain/photo.repository';
 import { PreparePhotoResult } from './prepare-photo.use-case';
 import { photoMetadataConfig } from '../config/photo-metadata';
+import { buildPhotoLocation, buildPhotoTitle } from './photo-localization';
 
 export class PublishPhotoUseCase {
   constructor(
@@ -15,8 +16,12 @@ export class PublishPhotoUseCase {
     private readonly routeRepository: IRouteRepository
   ) {}
 
-  async execute(routePointId: number, preparedPhoto: PreparePhotoResult): Promise<number> {
-    const routePoint = await this.routeRepository.findById(routePointId);
+  async execute(
+    routePointId: number,
+    preparedPhoto: PreparePhotoResult,
+    options?: { queryExecutor?: QueryExecutor }
+  ): Promise<number> {
+    const routePoint = await this.routeRepository.findById(routePointId, options?.queryExecutor);
     if (!routePoint) {
       throw new Error(`RoutePoint ${routePointId} not found`);
     }
@@ -26,7 +31,10 @@ export class PublishPhotoUseCase {
     }
 
     const { supportedLanguages, defaultLanguage } = getI18nConfig();
-    const translations = await this.routeRepository.findContentTranslations(routePoint.id);
+    const translations = await this.routeRepository.findContentTranslations(
+      routePoint.id,
+      options?.queryExecutor
+    );
     const translationMap = new Map(
       translations.map((translation) => [translation.language, translation])
     );
@@ -36,8 +44,13 @@ export class PublishPhotoUseCase {
       routePoint.narrativePrompt ||
       preparedPhoto.narrative;
 
-    const title = this.buildTitle(routePoint.placeName, defaultLanguage);
-    const location = this.buildLocation(routePoint.placeName, routePoint.region, routePoint.country, defaultLanguage);
+    const title = buildPhotoTitle(routePoint.placeName, defaultLanguage);
+    const location = buildPhotoLocation(
+      routePoint.placeName,
+      routePoint.region,
+      routePoint.country,
+      defaultLanguage
+    );
     const tags = this.buildTags(routePoint);
     const normalizedTags = tags.length ? tags : null;
     const editorial = this.buildEditorialMetadata(routePoint.sequence);
@@ -46,8 +59,8 @@ export class PublishPhotoUseCase {
       const translation = translationMap.get(language);
       return {
         language,
-        title: this.buildTitle(routePoint.placeName, language),
-        location: this.buildLocation(routePoint.placeName, routePoint.region, routePoint.country, language),
+        title: buildPhotoTitle(routePoint.placeName, language),
+        location: buildPhotoLocation(routePoint.placeName, routePoint.region, routePoint.country, language),
         narrative: translation?.narrative || defaultNarrative,
       };
     });
@@ -74,31 +87,12 @@ export class PublishPhotoUseCase {
       publishedAt: new Date(),
     };
 
-    const photoId = await this.photoRepository.create(photoInput);
+    const photoId = await this.photoRepository.create(photoInput, options?.queryExecutor);
     
     routePoint.updateStatus('published');
-    await this.routeRepository.update(routePoint);
+    await this.routeRepository.update(routePoint, options?.queryExecutor);
 
     return photoId;
-  }
-
-  private buildTitle(placeName: string | null, language: string): string {
-    const fallback = this.getFallbackCopy(language).title;
-    return placeName?.trim() || fallback;
-  }
-
-  private buildLocation(
-    placeName: string | null,
-    region: string | null,
-    country: string | null,
-    language: string
-  ): string {
-    const parts = [placeName, region, country].filter((part) => part && part.trim().length > 0);
-    if (parts.length) {
-      return parts.join(', ');
-    }
-
-    return this.getFallbackCopy(language).location;
   }
 
   private buildTags(routePoint: { placeName?: string | null; region?: string | null; country?: string | null; osmData?: any; isFferryCrossing?: boolean }): string[] {
@@ -174,18 +168,4 @@ export class PublishPhotoUseCase {
     };
   }
 
-  private getFallbackCopy(language: string): { title: string; location: string } {
-    const normalized = language.trim().toLowerCase();
-    if (normalized.startsWith('es')) {
-      return {
-        title: 'Lugar desconocido',
-        location: 'Ubicación desconocida',
-      };
-    }
-
-    return {
-      title: 'Unknown place',
-      location: 'Unknown location',
-    };
-  }
 }

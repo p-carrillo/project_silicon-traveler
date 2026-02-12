@@ -78,6 +78,125 @@ const translations = {
       line: (photos: number | string, distanceKm: number | string, locations: number | string) =>
         `${photos} photos | ${distanceKm}km traveled | ${locations} locations`,
     },
+    admin: {
+      title: 'Admin',
+      empty: 'No route points found.',
+      filters: {
+        status: 'Status',
+      },
+      status: {
+        all: 'All',
+        pending: 'Pending',
+        researched: 'Researched',
+        content_generated: 'Content generated',
+        image_ready: 'Image ready',
+        published: 'Published',
+        failed: 'Failed',
+      },
+      table: {
+        sequence: 'Seq',
+        status: 'Status',
+        city: 'City',
+        country: 'Country',
+        updated: 'Updated',
+        actions: 'Actions',
+      },
+      fields: {
+        city: 'City',
+        country: 'Country',
+        region: 'Region',
+        status: 'Status',
+        lat: 'Lat',
+        lng: 'Lng',
+        prompt: 'Prompt',
+        text: 'Text',
+        photo: 'Photo',
+      },
+      publishSwitch: {
+        label: 'Published',
+        help: 'Toggle visibility in public archive and map.',
+        checkedLabel: 'Visible',
+        uncheckedLabel: 'Hidden',
+      },
+      placeholders: {
+        city: 'e.g. Tokyo',
+        country: 'e.g. Japan',
+        region: 'e.g. Kanto',
+        prompt: 'Image prompt...',
+        text: 'Narrative / text...',
+      },
+      actions: {
+        apply: 'Apply',
+        edit: 'Edit',
+        save: 'Save',
+        delete: 'Delete',
+        back: 'Back',
+        logout: 'Logout',
+        cancel: 'Cancel',
+        create: 'Create',
+        addRoutePoint: 'Add Route Point',
+        uploadJpeg: 'Upload JPEG',
+      },
+      geocode: {
+        calculate: 'Calculate coordinates',
+        calculating: 'Calculating...',
+        success: 'Coordinates updated.',
+        errors: {
+          cityRequired: 'Enter a city first.',
+          notFound: 'Location not found.',
+          failed: 'Could not calculate coordinates.',
+        },
+      },
+      new: {
+        title: 'New Route Point',
+      },
+      edit: {
+        title: 'Edit Route Point',
+      },
+      login: {
+        title: 'Admin Login',
+        description: 'Restricted area. Sign in to manage route points.',
+        fields: {
+          username: 'Username',
+          password: 'Password',
+        },
+        actions: {
+          signIn: 'Sign in',
+        },
+        errors: {
+          invalidCredentials: 'Invalid credentials.',
+          tooManyAttempts: 'Too many failed attempts. Please try again later.',
+        },
+      },
+      deleteModal: {
+        title: 'Delete route point?',
+        description: 'This action cannot be undone.',
+        confirm: 'Delete permanently',
+        cancel: 'Cancel',
+      },
+      fallback: {
+        unknown: 'Unknown',
+        noPhoto: 'No photo',
+      },
+      alt: {
+        routePointPhoto: 'Route point photo',
+      },
+      success: {
+        saved: 'Changes saved.',
+        deleted: 'Route point deleted.',
+      },
+      errors: {
+        invalidCoordinates: 'Invalid coordinates.',
+        saveFailed: 'Could not save changes.',
+        publishNotReady: 'Route point must be image-ready before publishing.',
+        publishMissingImage: 'Upload a route-point image before publishing.',
+        deleteFailed: 'Could not delete route point.',
+        photoRequired: 'Please select a JPEG file.',
+        photoType: 'Only JPEG is supported right now.',
+        photoFailed: 'Could not upload the photo.',
+        unknown: 'Something went wrong.',
+      },
+    },
     cookie: {
       message: 'This website uses cookies to enhance your browsing experience.',
       accept: 'Accept',
@@ -229,6 +348,125 @@ const translations = {
       line: (photos: number | string, distanceKm: number | string, locations: number | string) =>
         `${photos} fotos | ${distanceKm}km recorridos | ${locations} lugares`,
     },
+    admin: {
+      title: 'Admin',
+      empty: 'No se encontraron puntos de ruta.',
+      filters: {
+        status: 'Estado',
+      },
+      status: {
+        all: 'Todos',
+        pending: 'Pendiente',
+        researched: 'Investigado',
+        content_generated: 'Contenido generado',
+        image_ready: 'Imagen lista',
+        published: 'Publicado',
+        failed: 'Fallido',
+      },
+      table: {
+        sequence: 'Sec',
+        status: 'Estado',
+        city: 'Ciudad',
+        country: 'Pais',
+        updated: 'Actualizado',
+        actions: 'Acciones',
+      },
+      fields: {
+        city: 'Ciudad',
+        country: 'Pais',
+        region: 'Region',
+        status: 'Estado',
+        lat: 'Lat',
+        lng: 'Lng',
+        prompt: 'Prompt',
+        text: 'Texto',
+        photo: 'Foto',
+      },
+      publishSwitch: {
+        label: 'Publicado',
+        help: 'Activa o desactiva su visibilidad en archivo y mapa.',
+        checkedLabel: 'Visible',
+        uncheckedLabel: 'Oculto',
+      },
+      placeholders: {
+        city: 'p.ej. Tokyo',
+        country: 'p.ej. Japon',
+        region: 'p.ej. Kanto',
+        prompt: 'Prompt de imagen...',
+        text: 'Narrativa / texto...',
+      },
+      actions: {
+        apply: 'Aplicar',
+        edit: 'Editar',
+        save: 'Guardar',
+        delete: 'Borrar',
+        back: 'Volver',
+        logout: 'Salir',
+        cancel: 'Cancelar',
+        create: 'Crear',
+        addRoutePoint: 'Nuevo punto',
+        uploadJpeg: 'Subir JPEG',
+      },
+      geocode: {
+        calculate: 'Calcular coordenadas',
+        calculating: 'Calculando...',
+        success: 'Coordenadas actualizadas.',
+        errors: {
+          cityRequired: 'Primero indica una ciudad.',
+          notFound: 'No se encontro la ubicacion.',
+          failed: 'No se pudieron calcular las coordenadas.',
+        },
+      },
+      new: {
+        title: 'Nuevo punto de ruta',
+      },
+      edit: {
+        title: 'Editar punto de ruta',
+      },
+      login: {
+        title: 'Acceso Admin',
+        description: 'Area restringida. Inicia sesion para gestionar puntos de ruta.',
+        fields: {
+          username: 'Usuario',
+          password: 'Contrasena',
+        },
+        actions: {
+          signIn: 'Entrar',
+        },
+        errors: {
+          invalidCredentials: 'Credenciales invalidas.',
+          tooManyAttempts: 'Demasiados intentos fallidos. Intentalo mas tarde.',
+        },
+      },
+      deleteModal: {
+        title: 'Borrar punto de ruta?',
+        description: 'Esta accion no se puede deshacer.',
+        confirm: 'Borrar definitivamente',
+        cancel: 'Cancelar',
+      },
+      fallback: {
+        unknown: 'Desconocido',
+        noPhoto: 'Sin foto',
+      },
+      alt: {
+        routePointPhoto: 'Foto del punto de ruta',
+      },
+      success: {
+        saved: 'Cambios guardados.',
+        deleted: 'Punto de ruta borrado.',
+      },
+      errors: {
+        invalidCoordinates: 'Coordenadas invalidas.',
+        saveFailed: 'No se pudieron guardar los cambios.',
+        publishNotReady: 'El punto debe estar en estado imagen lista para publicarse.',
+        publishMissingImage: 'Sube una imagen del punto antes de publicarlo.',
+        deleteFailed: 'No se pudo borrar el punto de ruta.',
+        photoRequired: 'Selecciona un archivo JPEG.',
+        photoType: 'Por ahora solo se admite JPEG.',
+        photoFailed: 'No se pudo subir la foto.',
+        unknown: 'Algo fallo.',
+      },
+    },
     cookie: {
       message: 'Este sitio web utiliza cookies para mejorar tu experiencia de navegación.',
       accept: 'Aceptar',
@@ -302,7 +540,7 @@ const translations = {
       cookiesChangesText:
         'Podemos actualizar esta Política de Cookies para reflejar cambios en nuestras prácticas o por motivos legales, regulatorios u operativos. La fecha de la última actualización se indica al inicio de esta página.',
     },
-  },
+  }
 } as const;
 
 export type Translations = (typeof translations)[keyof typeof translations];

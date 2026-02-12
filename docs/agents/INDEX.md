@@ -9,6 +9,10 @@
 - `docs/agents/GOLDEN_PATHS.md`: End-to-end flows for the core product.
 - `docs/agents/DEBUGGING.md`: Common issues and how to resolve them.
 
+## Recent Decisions
+- `.adr/056-admin-transactional-route-point-update-and-delete.md`: Transactional admin update/delete orchestration with post-commit storage cleanup.
+- `.adr/057-admin-session-secret-and-login-rate-limit.md`: Dedicated admin session secret and login brute-force mitigation policy.
+
 ## Standards
 Project standards (IDE-agnostic) in `.ai/standards/`, grouped by context:
 
@@ -22,6 +26,8 @@ Actionable procedures (each in its own folder with `SKILL.md`): `.ai/skills/` (d
 ## Commands
 Reusable workflows triggered with `/` in chat. Cursor wrappers in `.cursor/commands/`, real logic in `.ai/commands/`:
 - `/review-code`: Comprehensive code review using parallel subagents.
+- `/prueba`: Minimal smoke test command that returns a fixed success message.
+- `/prueba-codex`: Minimal smoke test command that returns a fixed success message.
 
 ## Custom Subagents
 Specialized agents used by commands. Cursor wrappers in `.cursor/agents/`, real definitions in `.ai/agents/`:

@@ -1,9 +1,14 @@
-import { pool, Point, pointToWKT } from '@silicon-traveler/shared';
-import { IRouteRepository, RoutePointContentTranslation } from '../ports/route-repository.port';
+import { pool, Point, pointToWKT, type QueryExecutor } from '@silicon-traveler/shared';
+import {
+  FindRoutePointsByJourneyParams,
+  IRouteRepository,
+  RoutePointContentTranslation,
+  RoutePointCreateParams,
+} from '../ports/route-repository.port';
 import { RoutePoint, RouteStatus } from '../domain/route-point.entity';
 
 export class MariaDBRouteRepository implements IRouteRepository {
-  async create(routePoint: Omit<RoutePoint, 'id' | 'createdAt' | 'updatedAt'>): Promise<RoutePoint> {
+  async create(routePoint: RoutePointCreateParams): Promise<RoutePoint> {
     const conn = await pool.getConnection();
     try {
       const result = await conn.query(
@@ -36,7 +41,7 @@ export class MariaDBRouteRepository implements IRouteRepository {
       );
 
       return new RoutePoint(
-        result.insertId,
+        this.toNumber(result.insertId),
         routePoint.journeyId,
         routePoint.sequence,
         routePoint.placeName,
@@ -63,10 +68,9 @@ export class MariaDBRouteRepository implements IRouteRepository {
     }
   }
 
-  async findById(id: number): Promise<RoutePoint | null> {
-    const conn = await pool.getConnection();
-    try {
-      const rows = await conn.query(
+  async findById(id: number, queryExecutor?: QueryExecutor): Promise<RoutePoint | null> {
+    return this.withQueryExecutor(queryExecutor, async (executor) => {
+      const rows = await executor.query(
         `SELECT id, journey_id, sequence, place_name,
                 ST_AsText(coordinates) as coordinates,
                 country, region, is_ferry_crossing, distance_from_previous,
@@ -79,9 +83,7 @@ export class MariaDBRouteRepository implements IRouteRepository {
 
       if (rows.length === 0) return null;
       return this.toDomain(rows[0]);
-    } finally {
-      conn.release();
-    }
+    });
   }
 
   async findByStatus(status: RouteStatus, limit: number = 10): Promise<RoutePoint[]> {
@@ -156,6 +158,64 @@ export class MariaDBRouteRepository implements IRouteRepository {
     }
   }
 
+  async findByJourney(journeyId: number, params: FindRoutePointsByJourneyParams): Promise<RoutePoint[]> {
+    const conn = await pool.getConnection();
+    try {
+      const statuses = params.statuses?.length ? params.statuses : undefined;
+      const where: string[] = ['journey_id = ?'];
+      const queryParams: any[] = [journeyId];
+
+      if (statuses) {
+        const placeholders = statuses.map(() => '?').join(',');
+        where.push(`status IN (${placeholders})`);
+        queryParams.push(...statuses);
+      }
+
+      const rows = await conn.query(
+        `SELECT id, journey_id, sequence, place_name,
+                ST_AsText(coordinates) as coordinates,
+                country, region, is_ferry_crossing, distance_from_previous,
+                osm_data, research_summary, image_prompt, narrative_prompt,
+                camera_metadata, status, error_message, image_path, thumbnail_path,
+                created_at, published_at, updated_at
+         FROM route_points
+         WHERE ${where.join(' AND ')}
+         ORDER BY sequence ASC
+         LIMIT ? OFFSET ?`,
+        [...queryParams, params.limit, params.offset]
+      );
+
+      return rows.map((row: any) => this.toDomain(row));
+    } finally {
+      conn.release();
+    }
+  }
+
+  async countByJourney(journeyId: number, statuses?: RouteStatus[]): Promise<number> {
+    const conn = await pool.getConnection();
+    try {
+      const where: string[] = ['journey_id = ?'];
+      const queryParams: any[] = [journeyId];
+
+      if (statuses?.length) {
+        const placeholders = statuses.map(() => '?').join(',');
+        where.push(`status IN (${placeholders})`);
+        queryParams.push(...statuses);
+      }
+
+      const rows = await conn.query(
+        `SELECT COUNT(*) as count
+         FROM route_points
+         WHERE ${where.join(' AND ')}`,
+        queryParams
+      );
+
+      return Number(rows[0]?.count ?? 0);
+    } finally {
+      conn.release();
+    }
+  }
+
   async countByStatuses(statuses: RouteStatus[]): Promise<number> {
     const conn = await pool.getConnection();
     try {
@@ -175,12 +235,12 @@ export class MariaDBRouteRepository implements IRouteRepository {
 
   async upsertContentTranslations(
     routePointId: number,
-    translations: RoutePointContentTranslation[]
+    translations: RoutePointContentTranslation[],
+    queryExecutor?: QueryExecutor
   ): Promise<void> {
     if (!translations.length) return;
 
-    const conn = await pool.getConnection();
-    try {
+    await this.withQueryExecutor(queryExecutor, async (executor) => {
       const values = translations.map(() => '(?, ?, ?, ?)').join(', ');
       const params = translations.flatMap((translation) => [
         routePointId,
@@ -189,7 +249,7 @@ export class MariaDBRouteRepository implements IRouteRepository {
         translation.narrative,
       ]);
 
-      await conn.query(
+      await executor.query(
         `INSERT INTO route_point_translations
          (route_point_id, language, image_prompt, narrative)
          VALUES ${values}
@@ -199,15 +259,15 @@ export class MariaDBRouteRepository implements IRouteRepository {
            updated_at = CURRENT_TIMESTAMP`,
         params
       );
-    } finally {
-      conn.release();
-    }
+    });
   }
 
-  async findContentTranslations(routePointId: number): Promise<RoutePointContentTranslation[]> {
-    const conn = await pool.getConnection();
-    try {
-      const rows = await conn.query(
+  async findContentTranslations(
+    routePointId: number,
+    queryExecutor?: QueryExecutor
+  ): Promise<RoutePointContentTranslation[]> {
+    return this.withQueryExecutor(queryExecutor, async (executor) => {
+      const rows = await executor.query(
         `SELECT language, image_prompt, narrative
          FROM route_point_translations
          WHERE route_point_id = ?`,
@@ -219,17 +279,14 @@ export class MariaDBRouteRepository implements IRouteRepository {
         imagePrompt: row.image_prompt ?? null,
         narrative: row.narrative ?? null,
       }));
-    } finally {
-      conn.release();
-    }
+    });
   }
 
-  async update(routePoint: RoutePoint): Promise<void> {
-    const conn = await pool.getConnection();
-    try {
-      await conn.query(
+  async update(routePoint: RoutePoint, queryExecutor?: QueryExecutor): Promise<void> {
+    await this.withQueryExecutor(queryExecutor, async (executor) => {
+      await executor.query(
         `UPDATE route_points
-         SET place_name = ?, country = ?, region = ?,
+         SET place_name = ?, coordinates = ST_GeomFromText(?, 4326), country = ?, region = ?,
              osm_data = ?, research_summary = ?,
              image_prompt = ?, narrative_prompt = ?, camera_metadata = ?,
              status = ?, error_message = ?,
@@ -238,6 +295,7 @@ export class MariaDBRouteRepository implements IRouteRepository {
          WHERE id = ?`,
         [
           routePoint.placeName,
+          pointToWKT(routePoint.coordinates),
           routePoint.country,
           routePoint.region,
           this.safeStringify(routePoint.osmData),
@@ -253,9 +311,19 @@ export class MariaDBRouteRepository implements IRouteRepository {
           routePoint.id,
         ]
       );
-    } finally {
-      conn.release();
-    }
+    });
+  }
+
+  async deleteById(id: number, queryExecutor?: QueryExecutor): Promise<boolean> {
+    return this.withQueryExecutor(queryExecutor, async (executor) => {
+      const result = await executor.query(
+        `DELETE FROM route_points
+         WHERE id = ?`,
+        [id]
+      );
+
+      return this.toNumber(result.affectedRows) > 0;
+    });
   }
 
   async getLastSequence(journeyId: number): Promise<number> {
@@ -266,7 +334,7 @@ export class MariaDBRouteRepository implements IRouteRepository {
         [journeyId]
       );
 
-      return rows[0].max_seq || 0;
+      return this.toNumber(rows[0].max_seq, 0);
     } finally {
       conn.release();
     }
@@ -274,9 +342,9 @@ export class MariaDBRouteRepository implements IRouteRepository {
 
   private toDomain(row: any): RoutePoint {
     return new RoutePoint(
-      row.id,
-      row.journey_id,
-      row.sequence,
+      this.toNumber(row.id),
+      this.toNumber(row.journey_id),
+      this.toNumber(row.sequence),
       row.place_name,
       this.parsePoint(row.coordinates),
       row.country,
@@ -305,7 +373,7 @@ export class MariaDBRouteRepository implements IRouteRepository {
   }
 
   private safeJsonParse(data: string | object): any {
-    if (data && typeof data !== 'string') {
+    if (typeof data !== 'string') {
       return data;
     }
 
@@ -325,6 +393,41 @@ export class MariaDBRouteRepository implements IRouteRepository {
     } catch (error) {
       console.warn(`Failed to stringify data: ${error instanceof Error ? error.message : String(error)}`);
       return null;
+    }
+  }
+
+  private toNumber(value: unknown, fallback: number = 0): number {
+    if (typeof value === 'number' && Number.isFinite(value)) {
+      return value;
+    }
+
+    if (typeof value === 'bigint') {
+      return Number(value);
+    }
+
+    if (typeof value === 'string' && value.trim().length > 0) {
+      const parsed = Number(value);
+      if (Number.isFinite(parsed)) {
+        return parsed;
+      }
+    }
+
+    return fallback;
+  }
+
+  private async withQueryExecutor<T>(
+    queryExecutor: QueryExecutor | undefined,
+    work: (executor: QueryExecutor) => Promise<T>
+  ): Promise<T> {
+    if (queryExecutor) {
+      return await work(queryExecutor);
+    }
+
+    const connection = await pool.getConnection();
+    try {
+      return await work(connection);
+    } finally {
+      connection.release();
     }
   }
 }
