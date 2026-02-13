@@ -149,7 +149,9 @@ export default async function AdminLoginPage({
   );
 }
 
-function normalizeNextPath(value: FormDataEntryValue | string | undefined): string {
+function normalizeNextPath(
+  value: FormDataEntryValue | string | null | undefined
+): string {
   const raw = typeof value === 'string' ? value : '';
   if (!raw.startsWith('/admin')) {
     return '/admin';
