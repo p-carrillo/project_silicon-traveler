@@ -76,6 +76,9 @@ jobs:
           
           # API
           API_KEY=${{ secrets.PROD_API_KEY }}
+          ADMIN_BASIC_USER=${{ secrets.PROD_ADMIN_BASIC_USER }}
+          ADMIN_BASIC_PASSWORD=${{ secrets.PROD_ADMIN_BASIC_PASSWORD }}
+          ADMIN_SESSION_SECRET=${{ secrets.PROD_ADMIN_SESSION_SECRET }}
           CORS_ORIGINS=${{ secrets.PROD_CORS_ORIGINS }}
           API_URL=${{ secrets.PROD_API_URL }}
           NEXT_PUBLIC_API_URL=${{ secrets.PROD_NEXT_PUBLIC_API_URL }}

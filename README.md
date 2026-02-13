@@ -274,6 +274,12 @@ docker-compose exec mariadb sh
 ./scripts/docker-deploy.sh prod logs
 ```
 
+The GitHub Actions deploy workflow recreates `${DEPLOY_PATH}/.env` on every run from repository secrets.  
+For admin access in production, these secrets are required:
+- `PROD_ADMIN_BASIC_USER`
+- `PROD_ADMIN_BASIC_PASSWORD`
+- `PROD_ADMIN_SESSION_SECRET`
+
 Production images compile all required workspace artifacts used at runtime, including `@silicon-traveler/map` (API dependency) and `@silicon-traveler/scheduler`.
 TypeScript incremental metadata (`*.tsbuildinfo`) is excluded from Docker context to keep production builds deterministic.
 The production GitHub Actions deploy now fails fast when `apps/web/src/app/api/images/[...path]/route.ts` is missing on the target server and runs a smoke test against `http://localhost:3001/api/images/images-proxy-smoke-test.jpg` to ensure the web image proxy route is active.
