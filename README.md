@@ -276,9 +276,9 @@ docker-compose exec mariadb sh
 
 The GitHub Actions deploy workflow recreates `${DEPLOY_PATH}/.env` on every run from repository secrets.  
 For admin access in production, these secrets are required:
-- `PROD_ADMIN_BASIC_USER`
-- `PROD_ADMIN_BASIC_PASSWORD`
-- `PROD_ADMIN_SESSION_SECRET`
+- `ADMIN_BASIC_USER`
+- `ADMIN_BASIC_PASSWORD`
+- `ADMIN_SESSION_SECRET`
 
 Production images compile all required workspace artifacts used at runtime, including `@silicon-traveler/map` (API dependency) and `@silicon-traveler/scheduler`.
 TypeScript incremental metadata (`*.tsbuildinfo`) is excluded from Docker context to keep production builds deterministic.
