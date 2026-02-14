@@ -1,5 +1,5 @@
 import { Point } from '@silicon-traveler/shared';
-import type { RouteStatus } from '@silicon-traveler/route';
+import type { RoutePointListOrder, RouteStatus } from '@silicon-traveler/route';
 
 const ROUTE_STATUSES: RouteStatus[] = [
   'pending',
@@ -9,6 +9,8 @@ const ROUTE_STATUSES: RouteStatus[] = [
   'published',
   'failed',
 ];
+
+const ROUTE_POINT_LIST_ORDERS: RoutePointListOrder[] = ['id_asc', 'id_desc'];
 
 export function parsePositiveInt(
   value: unknown,
@@ -61,6 +63,22 @@ export function parseStatusesParam(value: unknown): { value: RouteStatus[] | und
     .filter(Boolean);
 
   return validateStatuses(parts);
+}
+
+export function parseRoutePointOrder(
+  value: unknown,
+  fallback: RoutePointListOrder = 'id_desc'
+): { value: RoutePointListOrder } | { error: string } {
+  if (value === undefined || value === null || value === '') {
+    return { value: fallback };
+  }
+
+  const normalized = String(value).trim().toLowerCase() as RoutePointListOrder;
+  if (!ROUTE_POINT_LIST_ORDERS.includes(normalized)) {
+    return { error: `Invalid order: ${value}` };
+  }
+
+  return { value: normalized };
 }
 
 function validateStatuses(values: string[]): { value: RouteStatus[] } | { error: string } {

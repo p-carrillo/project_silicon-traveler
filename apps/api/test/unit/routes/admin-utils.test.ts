@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { parsePoint, parsePositiveInt, parseOffsetInt, parseStatusesParam } from '../../../src/routes/admin.utils';
+import {
+  parsePoint,
+  parsePositiveInt,
+  parseOffsetInt,
+  parseStatusesParam,
+  parseRoutePointOrder,
+} from '../../../src/routes/admin.utils';
 
 describe('admin.utils', () => {
   it('parses limit with fallback and range', () => {
@@ -24,5 +30,10 @@ describe('admin.utils', () => {
     expect(parseStatusesParam('pending,image_ready')).toEqual({ value: ['pending', 'image_ready'] });
     expect(parseStatusesParam('nope')).toHaveProperty('error');
   });
-});
 
+  it('parses route-point order', () => {
+    expect(parseRoutePointOrder(undefined)).toEqual({ value: 'id_desc' });
+    expect(parseRoutePointOrder('id_asc')).toEqual({ value: 'id_asc' });
+    expect(parseRoutePointOrder('bad')).toHaveProperty('error');
+  });
+});

@@ -83,6 +83,13 @@ const translations = {
       empty: 'No route points found.',
       filters: {
         status: 'Status',
+        city: 'City',
+        cityPlaceholder: 'Search city',
+        order: 'Order',
+      },
+      order: {
+        id_desc: 'ID (newest first)',
+        id_asc: 'ID (oldest first)',
       },
       status: {
         all: 'All',
@@ -100,6 +107,17 @@ const translations = {
         country: 'Country',
         updated: 'Updated',
         actions: 'Actions',
+      },
+      pagination: {
+        prev: 'Previous',
+        next: 'Next',
+        summary: (
+          start: number | string,
+          end: number | string,
+          total: number | string,
+          current: number | string,
+          pages: number | string
+        ) => `Showing ${start}-${end} of ${total} route points | Page ${current} of ${pages}`,
       },
       fields: {
         city: 'City',
@@ -353,6 +371,13 @@ const translations = {
       empty: 'No se encontraron puntos de ruta.',
       filters: {
         status: 'Estado',
+        city: 'Ciudad',
+        cityPlaceholder: 'Buscar ciudad',
+        order: 'Orden',
+      },
+      order: {
+        id_desc: 'ID (mas reciente primero)',
+        id_asc: 'ID (mas antiguo primero)',
       },
       status: {
         all: 'Todos',
@@ -370,6 +395,17 @@ const translations = {
         country: 'Pais',
         updated: 'Actualizado',
         actions: 'Acciones',
+      },
+      pagination: {
+        prev: 'Anterior',
+        next: 'Siguiente',
+        summary: (
+          start: number | string,
+          end: number | string,
+          total: number | string,
+          current: number | string,
+          pages: number | string
+        ) => `Mostrando ${start}-${end} de ${total} puntos de ruta | Pagina ${current} de ${pages}`,
       },
       fields: {
         city: 'Ciudad',

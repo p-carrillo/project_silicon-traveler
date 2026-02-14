@@ -162,6 +162,8 @@ export class MariaDBRouteRepository implements IRouteRepository {
     const conn = await pool.getConnection();
     try {
       const statuses = params.statuses?.length ? params.statuses : undefined;
+      const cityQuery = params.cityQuery?.trim();
+      const orderClause = params.order === 'id_asc' ? 'id ASC' : 'id DESC';
       const where: string[] = ['journey_id = ?'];
       const queryParams: any[] = [journeyId];
 
@@ -169,6 +171,11 @@ export class MariaDBRouteRepository implements IRouteRepository {
         const placeholders = statuses.map(() => '?').join(',');
         where.push(`status IN (${placeholders})`);
         queryParams.push(...statuses);
+      }
+
+      if (cityQuery) {
+        where.push('LOWER(COALESCE(place_name, \'\')) LIKE ?');
+        queryParams.push(`%${cityQuery.toLowerCase()}%`);
       }
 
       const rows = await conn.query(
@@ -180,7 +187,7 @@ export class MariaDBRouteRepository implements IRouteRepository {
                 created_at, published_at, updated_at
          FROM route_points
          WHERE ${where.join(' AND ')}
-         ORDER BY sequence ASC
+         ORDER BY ${orderClause}
          LIMIT ? OFFSET ?`,
         [...queryParams, params.limit, params.offset]
       );
@@ -191,7 +198,11 @@ export class MariaDBRouteRepository implements IRouteRepository {
     }
   }
 
-  async countByJourney(journeyId: number, statuses?: RouteStatus[]): Promise<number> {
+  async countByJourney(
+    journeyId: number,
+    statuses?: RouteStatus[],
+    cityQuery?: string
+  ): Promise<number> {
     const conn = await pool.getConnection();
     try {
       const where: string[] = ['journey_id = ?'];
@@ -201,6 +212,12 @@ export class MariaDBRouteRepository implements IRouteRepository {
         const placeholders = statuses.map(() => '?').join(',');
         where.push(`status IN (${placeholders})`);
         queryParams.push(...statuses);
+      }
+
+      const normalizedCityQuery = cityQuery?.trim();
+      if (normalizedCityQuery) {
+        where.push('LOWER(COALESCE(place_name, \'\')) LIKE ?');
+        queryParams.push(`%${normalizedCityQuery.toLowerCase()}%`);
       }
 
       const rows = await conn.query(

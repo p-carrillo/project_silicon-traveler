@@ -31,9 +31,13 @@ export interface RoutePointCreateParams {
 
 export interface FindRoutePointsByJourneyParams {
   statuses?: RouteStatus[];
+  cityQuery?: string;
+  order?: RoutePointListOrder;
   limit: number;
   offset: number;
 }
+
+export type RoutePointListOrder = 'id_asc' | 'id_desc';
 
 export interface IRouteRepository {
   create(routePoint: RoutePointCreateParams): Promise<RoutePoint>;
@@ -42,7 +46,7 @@ export interface IRouteRepository {
   findFirstScheduledByJourney(journeyId: number): Promise<RoutePoint | null>;
   findNextBySequence(journeyId: number): Promise<RoutePoint | null>;
   findByJourney(journeyId: number, params: FindRoutePointsByJourneyParams): Promise<RoutePoint[]>;
-  countByJourney(journeyId: number, statuses?: RouteStatus[]): Promise<number>;
+  countByJourney(journeyId: number, statuses?: RouteStatus[], cityQuery?: string): Promise<number>;
   countByStatuses(statuses: RouteStatus[]): Promise<number>;
   upsertContentTranslations(
     routePointId: number,

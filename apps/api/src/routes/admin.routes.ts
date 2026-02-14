@@ -17,7 +17,13 @@ import {
 } from '@silicon-traveler/photo';
 import { LocalStorageAdapter } from '@silicon-traveler/storage';
 import { SharpAdapter } from '@silicon-traveler/image';
-import { parseOffsetInt, parsePoint, parsePositiveInt, parseStatusesParam } from './admin.utils';
+import {
+  parseOffsetInt,
+  parsePoint,
+  parsePositiveInt,
+  parseRoutePointOrder,
+  parseStatusesParam,
+} from './admin.utils';
 import { DeleteAdminRoutePointUseCase } from '../application/admin/delete-admin-route-point.use-case';
 import { deriveThumbnailPath } from '../application/admin/photo-prepared.factory';
 import { UpdateAdminRoutePointUseCase } from '../application/admin/update-admin-route-point.use-case';
@@ -69,9 +75,18 @@ adminRouter.get('/route-points', async (req: Request, res: Response) => {
       return res.status(400).json({ error: `offset: ${offsetResult.error}` });
     }
 
+    const orderResult = parseRoutePointOrder(req.query.order);
+    if ('error' in orderResult) {
+      return res.status(400).json({ error: orderResult.error });
+    }
+
+    const cityQuery = normalizeQueryString(req.query.city);
+
     const result = await listRoutePointsUseCase.execute({
       journeyId: JOURNEY_ID,
       statuses: statusesResult.value,
+      cityQuery,
+      order: orderResult.value,
       limit: limitResult.value,
       offset: offsetResult.value,
     });

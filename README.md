@@ -38,6 +38,7 @@ The system maintains a buffer of 10 pre-generated photos and displays them in a 
 - Authenticated sessions can be closed from the admin `Logout` button.
 - Admin forms can calculate coordinates from city/country/region using the `Calculate coordinates` button.
 - Admin coordinate inputs accept dot or comma decimals (e.g. `43.36` or `43,36`) and show a success message after saving edits.
+- Admin route-point list supports status and city filters, ID sort order, and numbered pagination controls.
 - Editing a published route point in admin also syncs the linked `photos` record, so changes appear in `archive` and `map`.
 - The route-point editor shows current status and includes a `Published` switch to publish/unpublish from the same form.
 - The edit screen includes a `Delete` button with confirmation modal before removing a route point.

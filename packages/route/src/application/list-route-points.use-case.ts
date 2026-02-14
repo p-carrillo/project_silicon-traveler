@@ -1,9 +1,11 @@
-import { IRouteRepository } from '../ports/route-repository.port';
+import { IRouteRepository, RoutePointListOrder } from '../ports/route-repository.port';
 import { RoutePoint, RouteStatus } from '../domain/route-point.entity';
 
 export interface ListRoutePointsInput {
   journeyId: number;
   statuses?: RouteStatus[];
+  cityQuery?: string;
+  order?: RoutePointListOrder;
   limit: number;
   offset: number;
 }
@@ -22,10 +24,16 @@ export class ListRoutePointsUseCase {
     const [routePoints, total] = await Promise.all([
       this.routeRepository.findByJourney(input.journeyId, {
         statuses: input.statuses,
+        cityQuery: input.cityQuery,
+        order: input.order,
         limit: input.limit,
         offset: input.offset,
       }),
-      this.routeRepository.countByJourney(input.journeyId, input.statuses),
+      this.routeRepository.countByJourney(
+        input.journeyId,
+        input.statuses,
+        input.cityQuery
+      ),
     ]);
 
     return {
@@ -36,4 +44,3 @@ export class ListRoutePointsUseCase {
     };
   }
 }
-

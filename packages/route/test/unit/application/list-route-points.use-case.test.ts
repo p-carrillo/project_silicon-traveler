@@ -47,6 +47,8 @@ describe('ListRoutePointsUseCase', () => {
     const result = await useCase.execute({
       journeyId: 1,
       statuses: ['pending'],
+      cityQuery: 'bilbao',
+      order: 'id_desc',
       limit: 50,
       offset: 0,
     });
@@ -55,10 +57,11 @@ describe('ListRoutePointsUseCase', () => {
     expect(result.total).toBe(10);
     expect(routeRepository.findByJourney).toHaveBeenCalledWith(1, {
       statuses: ['pending'],
+      cityQuery: 'bilbao',
+      order: 'id_desc',
       limit: 50,
       offset: 0,
     });
-    expect(routeRepository.countByJourney).toHaveBeenCalledWith(1, ['pending']);
+    expect(routeRepository.countByJourney).toHaveBeenCalledWith(1, ['pending'], 'bilbao');
   });
 });
-

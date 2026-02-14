@@ -1,4 +1,9 @@
-import type { AdminRoutePoint, AdminRoutePointListResponse, AdminRoutePointUpdateInput } from '@/types/admin';
+import type {
+  AdminRoutePoint,
+  AdminRoutePointListResponse,
+  AdminRoutePointOrder,
+  AdminRoutePointUpdateInput,
+} from '@/types/admin';
 
 const API_BASE_URL = process.env.API_URL || 'http://api:3000';
 const API_KEY = process.env.API_KEY;
@@ -28,11 +33,15 @@ async function adminFetch(path: string, options: RequestInit = {}, timeoutMs = 8
 
 export async function getAdminRoutePoints(params: {
   statuses?: string;
+  city?: string;
+  order?: AdminRoutePointOrder;
   limit?: number;
   offset?: number;
 }): Promise<AdminRoutePointListResponse> {
   const search = new URLSearchParams();
   if (params.statuses) search.set('statuses', params.statuses);
+  if (params.city) search.set('city', params.city);
+  if (params.order) search.set('order', params.order);
   if (params.limit !== undefined) search.set('limit', String(params.limit));
   if (params.offset !== undefined) search.set('offset', String(params.offset));
 

@@ -6,6 +6,8 @@ export type AdminRouteStatus =
   | 'published'
   | 'failed';
 
+export type AdminRoutePointOrder = 'id_desc' | 'id_asc';
+
 export interface AdminRoutePointTranslation {
   language: string;
   imagePrompt: string | null;
@@ -53,4 +55,3 @@ export interface AdminRoutePointUpdateInput {
   status?: AdminRouteStatus;
   error_message?: string | null;
 }
-
