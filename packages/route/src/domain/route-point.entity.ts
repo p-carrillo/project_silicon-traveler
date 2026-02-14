@@ -2,6 +2,7 @@ import { Point } from '@silicon-traveler/shared';
 import type { RoutePointCreateParams } from '../ports/route-repository.port';
 
 export type RouteStatus = 'pending' | 'researched' | 'content_generated' | 'image_ready' | 'published' | 'failed';
+export type TravelMode = 'land' | 'air';
 
 export class RoutePoint {
   constructor(
@@ -25,7 +26,8 @@ export class RoutePoint {
     public thumbnailPath: string | null,
     public readonly createdAt: Date,
     public publishedAt: Date | null,
-    public updatedAt: Date
+    public updatedAt: Date,
+    public readonly travelMode: TravelMode = 'land'
   ) {}
 
   updateStatus(status: RouteStatus, errorMessage: string | null = null): void {
@@ -67,7 +69,8 @@ export class RoutePoint {
     sequence: number,
     coordinates: Point,
     isFerry: boolean = false,
-    distance: number | null = null
+    distance: number | null = null,
+    travelMode: TravelMode = 'land'
   ): RoutePointCreateParams {
     return {
       journeyId,
@@ -77,6 +80,7 @@ export class RoutePoint {
       country: null,
       region: null,
       isFferryCrossing: isFerry,
+      travelMode,
       distanceFromPrevious: distance,
       osmData: null,
       researchSummary: null,

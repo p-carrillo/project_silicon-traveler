@@ -1,4 +1,5 @@
 import type { PortraitParameters } from '../config/portrait';
+export type ContentTravelMode = 'land' | 'air';
 
 export interface GeneratedContent {
   imagePrompt: string;
@@ -29,7 +30,8 @@ export interface ContentInput {
   country: string;
   region: string;
   researchSummary: string;
-  isFferryCrossing: boolean;
+  travelMode: ContentTravelMode;
+  isFferryCrossing?: boolean; // legacy compatibility
   language?: string;
   portraitParameters?: PortraitParameters;
 }

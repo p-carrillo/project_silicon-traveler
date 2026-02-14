@@ -92,6 +92,7 @@ journeyRouter.get('/route', async (req, res) => {
         distance_from_previous as distance_km,
         place_name as city_name,
         country as country_name,
+        travel_mode as travel_mode,
         status,
         created_at,
         updated_at
@@ -139,7 +140,31 @@ journeyRouter.get('/route/:id', async (req, res) => {
       return res.status(404).json({ error: 'Route point not found' });
     }
 
-    return res.json(routePoint);
+    return res.json({
+      id: routePoint.id,
+      journeyId: routePoint.journeyId,
+      sequence: routePoint.sequence,
+      placeName: routePoint.placeName,
+      coordinates: routePoint.coordinates,
+      country: routePoint.country,
+      region: routePoint.region,
+      isFferryCrossing: routePoint.isFferryCrossing,
+      travelMode: routePoint.travelMode,
+      travel_mode: routePoint.travelMode,
+      distanceFromPrevious: routePoint.distanceFromPrevious,
+      osmData: routePoint.osmData,
+      researchSummary: routePoint.researchSummary,
+      imagePrompt: routePoint.imagePrompt,
+      narrativePrompt: routePoint.narrativePrompt,
+      cameraMetadata: routePoint.cameraMetadata,
+      status: routePoint.status,
+      errorMessage: routePoint.errorMessage,
+      imagePath: routePoint.imagePath,
+      thumbnailPath: routePoint.thumbnailPath,
+      createdAt: routePoint.createdAt,
+      publishedAt: routePoint.publishedAt,
+      updatedAt: routePoint.updatedAt,
+    });
   } catch (error) {
     console.error('Error fetching route point:', error);
     return res.status(500).json({ error: 'Failed to fetch route point' });

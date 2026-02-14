@@ -29,6 +29,25 @@
 | `OPENAI_API_KEY` | content, image, photo | OpenAI for text and image generation | Required for real runs.
 | `IMAGE_MODEL` | image | OpenAI image generation model | Default `gpt-image-1.5`. Options: `gpt-image-1.5`, `gpt-image-1`, `gpt-image-1-mini`, `dall-e-3`, `dall-e-2`.
 | `BRAVE_SEARCH_API_KEY` | research, photo | Brave Search API | Required for real runs.
+| `OSRM_BASE_URL` | route, cli, scheduler | Base URL for OSRM route planning API | Default `http://osrm:5000` in Docker; can be overridden to a public endpoint.
+| `OSRM_TIMEOUT_MS` | route, cli, scheduler | Timeout for OSRM requests | Default `5000`.
+| `OSRM_PBF_URL` | Docker bootstrap | Source URL for OSRM dataset download | Default Geofabrik Spain extract.
+| `OSRM_PBF_FILE` | Docker bootstrap/osrm service | PBF filename stored under OSRM data volume | Default `spain-latest.osm.pbf`.
+| `OVERPASS_BASE_URL` | route, cli, scheduler | Base URL for Overpass API | Default `https://overpass-api.de/api/interpreter`.
+| `OVERPASS_TIMEOUT_MS` | route, cli, scheduler | Timeout for Overpass requests | Default `5000`.
+| `GEO_RETRY_MAX_ATTEMPTS` | route adapters | Max retry attempts for transient geo provider failures | Default `3`.
+| `GEO_RETRY_BASE_DELAY_MS` | route adapters | Base retry backoff delay | Default `200`.
+| `GEO_RETRY_MAX_DELAY_MS` | route adapters | Max retry backoff delay | Default `2000`.
+| `GEO_CIRCUIT_FAILURE_THRESHOLD` | route adapters | Consecutive failures before opening circuit | Default `5`.
+| `GEO_CIRCUIT_OPEN_MS` | route adapters | Circuit open duration | Default `120000`.
+| `GEO_CACHE_MAX_ENTRIES` | route adapters | Max in-memory geo cache entries per adapter cache | Default `2000`.
+| `GEO_CACHE_TTL_MS_WATER` | Overpass adapter | TTL for water-detection cache entries | Default `86400000`.
+| `GEO_CACHE_TTL_MS_CITY` | Overpass adapter | TTL for nearest-city cache entries | Default `21600000`.
+| `GEO_CACHE_TTL_MS_ROUTE` | Routing adapter | TTL for OSRM route cache entries | Default `3600000`.
+| `ROUTE_EAST_BEARING_MIN` | route, cli, scheduler | Minimum eastward candidate bearing (degrees) | Default `65`.
+| `ROUTE_EAST_BEARING_MAX` | route, cli, scheduler | Maximum eastward candidate bearing (degrees) | Default `115`.
+| `ROUTE_LANDFALL_SAMPLE_KM` | route, cli, scheduler | Sampling distance for eastward landfall scan | Default `25`.
+| `ROUTE_LANDFALL_MAX_KM` | route, cli, scheduler | Maximum eastward scan distance before giving up on air fallback | Default `1500`.
 
 ## Runtime Defaults
 - `docker-compose.yml` sets `NODE_ENV=development` for containers.

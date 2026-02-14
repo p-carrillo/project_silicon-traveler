@@ -4,13 +4,16 @@
 1. Apply migrations with `pnpm --filter @silicon-traveler/cli migrate`.
 2. Create the journey and initial route points with `pnpm --filter @silicon-traveler/cli init-journey`.
 3. Verify `journey` and `route_points` rows exist in MariaDB.
+4. Confirm generated route points include `travel_mode` (`land` by default, `air` when sea fallback is needed).
 
 ## 2. Prepare Photos (CLI)
 1. Ensure `OPENAI_API_KEY` and `BRAVE_SEARCH_API_KEY` are set.
-2. Run `pnpm --filter @silicon-traveler/cli prepare-prompts -- 7 --journey-id 1`.
-3. The command prints JSON with prepared photo details and updates `route_points` status to `image_ready`.
-4. Use `--prompts-only` to stop after content generation (`content_generated`).
-5. If the place name remains `Unknown`, the pipeline marks the route point as `failed` and throws.
+2. For stable route planning, bootstrap and start OSRM profile (`./scripts/osrm-bootstrap.sh dev`, then `docker compose --profile routing up -d osrm`).
+3. Run `pnpm --filter @silicon-traveler/cli prepare-prompts -- 7 --journey-id 1`.
+4. The command prints JSON with prepared photo details and updates `route_points` status to `image_ready`.
+5. Use `--prompts-only` to stop after content generation (`content_generated`).
+6. Route planning prefers eastward land pathfinding and uses a single air landing fallback when no land step is available.
+7. If the place name remains `Unknown`, the pipeline marks the route point as `failed` and throws.
 
 ## 3. Generate and Publish Photos (Scheduler)
 1. Start `apps/scheduler` with the scheduler profile or run `pnpm --filter @silicon-traveler/scheduler build` then `pnpm --filter @silicon-traveler/scheduler start`.

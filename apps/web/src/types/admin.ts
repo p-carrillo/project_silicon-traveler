@@ -21,6 +21,7 @@ export interface AdminRoutePoint {
   place_name: string | null;
   country: string | null;
   region: string | null;
+  travel_mode?: 'land' | 'air';
   coordinates: { lat: number; lng: number };
   status: AdminRouteStatus;
   image_prompt: string | null;

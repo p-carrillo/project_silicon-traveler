@@ -21,11 +21,77 @@ x-app-base: &app-base
     - OPENAI_API_KEY=${OPENAI_API_KEY}
     - BRAVE_SEARCH_API_KEY=${BRAVE_SEARCH_API_KEY}
     - API_URL=${API_URL:-http://api:3000}
+    - OVERPASS_BASE_URL=${OVERPASS_BASE_URL:-https://overpass-api.de/api/interpreter}
+    - OVERPASS_TIMEOUT_MS=${OVERPASS_TIMEOUT_MS:-5000}
+    - OSRM_BASE_URL=${OSRM_BASE_URL:-http://osrm:5000}
+    - OSRM_TIMEOUT_MS=${OSRM_TIMEOUT_MS:-5000}
+    - GEO_RETRY_MAX_ATTEMPTS=${GEO_RETRY_MAX_ATTEMPTS:-3}
+    - GEO_RETRY_BASE_DELAY_MS=${GEO_RETRY_BASE_DELAY_MS:-200}
+    - GEO_RETRY_MAX_DELAY_MS=${GEO_RETRY_MAX_DELAY_MS:-2000}
+    - GEO_CIRCUIT_FAILURE_THRESHOLD=${GEO_CIRCUIT_FAILURE_THRESHOLD:-5}
+    - GEO_CIRCUIT_OPEN_MS=${GEO_CIRCUIT_OPEN_MS:-120000}
+    - GEO_CACHE_MAX_ENTRIES=${GEO_CACHE_MAX_ENTRIES:-2000}
+    - GEO_CACHE_TTL_MS_WATER=${GEO_CACHE_TTL_MS_WATER:-86400000}
+    - GEO_CACHE_TTL_MS_CITY=${GEO_CACHE_TTL_MS_CITY:-21600000}
+    - GEO_CACHE_TTL_MS_ROUTE=${GEO_CACHE_TTL_MS_ROUTE:-3600000}
   volumes:
     - ./images:/app/images
   restart: unless-stopped
 
 services:
+  osrm-init:
+    image: osrm/osrm-backend:latest
+    profiles:
+      - routing
+      - routing-init
+    environment:
+      - OSRM_PBF_FILE=${OSRM_PBF_FILE:-spain-latest.osm.pbf}
+    volumes:
+      - osrm_data:/data
+    command: >-
+      sh -c 'set -e;
+      FILE="/data/$${OSRM_PBF_FILE:-spain-latest.osm.pbf}";
+      if [ ! -f "$${FILE}" ]; then
+        echo "Missing OSM PBF at $${FILE}. Run scripts/osrm-bootstrap.sh first.";
+        exit 1;
+      fi;
+      if [ -f "$${FILE}.osrm.mldgr" ]; then
+        echo "OSRM dataset already prepared: $${FILE}";
+        exit 0;
+      fi;
+      osrm-extract -p /opt/car.lua "$${FILE}";
+      osrm-partition "$${FILE}";
+      osrm-customize "$${FILE}";'
+    restart: "no"
+
+  osrm:
+    image: osrm/osrm-backend:latest
+    profiles:
+      - routing
+    depends_on:
+      osrm-init:
+        condition: service_completed_successfully
+    environment:
+      - OSRM_PBF_FILE=${OSRM_PBF_FILE:-spain-latest.osm.pbf}
+    volumes:
+      - osrm_data:/data
+    command: >-
+      sh -c 'set -e;
+      FILE="/data/$${OSRM_PBF_FILE:-spain-latest.osm.pbf}";
+      osrm-routed --algorithm mld "$${FILE}"'
+    ports:
+      - "5000:5000"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget --no-verbose --tries=1 --spider \"http://localhost:5000/route/v1/driving/-8.3186,43.3328;-8.04799,43.35316?overview=false\" || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
   mariadb:
     image: mariadb:11
     environment:
@@ -90,3 +156,4 @@ services:
 
 volumes:
   mariadb_data:
+  osrm_data:

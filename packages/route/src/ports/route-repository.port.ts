@@ -1,4 +1,4 @@
-import { RoutePoint, RouteStatus } from '../domain/route-point.entity';
+import { RoutePoint, RouteStatus, TravelMode } from '../domain/route-point.entity';
 import { Point } from '@silicon-traveler/shared';
 import type { QueryExecutor } from '@silicon-traveler/shared';
 
@@ -16,6 +16,7 @@ export interface RoutePointCreateParams {
   country: string | null;
   region: string | null;
   isFferryCrossing: boolean;
+  travelMode: TravelMode;
   distanceFromPrevious: number | null;
   osmData: unknown | null;
   researchSummary: string | null;

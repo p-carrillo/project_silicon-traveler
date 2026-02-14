@@ -26,6 +26,7 @@ describe('PublishPhotoUseCase', () => {
       osmData: { place: 'city' },
       imagePrompt: 'Prompt',
       isFferryCrossing: false,
+      travelMode: 'land',
       updateStatus: vi.fn(),
     };
 
@@ -93,8 +94,9 @@ describe('PublishPhotoUseCase', () => {
       revisedPrompt: null,
       imagePrompt: 'Prompt',
       isFerryCrossing: false,
+      travelMode: 'land',
     });
     expect(routePoint.updateStatus).toHaveBeenCalledWith('published');
-    expect(routeRepo.update).toHaveBeenCalledWith(routePoint);
+    expect(routeRepo.update).toHaveBeenCalledWith(routePoint, undefined);
   });
 });

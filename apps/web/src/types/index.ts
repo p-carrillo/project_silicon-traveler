@@ -33,6 +33,7 @@ export interface RoutePoint {
   distance_km: number | null;
   city_name: string | null;
   country_name: string | null;
+  travel_mode?: 'land' | 'air';
   status: 'pending' | 'researched' | 'content_generated' | 'image_ready' | 'published' | 'failed';
   created_at: string;
   updated_at: string;

@@ -5,8 +5,10 @@ import {
   CalculateNextPointUseCase,
   FindNearestCityUseCase,
   GeocodePointUseCase,
-  DetectWaterUseCase,
+  PlanEastwardStepUseCase,
+  FindAirLandingEastUseCase,
   RoutePoint,
+  TravelMode,
 } from '@silicon-traveler/route';
 import { PreparePhotoResult, PreparePhotoUseCase } from './prepare-photo.use-case';
 import { PreparePhotoPromptsResult, PreparePhotoPromptsUseCase } from './prepare-photo-prompts.use-case';
@@ -31,6 +33,7 @@ export interface PrepareNextPhotoResult {
   country: string | null;
   coordinates: Point;
   isFerryCrossing: boolean;
+  travelMode: TravelMode;
   createdNewRoutePoint: boolean;
   mode: PrepareNextPhotoMode;
   prepared: PreparePhotoResult | PreparePhotoPromptsResult;
@@ -51,9 +54,10 @@ export class PrepareNextPhotoUseCase {
     private readonly journeyRepository: IJourneyRepository,
     private readonly routeRepository: IRouteRepository,
     private readonly calculateNextPoint: CalculateNextPointUseCase,
+    private readonly planEastwardStep: PlanEastwardStepUseCase,
+    private readonly findAirLandingEast: FindAirLandingEastUseCase,
     private readonly findNearestCity: FindNearestCityUseCase,
     private readonly geocodePoint: GeocodePointUseCase,
-    private readonly detectWater: DetectWaterUseCase,
     private readonly preparePhotoUseCase: PreparePhotoUseCase,
     private readonly preparePhotoPromptsUseCase: PreparePhotoPromptsUseCase,
     config: Partial<PrepareNextPhotoConfig> = {}
@@ -74,35 +78,85 @@ export class PrepareNextPhotoUseCase {
       createdNewRoutePoint = true;
 
       const heading = this.resolveHeading(journey.heading);
-      const nextCoordinates = this.calculateNextPoint.execute({
+
+      const landStep = await this.safeExecute(
+        'eastward land planning',
+        () =>
+          this.planEastwardStep.execute({
+            currentPosition: journey.currentPosition,
+            heading,
+            minDistanceKm: this.config.minDistanceKm,
+            maxDistanceKm: this.config.maxDistanceKm,
+          }),
+        null
+      );
+
+      const airStep =
+        !landStep && heading === 'east'
+          ? await this.safeExecute(
+              'air landing planning',
+              () =>
+                this.findAirLandingEast.execute({
+                  currentPosition: journey.currentPosition,
+                }),
+              null
+            )
+          : null;
+
+      const fallbackCoordinates = this.calculateNextPoint.execute({
         currentPosition: journey.currentPosition,
         heading,
         minDistanceKm: this.config.minDistanceKm,
         maxDistanceKm: this.config.maxDistanceKm,
       });
 
-      const distanceFromPrevious = calculateDistance(journey.currentPosition, nextCoordinates);
-      const isWater = await this.safeExecute('water detection', () => this.detectWater.execute(journey.currentPosition), false);
+      const nextCoordinates = landStep?.coordinates ?? airStep?.coordinates ?? fallbackCoordinates;
+      const distanceFromPrevious =
+        landStep?.distanceFromPrevious ??
+        airStep?.distanceFromPrevious ??
+        calculateDistance(journey.currentPosition, fallbackCoordinates);
+      const travelMode: TravelMode = landStep?.travelMode ?? airStep?.travelMode ?? 'land';
 
       const lastSequence = await this.routeRepository.getLastSequence(journey.id);
-      const routePointData = RoutePoint.create(
-        journey.id,
-        lastSequence + 1,
-        nextCoordinates,
-        isWater,
-        distanceFromPrevious
-      );
+      const routePointData = {
+        journeyId: journey.id,
+        sequence: lastSequence + 1,
+        placeName: null,
+        coordinates: nextCoordinates,
+        country: null,
+        region: null,
+        isFferryCrossing: false,
+        travelMode,
+        distanceFromPrevious,
+        osmData: null,
+        researchSummary: null,
+        imagePrompt: null,
+        narrativePrompt: null,
+        cameraMetadata: null,
+        status: 'pending' as const,
+        errorMessage: null,
+        imagePath: null,
+        thumbnailPath: null,
+        publishedAt: null,
+      };
       const createdRoutePoint = await this.routeRepository.create(routePointData);
       routePoint = createdRoutePoint;
 
-      const city = await this.safeExecute(
-        'city lookup',
-        () => this.findNearestCity.execute(createdRoutePoint.coordinates, this.config.cityRadiusKm),
-        null
-      );
-      if (city) {
-        createdRoutePoint.placeName = city.name;
-        createdRoutePoint.osmData = city.tags;
+      if (airStep) {
+        createdRoutePoint.placeName = airStep.placeName;
+        createdRoutePoint.country = airStep.country;
+        createdRoutePoint.region = airStep.region;
+        createdRoutePoint.osmData = airStep.osmData;
+      } else {
+        const city = await this.safeExecute(
+          'city lookup',
+          () => this.findNearestCity.execute(createdRoutePoint.coordinates, this.config.cityRadiusKm),
+          null
+        );
+        if (city) {
+          createdRoutePoint.placeName = city.name;
+          createdRoutePoint.osmData = city.tags;
+        }
       }
 
       const location = await this.safeExecute(
@@ -111,15 +165,11 @@ export class PrepareNextPhotoUseCase {
         null
       );
       if (location) {
-        createdRoutePoint.country = location.country;
-        createdRoutePoint.region = location.region;
+        createdRoutePoint.country = createdRoutePoint.country || location.country;
+        createdRoutePoint.region = createdRoutePoint.region || location.region;
         if (!createdRoutePoint.placeName && location.placeName && location.placeName !== 'Unknown') {
           createdRoutePoint.placeName = location.placeName;
         }
-      }
-
-      if (isWater) {
-        createdRoutePoint.placeName = `Ferry crossing near ${createdRoutePoint.placeName || 'unknown'}`;
       }
 
       await this.routeRepository.update(createdRoutePoint);
@@ -149,6 +199,7 @@ export class PrepareNextPhotoUseCase {
       country: routePoint.country,
       coordinates: routePoint.coordinates,
       isFerryCrossing: routePoint.isFferryCrossing,
+      travelMode: routePoint.travelMode,
       createdNewRoutePoint,
       mode,
       prepared,

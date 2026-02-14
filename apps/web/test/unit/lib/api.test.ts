@@ -97,3 +97,44 @@ describe('getPhotos', () => {
     expect(requestUrl).toContain('end_date=2026-02-03');
   });
 });
+
+describe('getRoutePoints', () => {
+  it('returns route points including travel_mode when provided by API', async () => {
+    process.env.API_URL = 'http://api:3000';
+    process.env.NEXT_PUBLIC_API_URL = 'http://localhost:3010';
+
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          route_points: [
+            {
+              id: 1,
+              journey_id: 1,
+              sequence: 10,
+              longitude: 2,
+              latitude: 1,
+              distance_km: 25,
+              city_name: 'Lisbon',
+              country_name: 'Portugal',
+              travel_mode: 'air',
+              status: 'pending',
+              created_at: '2026-02-14T00:00:00.000Z',
+              updated_at: '2026-02-14T00:00:00.000Z',
+            },
+          ],
+          pagination: { limit: 100, offset: 0, count: 1 },
+        }),
+        {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        }
+      )
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const { getRoutePoints } = await import('../../../src/lib/api');
+    const result = await getRoutePoints();
+
+    expect(result.route_points[0].travel_mode).toBe('air');
+  });
+});

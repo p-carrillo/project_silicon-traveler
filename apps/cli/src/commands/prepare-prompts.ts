@@ -3,10 +3,13 @@ import { MariaDBJourneyRepository } from '@silicon-traveler/journey';
 import {
   MariaDBRouteRepository,
   CalculateNextPointUseCase,
+  PlanEastwardStepUseCase,
+  FindAirLandingEastUseCase,
   FindNearestCityUseCase,
   GeocodePointUseCase,
   DetectWaterUseCase,
   OverpassAdapter,
+  RoutingAdapter,
   NominatimAdapter,
 } from '@silicon-traveler/route';
 import { BraveSearchAdapter } from '@silicon-traveler/research';
@@ -36,12 +39,15 @@ export async function preparePrompts(options: PreparePromptsOptions): Promise<vo
   const journeyRepo = new MariaDBJourneyRepository();
   const routeRepo = new MariaDBRouteRepository();
   const overpass = new OverpassAdapter();
+  const routing = new RoutingAdapter();
   const nominatim = new NominatimAdapter();
 
   const calculateNextPoint = new CalculateNextPointUseCase();
+  const planEastwardStep = new PlanEastwardStepUseCase(routing, calculateNextPoint);
   const findNearestCity = new FindNearestCityUseCase(overpass);
   const geocodePoint = new GeocodePointUseCase(nominatim);
   const detectWater = new DetectWaterUseCase(overpass);
+  const findAirLandingEast = new FindAirLandingEastUseCase(detectWater, findNearestCity, geocodePoint);
 
   const braveSearch = new BraveSearchAdapter();
   const llm = new OpenAIAdapter();
@@ -56,9 +62,10 @@ export async function preparePrompts(options: PreparePromptsOptions): Promise<vo
     journeyRepo,
     routeRepo,
     calculateNextPoint,
+    planEastwardStep,
+    findAirLandingEast,
     findNearestCity,
     geocodePoint,
-    detectWater,
     preparePhotoUseCase,
     preparePhotoPromptsUseCase,
     { mode }
@@ -127,6 +134,7 @@ export async function preparePrompts(options: PreparePromptsOptions): Promise<vo
         country: result.country,
         coordinates: result.coordinates,
         isFerryCrossing: result.isFerryCrossing,
+        travelMode: result.travelMode,
         createdNewRoutePoint: result.createdNewRoutePoint,
         mode: result.mode,
         prepared: preparedData,

@@ -22,6 +22,7 @@ describe('MariaDBRouteRepository (unit)', () => {
       country: 'Spain',
       region: 'Basque Country',
       isFferryCrossing: false,
+      travelMode: 'land',
       distanceFromPrevious: 24.5,
       osmData: null,
       researchSummary: null,
@@ -36,6 +37,7 @@ describe('MariaDBRouteRepository (unit)', () => {
     });
 
     expect(created.id).toBe(42);
+    expect(created.travelMode).toBe('land');
     expect(typeof created.id).toBe('number');
     expect(release).toHaveBeenCalledTimes(1);
   });

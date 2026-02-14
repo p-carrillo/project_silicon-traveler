@@ -14,10 +14,10 @@ export class MariaDBRouteRepository implements IRouteRepository {
       const result = await conn.query(
         `INSERT INTO route_points (
           journey_id, sequence, place_name, coordinates, country, region,
-          is_ferry_crossing, distance_from_previous, osm_data, research_summary,
+          is_ferry_crossing, travel_mode, distance_from_previous, osm_data, research_summary,
           image_prompt, narrative_prompt, camera_metadata, status, error_message,
           image_path, thumbnail_path, published_at
-        ) VALUES (?, ?, ?, ST_GeomFromText(?, 4326), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        ) VALUES (?, ?, ?, ST_GeomFromText(?, 4326), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           routePoint.journeyId,
           routePoint.sequence,
@@ -26,6 +26,7 @@ export class MariaDBRouteRepository implements IRouteRepository {
           routePoint.country,
           routePoint.region,
           routePoint.isFferryCrossing,
+          routePoint.travelMode,
           routePoint.distanceFromPrevious,
           routePoint.osmData ? JSON.stringify(routePoint.osmData) : null,
           routePoint.researchSummary,
@@ -61,7 +62,8 @@ export class MariaDBRouteRepository implements IRouteRepository {
         routePoint.thumbnailPath,
         new Date(),
         routePoint.publishedAt,
-        new Date()
+        new Date(),
+        routePoint.travelMode
       );
     } finally {
       conn.release();
@@ -73,7 +75,7 @@ export class MariaDBRouteRepository implements IRouteRepository {
       const rows = await executor.query(
         `SELECT id, journey_id, sequence, place_name,
                 ST_AsText(coordinates) as coordinates,
-                country, region, is_ferry_crossing, distance_from_previous,
+                country, region, is_ferry_crossing, travel_mode, distance_from_previous,
                 osm_data, research_summary, image_prompt, narrative_prompt,
                 camera_metadata, status, error_message, image_path, thumbnail_path,
                 created_at, published_at, updated_at
@@ -92,7 +94,7 @@ export class MariaDBRouteRepository implements IRouteRepository {
       const rows = await conn.query(
         `SELECT id, journey_id, sequence, place_name,
                 ST_AsText(coordinates) as coordinates,
-                country, region, is_ferry_crossing, distance_from_previous,
+                country, region, is_ferry_crossing, travel_mode, distance_from_previous,
                 osm_data, research_summary, image_prompt, narrative_prompt,
                 camera_metadata, status, error_message, image_path, thumbnail_path,
                 created_at, published_at, updated_at
@@ -115,7 +117,7 @@ export class MariaDBRouteRepository implements IRouteRepository {
       const rows = await conn.query(
         `SELECT id, journey_id, sequence, place_name,
                 ST_AsText(coordinates) as coordinates,
-                country, region, is_ferry_crossing, distance_from_previous,
+                country, region, is_ferry_crossing, travel_mode, distance_from_previous,
                 osm_data, research_summary, image_prompt, narrative_prompt,
                 camera_metadata, status, error_message, image_path, thumbnail_path,
                 created_at, published_at, updated_at
@@ -140,7 +142,7 @@ export class MariaDBRouteRepository implements IRouteRepository {
       const rows = await conn.query(
         `SELECT id, journey_id, sequence, place_name,
                 ST_AsText(coordinates) as coordinates,
-                country, region, is_ferry_crossing, distance_from_previous,
+                country, region, is_ferry_crossing, travel_mode, distance_from_previous,
                 osm_data, research_summary, image_prompt, narrative_prompt,
                 camera_metadata, status, error_message, image_path, thumbnail_path,
                 created_at, published_at, updated_at
@@ -181,7 +183,7 @@ export class MariaDBRouteRepository implements IRouteRepository {
       const rows = await conn.query(
         `SELECT id, journey_id, sequence, place_name,
                 ST_AsText(coordinates) as coordinates,
-                country, region, is_ferry_crossing, distance_from_previous,
+                country, region, is_ferry_crossing, travel_mode, distance_from_previous,
                 osm_data, research_summary, image_prompt, narrative_prompt,
                 camera_metadata, status, error_message, image_path, thumbnail_path,
                 created_at, published_at, updated_at
@@ -304,6 +306,7 @@ export class MariaDBRouteRepository implements IRouteRepository {
       await executor.query(
         `UPDATE route_points
          SET place_name = ?, coordinates = ST_GeomFromText(?, 4326), country = ?, region = ?,
+             travel_mode = ?,
              osm_data = ?, research_summary = ?,
              image_prompt = ?, narrative_prompt = ?, camera_metadata = ?,
              status = ?, error_message = ?,
@@ -315,6 +318,7 @@ export class MariaDBRouteRepository implements IRouteRepository {
           pointToWKT(routePoint.coordinates),
           routePoint.country,
           routePoint.region,
+          routePoint.travelMode,
           this.safeStringify(routePoint.osmData),
           routePoint.researchSummary,
           routePoint.imagePrompt,
@@ -379,7 +383,8 @@ export class MariaDBRouteRepository implements IRouteRepository {
       row.thumbnail_path,
       new Date(row.created_at),
       row.published_at ? new Date(row.published_at) : null,
-      new Date(row.updated_at)
+      new Date(row.updated_at),
+      row.travel_mode === 'air' ? 'air' : 'land'
     );
   }
 

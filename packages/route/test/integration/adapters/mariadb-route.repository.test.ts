@@ -31,6 +31,7 @@ describe('MariaDBRouteRepository (integration)', () => {
       country: 'Test Country',
       region: 'Test Region',
       isFferryCrossing: false,
+      travelMode: 'land',
       distanceFromPrevious: 12.34,
       osmData: { foo: 'bar' },
       researchSummary: 'Summary',
@@ -51,6 +52,7 @@ describe('MariaDBRouteRepository (integration)', () => {
       expect(fetched?.journeyId).toBe(journeyId);
       expect(fetched?.placeName).toBe('Test Place');
       expect(fetched?.coordinates).toEqual({ lat: 11, lng: 11 });
+      expect(fetched?.travelMode).toBe('land');
     } finally {
       await pool.query('DELETE FROM route_points WHERE id = ?', [created.id]);
       await pool.query('DELETE FROM journey WHERE id = ?', [journeyId]);
@@ -85,6 +87,7 @@ describe('MariaDBRouteRepository (integration)', () => {
         country: 'Test Country',
         region: 'Test Region',
         isFferryCrossing: false,
+        travelMode: 'land',
         distanceFromPrevious: 5,
         osmData: null,
         researchSummary: null,
@@ -107,6 +110,7 @@ describe('MariaDBRouteRepository (integration)', () => {
         country: 'Test Country',
         region: 'Test Region',
         isFferryCrossing: false,
+        travelMode: 'land',
         distanceFromPrevious: 5,
         osmData: null,
         researchSummary: null,

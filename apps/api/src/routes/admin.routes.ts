@@ -99,6 +99,7 @@ adminRouter.get('/route-points', async (req: Request, res: Response) => {
         place_name: rp.placeName,
         country: rp.country,
         region: rp.region,
+        travel_mode: rp.travelMode,
         coordinates: rp.coordinates,
         status: rp.status,
         image_prompt: rp.imagePrompt,
@@ -173,6 +174,7 @@ adminRouter.get('/route-points/:id', async (req: Request, res: Response) => {
       place_name: routePoint.placeName,
       country: routePoint.country,
       region: routePoint.region,
+      travel_mode: routePoint.travelMode,
       coordinates: routePoint.coordinates,
       status: routePoint.status,
       image_prompt: routePoint.imagePrompt,
@@ -204,6 +206,12 @@ adminRouter.post('/route-points', async (req: Request, res: Response) => {
     if (status && !isRouteStatus(status)) {
       return res.status(400).json({ error: 'Invalid status' });
     }
+    const travelModeRaw = body.travel_mode;
+    const travelMode =
+      travelModeRaw === 'land' || travelModeRaw === 'air' ? travelModeRaw : undefined;
+    if (travelModeRaw !== undefined && !travelMode) {
+      return res.status(400).json({ error: 'Invalid travel_mode' });
+    }
 
     const created = await createFutureRoutePointUseCase.execute({
       journeyId: JOURNEY_ID,
@@ -212,6 +220,7 @@ adminRouter.post('/route-points', async (req: Request, res: Response) => {
       country: body.country !== undefined ? (body.country as string | null) : undefined,
       region: body.region !== undefined ? (body.region as string | null) : undefined,
       status: status as RouteStatus | undefined,
+      travelMode,
     });
 
     return res.status(201).json({

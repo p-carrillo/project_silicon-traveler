@@ -18,6 +18,7 @@ export interface PreparePhotoPromptsResult {
   country: string | null;
   coordinates: Point;
   isFerryCrossing: boolean;
+  travelMode: 'land' | 'air';
   researchQuery: string;
   researchSummary: string;
   llmSystemPrompt: string;
@@ -67,7 +68,7 @@ export class PreparePhotoPromptsUseCase {
       country: routePoint.country || 'Unknown Country',
       region: routePoint.region || 'Unknown Region',
       researchSummary,
-      isFferryCrossing: routePoint.isFferryCrossing,
+      travelMode: routePoint.travelMode,
       language: baseLanguage,
       portraitParameters,
     };
@@ -121,6 +122,7 @@ export class PreparePhotoPromptsUseCase {
       country: routePoint.country,
       coordinates: routePoint.coordinates,
       isFerryCrossing: routePoint.isFferryCrossing,
+      travelMode: routePoint.travelMode,
       researchQuery: query,
       researchSummary,
       llmSystemPrompt: NARRATIVE_SYSTEM_PROMPT,

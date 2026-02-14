@@ -7,6 +7,7 @@ export interface PhotoMetadata {
   heroThumbnailUrl?: string | null;
   imagePrompt?: string | null;
   isFerryCrossing?: boolean;
+  travelMode?: 'land' | 'air';
 }
 
 export interface PhotoTranslation {

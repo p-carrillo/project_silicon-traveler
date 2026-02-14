@@ -44,10 +44,21 @@ docker compose logs -f api
 docker compose logs -f web
 ```
 
+### Optional: stable local routing (OSRM self-host)
+
+```bash
+# Prepare/download OSM extract and build OSRM indexes
+./scripts/osrm-bootstrap.sh dev
+
+# Start OSRM service profile
+docker compose --profile routing up -d osrm
+```
+
 ### Services and ports (development)
 - API: http://localhost:3010
 - Web: http://localhost:3011
 - MariaDB: localhost:3316
+- OSRM (routing profile): http://localhost:5000
 
 ### Run commands inside containers
 
@@ -88,6 +99,16 @@ docker compose -f docker-compose.prod.yml ps
 
 # Tail logs
 docker compose -f docker-compose.prod.yml logs -f
+```
+
+### Optional: OSRM routing profile in production
+
+```bash
+# Bootstrap production OSRM dataset
+./scripts/osrm-bootstrap.sh prod
+
+# Start production OSRM profile
+docker compose -f docker-compose.prod.yml --profile routing up -d osrm
 ```
 
 ### Services and ports (production)
@@ -229,6 +250,7 @@ docker compose exec mariadb mysql -u root -p${DB_ROOT_PASSWORD} -e "SHOW DATABAS
 - `api`: Production API with automatic migrations
 - `web`: Production-optimized Next.js
 - `scheduler`: Scheduled jobs
+- `osrm` (routing profile): Self-hosted route engine for stable path planning
 
 ## Required Environment Variables
 

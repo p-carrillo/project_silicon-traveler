@@ -1,6 +1,6 @@
 import { Point } from '@silicon-traveler/shared';
 import { IRouteRepository } from '../ports/route-repository.port';
-import { RoutePoint, RouteStatus } from '../domain/route-point.entity';
+import { RoutePoint, RouteStatus, TravelMode } from '../domain/route-point.entity';
 
 export interface CreateFutureRoutePointInput {
   journeyId: number;
@@ -9,6 +9,7 @@ export interface CreateFutureRoutePointInput {
   country?: string | null;
   region?: string | null;
   status?: RouteStatus;
+  travelMode?: TravelMode;
 }
 
 export class CreateFutureRoutePointUseCase {
@@ -26,6 +27,7 @@ export class CreateFutureRoutePointUseCase {
       country: input.country ?? null,
       region: input.region ?? null,
       isFferryCrossing: false,
+      travelMode: input.travelMode ?? 'land',
       distanceFromPrevious: null,
       osmData: null,
       researchSummary: null,
@@ -40,4 +42,3 @@ export class CreateFutureRoutePointUseCase {
     });
   }
 }
-

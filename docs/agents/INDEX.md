@@ -12,6 +12,8 @@
 ## Recent Decisions
 - `.adr/056-admin-transactional-route-point-update-and-delete.md`: Transactional admin update/delete orchestration with post-commit storage cleanup.
 - `.adr/057-admin-session-secret-and-login-rate-limit.md`: Dedicated admin session secret and login brute-force mitigation policy.
+- `.adr/058-eastward-land-pathfinding-and-air-crossing.md`: Eastward route planning with OSRM land paths and air fallback over sea barriers.
+- `.adr/059-geo-resilience-with-osrm-self-host-and-overpass-hardening.md`: Geo provider retry/circuit/cache hardening and OSRM self-host routing profile.
 
 ## Standards
 Project standards (IDE-agnostic) in `.ai/standards/`, grouped by context:

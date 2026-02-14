@@ -2,10 +2,13 @@ import { MariaDBJourneyRepository } from '@silicon-traveler/journey';
 import {
   MariaDBRouteRepository,
   CalculateNextPointUseCase,
+  PlanEastwardStepUseCase,
+  FindAirLandingEastUseCase,
   FindNearestCityUseCase,
   GeocodePointUseCase,
   DetectWaterUseCase,
   OverpassAdapter,
+  RoutingAdapter,
   NominatimAdapter,
 } from '@silicon-traveler/route';
 import { BraveSearchAdapter } from '@silicon-traveler/research';
@@ -116,10 +119,13 @@ export function createGeneratorJob(): GeneratorJob {
 
   const calculateNextPoint = new CalculateNextPointUseCase();
   const overpass = new OverpassAdapter();
+  const routing = new RoutingAdapter();
   const nominatim = new NominatimAdapter();
   const findNearestCity = new FindNearestCityUseCase(overpass);
   const geocodePoint = new GeocodePointUseCase(nominatim);
   const detectWater = new DetectWaterUseCase(overpass);
+  const planEastwardStep = new PlanEastwardStepUseCase(routing, calculateNextPoint);
+  const findAirLandingEast = new FindAirLandingEastUseCase(detectWater, findNearestCity, geocodePoint);
 
   const preparePhotoUseCase = new PreparePhotoUseCase(
     routeRepo,
@@ -136,9 +142,10 @@ export function createGeneratorJob(): GeneratorJob {
     journeyRepo,
     routeRepo,
     calculateNextPoint,
+    planEastwardStep,
+    findAirLandingEast,
     findNearestCity,
     geocodePoint,
-    detectWater,
     preparePhotoUseCase,
     preparePhotoPromptsUseCase
   );
