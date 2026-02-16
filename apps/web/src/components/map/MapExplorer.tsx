@@ -23,6 +23,13 @@ const WORLD_PROJECTED_BOUNDS = pathGenerator.bounds({ type: 'Sphere' } as any);
 const WORLD_PROJECTED_WIDTH = WORLD_PROJECTED_BOUNDS[1][0] - WORLD_PROJECTED_BOUNDS[0][0];
 const WORLD_PROJECTED_HEIGHT = WORLD_PROJECTED_BOUNDS[1][1] - WORLD_PROJECTED_BOUNDS[0][1];
 const DEFAULT_ZOOM = 1.2;
+const MIN_ZOOM = 1;
+const MAX_ZOOM = 28;
+const PIN_RADIUS = 0.82;
+const PIN_HIT_PADDING = 0.25;
+const WHEEL_ZOOM_IN_FACTOR = 1.16;
+const WHEEL_ZOOM_OUT_FACTOR = 1 / WHEEL_ZOOM_IN_FACTOR;
+const BUTTON_ZOOM_FACTOR = 1.25;
 
 type Viewport = {
   center: { x: number; y: number };
@@ -49,7 +56,7 @@ function clampViewport(viewport: Viewport): Viewport {
       x: clamp(viewport.center.x, minX, maxX),
       y: clamp(viewport.center.y, minY, maxY),
     },
-    zoom: clamp(viewport.zoom, 1, 12),
+    zoom: clamp(viewport.zoom, MIN_ZOOM, MAX_ZOOM),
   };
 }
 
@@ -183,9 +190,19 @@ export default function MapExplorer({
     return { lng: inverted[0], lat: inverted[1] };
   }, [viewport.center.x, viewport.center.y]);
   const pinScale = useMemo(() => {
-    const scale = 1 / Math.pow(viewport.zoom, 0.65);
-    return clamp(scale, 0.25, 1.05);
+    return 1 / viewport.zoom;
   }, [viewport.zoom]);
+  const projectedPins = useMemo(() => (
+    [...pins]
+      .sort((a, b) => new Date(a.published_at).getTime() - new Date(b.published_at).getTime())
+      .map((pin) => {
+        const projected = projection([pin.coordinates.x, pin.coordinates.y]);
+        if (!projected) return null;
+        const [x, y] = projected;
+        return { pin, x, y };
+      })
+      .filter((entry): entry is { pin: MapPin; x: number; y: number } => entry !== null)
+  ), [pins]);
   const activeFrame = useMemo(
     () => resolveActiveFrame(selectedPin, latestPhoto),
     [selectedPin, latestPhoto]
@@ -353,7 +370,7 @@ export default function MapExplorer({
   const handleWheel = (event: WheelEvent<SVGSVGElement>) => {
     event.preventDefault();
     const direction = event.deltaY > 0 ? 1 : -1;
-    const zoomFactor = direction > 0 ? 0.9 : 1.12;
+    const zoomFactor = direction > 0 ? WHEEL_ZOOM_OUT_FACTOR : WHEEL_ZOOM_IN_FACTOR;
     setViewport((current) => clampViewport({
       center: current.center,
       zoom: current.zoom * zoomFactor,
@@ -363,14 +380,14 @@ export default function MapExplorer({
   const zoomIn = () => {
     setViewport((current) => clampViewport({
       center: current.center,
-      zoom: current.zoom * 1.2,
+      zoom: current.zoom * BUTTON_ZOOM_FACTOR,
     }));
   };
 
   const zoomOut = () => {
     setViewport((current) => clampViewport({
       center: current.center,
-      zoom: current.zoom / 1.2,
+      zoom: current.zoom / BUTTON_ZOOM_FACTOR,
     }));
   };
 
@@ -431,9 +448,6 @@ export default function MapExplorer({
                 <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
                   <path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(0,0,0,0.08)" strokeWidth="0.3" />
                 </pattern>
-                <filter id="soft-shadow" x="-50%" y="-50%" width="200%" height="200%">
-                  <feDropShadow dx="0" dy="0.6" stdDeviation="0.6" floodColor="rgba(0,0,0,0.4)" />
-                </filter>
               </defs>
               <rect
                 x={WORLD_PROJECTED_BOUNDS[0][0]}
@@ -457,13 +471,22 @@ export default function MapExplorer({
                   pointerEvents="none"
                 />
               ))}
-              {pins.map((pin) => {
-                const projected = projection([pin.coordinates.x, pin.coordinates.y]);
-                if (!projected) return null;
-                const [x, y] = projected;
+              {projectedPins.length > 1 && (
+                <polyline
+                  points={projectedPins.map(({ x, y }) => `${x},${y}`).join(' ')}
+                  fill="none"
+                  stroke="rgba(0,0,0,0.55)"
+                  strokeWidth={0.45}
+                  strokeLinejoin="round"
+                  strokeLinecap="round"
+                  vectorEffect="non-scaling-stroke"
+                  pointerEvents="none"
+                />
+              )}
+              {projectedPins.map(({ pin, x, y }) => {
                 const isSelected = selectedPin?.id === pin.id;
-                const coreRadius = (isSelected ? 1.7 : 1.05) * pinScale;
-                const haloRadius = (isSelected ? 3.6 : 2.4) * pinScale;
+                const pointRadius = (isSelected ? 1.05 : PIN_RADIUS) * pinScale;
+                const hitRadius = pointRadius + PIN_HIT_PADDING * pinScale;
                 return (
                   <g
                     key={pin.id}
@@ -472,22 +495,12 @@ export default function MapExplorer({
                     onPointerDown={(event) => event.stopPropagation()}
                     onPointerUp={(event) => event.stopPropagation()}
                     style={{ cursor: 'pointer' }}
-                    filter={isSelected ? 'url(#soft-shadow)' : undefined}
                     data-pin="true"
                   >
+                    <circle r={hitRadius} fill="transparent" />
                     <circle
-                      r={coreRadius}
-                      fill={isSelected ? '#111111' : '#222222'}
-                      stroke="white"
-                      strokeWidth={0.35}
-                      vectorEffect="non-scaling-stroke"
-                    />
-                    <circle
-                      r={haloRadius}
-                      fill="transparent"
-                      stroke="rgba(0,0,0,0.35)"
-                      strokeWidth={0.25}
-                      vectorEffect="non-scaling-stroke"
+                      r={pointRadius}
+                      fill="#111111"
                     />
                   </g>
                 );
