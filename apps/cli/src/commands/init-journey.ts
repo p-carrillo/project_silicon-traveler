@@ -5,8 +5,8 @@ import {
   MariaDBRouteRepository, 
   CalculateNextPointUseCase, 
   FindNearestCityUseCase,
+  GeocodePlaceUseCase,
   GeocodePointUseCase,
-  DetectWaterUseCase,
   OverpassAdapter,
   NominatimAdapter
 } from '@silicon-traveler/route';
@@ -28,8 +28,8 @@ export async function initJourney(): Promise<void> {
 
   const calculateNextPoint = new CalculateNextPointUseCase();
   const findNearestCity = new FindNearestCityUseCase(overpass);
+  const geocodePlace = new GeocodePlaceUseCase(nominatim);
   const geocodePoint = new GeocodePointUseCase(nominatim);
-  const detectWater = new DetectWaterUseCase(overpass);
 
   try {
     // 1. Create journey
@@ -57,7 +57,6 @@ export async function initJourney(): Promise<void> {
       coordinates: { lat: OLEIROS_LAT, lng: OLEIROS_LNG },
       country: 'Spain',
       region: 'Galicia',
-      isFferryCrossing: false,
       distanceFromPrevious: null, // First point has no previous
       osmData: null,
       researchSummary: null,
@@ -108,7 +107,6 @@ export async function initJourney(): Promise<void> {
         coordinates: nextCoordinates,
         country: null,
         region: null,
-        isFferryCrossing: false,
         distanceFromPrevious: null,
         osmData: null,
         researchSummary: null,
@@ -127,10 +125,10 @@ export async function initJourney(): Promise<void> {
       // Find nearest city
       progressBar.update(i, { status: `Finding city near point ${i + 1}...` });
       const city = await findNearestCity.execute(routePoint.coordinates, 10);
-
       if (city) {
         routePoint.placeName = city.name;
         routePoint.osmData = city.tags;
+        routePoint.coordinates = { lat: city.lat, lng: city.lon };
       }
 
       // Geocode
@@ -145,18 +143,19 @@ export async function initJourney(): Promise<void> {
         }
       }
 
-      // Detect water (ferry crossing)
-      const isWater = await detectWater.execute(currentPosition);
-
-      if (isWater) {
-        routePoint.placeName = `Ferry crossing near ${routePoint.placeName || 'unknown'}`;
+      const snappedCoordinates = await resolveCoordinatesFromPlace({
+        routePoint,
+        geocodePlace,
+      });
+      if (snappedCoordinates) {
+        routePoint.coordinates = snappedCoordinates;
       }
 
       // Update route point
       await routeRepo.update(routePoint);
 
       // Update current position for next iteration
-      currentPosition = nextCoordinates;
+      currentPosition = routePoint.coordinates;
 
       progressBar.increment(1, { 
         status: `✓ Point ${i + 1}: ${routePoint.placeName || 'Unknown'}, ${routePoint.country || 'Unknown'}` 
@@ -186,4 +185,70 @@ if (require.main === module) {
     console.error(err);
     process.exit(1);
   });
+}
+
+function isKnownPlace(placeName: string | null | undefined): boolean {
+  if (!placeName) return false;
+  const normalized = placeName.trim().toLowerCase();
+  if (!normalized) return false;
+  if (normalized === 'unknown' || normalized === 'unknown place' || normalized === 'unknown location') {
+    return false;
+  }
+  if (normalized.startsWith('unknown') || normalized.endsWith('unknown')) {
+    return false;
+  }
+  return true;
+}
+
+function buildPlaceQuery(routePoint: {
+  placeName: string | null;
+  region: string | null;
+  country: string | null;
+}): string | null {
+  if (!isKnownPlace(routePoint.placeName)) {
+    return null;
+  }
+
+  const placeName = routePoint.placeName!.trim();
+  const region = routePoint.region?.trim();
+  const country = routePoint.country?.trim();
+
+  return [placeName, region, country].filter(Boolean).join(', ');
+}
+
+async function resolveCoordinatesFromPlace(params: {
+  routePoint: {
+    placeName: string | null;
+    region: string | null;
+    country: string | null;
+  };
+  geocodePlace: GeocodePlaceUseCase;
+}): Promise<{ lat: number; lng: number } | null> {
+  const query = buildPlaceQuery(params.routePoint);
+  if (!query) {
+    return null;
+  }
+
+  try {
+    const geocoded = await params.geocodePlace.execute(query);
+    if (!geocoded) {
+      return null;
+    }
+
+    if (isKnownPlace(geocoded.placeName)) {
+      params.routePoint.placeName = geocoded.placeName;
+    }
+    if (geocoded.country) {
+      params.routePoint.country = geocoded.country;
+    }
+    if (geocoded.region) {
+      params.routePoint.region = geocoded.region;
+    }
+
+    return geocoded.coordinates;
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.warn(`[init-journey] place geocoding failed: ${message}`);
+    return null;
+  }
 }

@@ -49,3 +49,76 @@ describe('deleteAdminRoutePoint', () => {
     await expect(deleteAdminRoutePoint(9)).rejects.toThrow('Failed to delete route point');
   });
 });
+
+describe('geocodeAdminPlace', () => {
+  it('returns geocoded place and forwards authorization header', async () => {
+    process.env.API_URL = 'http://api:3000';
+    process.env.API_KEY = 'secret-key';
+
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          query: 'A Coruna, Galicia, Spain',
+          coordinates: { lat: 43.3623, lng: -8.4115 },
+          place_name: 'A Coruna',
+          country: 'Spain',
+          region: 'Galicia',
+          display_name: 'A Coruna, Galicia, Spain',
+        }),
+        { status: 200 }
+      )
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const { geocodeAdminPlace } = await import('../../../src/lib/admin-api');
+
+    const result = await geocodeAdminPlace({
+      place_name: 'A Coruna',
+      country: 'Spain',
+      region: 'Galicia',
+    });
+
+    expect(result).toEqual({
+      query: 'A Coruna, Galicia, Spain',
+      coordinates: { lat: 43.3623, lng: -8.4115 },
+      place_name: 'A Coruna',
+      country: 'Spain',
+      region: 'Galicia',
+      display_name: 'A Coruna, Galicia, Spain',
+    });
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://api:3000/api/admin/geocode?place_name=A+Coruna&country=Spain&region=Galicia',
+      expect.objectContaining({
+        cache: 'no-store',
+      })
+    );
+    const headers = fetchMock.mock.calls[0][1].headers as Headers;
+    expect(headers.get('Authorization')).toBe('Bearer secret-key');
+  });
+
+  it('returns null when place is not found', async () => {
+    process.env.API_URL = 'http://api:3000';
+
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ error: 'Location not found' }), { status: 404 })
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const { geocodeAdminPlace } = await import('../../../src/lib/admin-api');
+
+    await expect(geocodeAdminPlace({ place_name: 'Unknown Place' })).resolves.toBeNull();
+  });
+
+  it('throws when geocoding fails with non-404 response', async () => {
+    process.env.API_URL = 'http://api:3000';
+
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ error: 'boom' }), { status: 500 })
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const { geocodeAdminPlace } = await import('../../../src/lib/admin-api');
+
+    await expect(geocodeAdminPlace({ place_name: 'Madrid' })).rejects.toThrow('Failed to geocode place');
+  });
+});

@@ -3,6 +3,7 @@ import { Command } from 'commander';
 import { migrate } from './commands/migrate';
 import { initJourney } from './commands/init-journey';
 import { preparePrompts } from './commands/prepare-prompts';
+import { publishSeedPoint } from './commands/publish-seed-point';
 import chalk from 'chalk';
 
 const program = new Command();
@@ -60,6 +61,31 @@ program
         message = String(error);
       }
       console.error(chalk.red(`Preparation failed: ${message}`));
+      process.exit(1);
+    }
+  });
+
+program
+  .command('publish-seed-point')
+  .description('Create and publish one new route point using local seed image + lorem ipsum')
+  .option('-j, --journey-id <number>', 'Journey ID', '1')
+  .option('--seed-index <number>', '1-based index of the seed image to use')
+  .option('--seed-dir <path>', 'Seed images directory (default: .ai/pictures_seed or SEED_PHOTOS_SOURCE_DIR)')
+  .option('--no-map-refresh', 'Skip POST /api/map/refresh after publishing')
+  .action(async (options) => {
+    try {
+      const journeyId = Number(options.journeyId);
+      const seedIndex = options.seedIndex !== undefined ? Number(options.seedIndex) : undefined;
+      const result = await publishSeedPoint({
+        journeyId,
+        seedIndex,
+        seedDir: options.seedDir,
+        mapRefresh: options.mapRefresh !== false,
+      });
+      console.log(JSON.stringify(result, null, 2));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error(chalk.red(`publish-seed-point failed: ${message}`));
       process.exit(1);
     }
   });

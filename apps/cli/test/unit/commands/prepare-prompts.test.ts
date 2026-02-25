@@ -14,8 +14,8 @@ vi.mock('@silicon-traveler/route', () => ({
   })),
   CalculateNextPointUseCase: vi.fn(),
   FindNearestCityUseCase: vi.fn(),
+  GeocodePlaceUseCase: vi.fn(),
   GeocodePointUseCase: vi.fn(),
-  DetectWaterUseCase: vi.fn(),
   OverpassAdapter: vi.fn(),
   NominatimAdapter: vi.fn(),
 }));
@@ -45,7 +45,6 @@ const prepareNextPhotoExecute = vi.fn().mockResolvedValue({
   region: 'Test Region',
   country: 'Test Country',
   coordinates: { lat: 1, lng: 1 },
-  isFerryCrossing: false,
   createdNewRoutePoint: true,
   prepared: {
     imageUrl: '/images/1.jpg',

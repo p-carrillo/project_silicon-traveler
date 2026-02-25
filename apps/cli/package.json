@@ -10,7 +10,8 @@
     "dev": "tsc --watch",
     "migrate": "node dist/commands/migrate.js",
     "init-journey": "node dist/commands/init-journey.js",
-    "prepare-prompts": "node dist/index.js prepare-prompts"
+    "prepare-prompts": "node dist/index.js prepare-prompts",
+    "publish-seed-point": "node dist/index.js publish-seed-point"
   },
   "dependencies": {
     "@silicon-traveler/shared": "workspace:*",

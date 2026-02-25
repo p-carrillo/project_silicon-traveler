@@ -48,7 +48,6 @@ describe('PreparePhotoPromptsUseCase', () => {
       country: 'Testland',
       region: 'Test Region',
       coordinates: { lat: 1, lng: 2 },
-      isFferryCrossing: false,
       osmData: { place: 'city' },
       researchSummary: null,
       imagePrompt: null,
@@ -109,12 +108,9 @@ describe('PreparePhotoPromptsUseCase', () => {
     expect(result.contentStatus).toBe('generated');
 
     // Check that the prompt contains the key elements
-    expect(result.llmUserPrompt).toContain("I'm virtually visiting Test City, Test Region, Testland");
-    expect(result.llmUserPrompt).toContain('Research');
+    expect(result.llmUserPrompt).toContain("I'm passing through Test City, Test Region, Testland");
+    expect(result.llmUserPrompt).toContain('## Research about this place');
     expect(result.llmUserPrompt).toContain('Info');
-    expect(result.llmUserPrompt).toContain('Portrait Scene Parameters');
-    expect(result.llmUserPrompt).toContain('"gender": "woman"');
-    expect(result.llmUserPrompt).toContain('"age": 34');
     expect(result.llmUserPrompt).toContain('40-60 words');
     expect(result.imagePrompt).toBe('Prompt ES');
     expect(result.narrative).toBe('Narrativa');
@@ -130,7 +126,6 @@ describe('PreparePhotoPromptsUseCase', () => {
       country: 'Testland',
       region: 'Test Region',
       coordinates: { lat: 1, lng: 2 },
-      isFferryCrossing: false,
       osmData: null,
       researchSummary: null,
       imagePrompt: null,

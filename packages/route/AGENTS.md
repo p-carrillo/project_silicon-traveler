@@ -5,7 +5,7 @@ Route point computation and enrichment for the journey path.
 
 ## Responsibilities
 - Calculate next route point coordinates.
-- Enrich points with nearest city, geocoding, and water detection.
+- Enrich points with nearest city and geocoding.
 - Persist route points in MariaDB.
 
 ## Boundaries
@@ -18,7 +18,6 @@ Route point computation and enrichment for the journey path.
 - `src/application/calculate-next-point.use-case.ts`
 - `src/application/find-nearest-city.use-case.ts`
 - `src/application/geocode-point.use-case.ts`
-- `src/application/detect-water.use-case.ts`
 - `src/adapters/overpass.adapter.ts`
 - `src/adapters/nominatim.adapter.ts`
 - `src/adapters/mariadb-route.repository.ts`

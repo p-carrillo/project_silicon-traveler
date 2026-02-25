@@ -3,8 +3,8 @@ import {
   MariaDBRouteRepository,
   CalculateNextPointUseCase,
   FindNearestCityUseCase,
+  GeocodePlaceUseCase,
   GeocodePointUseCase,
-  DetectWaterUseCase,
   OverpassAdapter,
   NominatimAdapter,
 } from '@silicon-traveler/route';
@@ -118,8 +118,8 @@ export function createGeneratorJob(): GeneratorJob {
   const overpass = new OverpassAdapter();
   const nominatim = new NominatimAdapter();
   const findNearestCity = new FindNearestCityUseCase(overpass);
+  const geocodePlace = new GeocodePlaceUseCase(nominatim);
   const geocodePoint = new GeocodePointUseCase(nominatim);
-  const detectWater = new DetectWaterUseCase(overpass);
 
   const preparePhotoUseCase = new PreparePhotoUseCase(
     routeRepo,
@@ -137,8 +137,8 @@ export function createGeneratorJob(): GeneratorJob {
     routeRepo,
     calculateNextPoint,
     findNearestCity,
+    geocodePlace,
     geocodePoint,
-    detectWater,
     preparePhotoUseCase,
     preparePhotoPromptsUseCase
   );

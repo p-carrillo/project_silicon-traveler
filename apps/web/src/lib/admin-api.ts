@@ -79,6 +79,47 @@ export async function createAdminRoutePoint(input: {
   return (await res.json()) as { id: number };
 }
 
+export interface AdminGeocodePlaceInput {
+  place_name: string;
+  country?: string | null;
+  region?: string | null;
+}
+
+export interface AdminGeocodePlaceResult {
+  query: string;
+  coordinates: { lat: number; lng: number };
+  place_name?: string;
+  country?: string;
+  region?: string;
+  display_name?: string;
+}
+
+export async function geocodeAdminPlace(input: AdminGeocodePlaceInput): Promise<AdminGeocodePlaceResult | null> {
+  const placeName = input.place_name.trim();
+  if (!placeName) {
+    throw new Error('place_name is required');
+  }
+
+  const search = new URLSearchParams();
+  search.set('place_name', placeName);
+  if (input.country?.trim()) {
+    search.set('country', input.country.trim());
+  }
+  if (input.region?.trim()) {
+    search.set('region', input.region.trim());
+  }
+
+  const res = await adminFetch(`/api/admin/geocode?${search.toString()}`);
+  if (res.status === 404) {
+    return null;
+  }
+  if (!res.ok) {
+    throw new Error('Failed to geocode place');
+  }
+
+  return (await res.json()) as AdminGeocodePlaceResult;
+}
+
 export async function updateAdminRoutePoint(id: number, input: AdminRoutePointUpdateInput): Promise<void> {
   const res = await adminFetch(`/api/admin/route-points/${id}`, {
     method: 'PUT',

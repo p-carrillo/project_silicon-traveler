@@ -15,7 +15,6 @@ export interface RoutePointCreateParams {
   coordinates: Point;
   country: string | null;
   region: string | null;
-  isFferryCrossing: boolean;
   distanceFromPrevious: number | null;
   osmData: unknown | null;
   researchSummary: string | null;

@@ -7,7 +7,6 @@ export * from './application/list-route-points.use-case';
 export * from './application/create-future-route-point.use-case';
 export * from './application/update-route-point-admin.use-case';
 export * from './application/delete-route-point-admin.use-case';
-export * from './application/detect-water.use-case';
 export * from './application/find-nearest-city.use-case';
 export * from './application/geocode-point.use-case';
 export * from './application/geocode-place.use-case';

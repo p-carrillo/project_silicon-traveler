@@ -18,3 +18,4 @@
 - `scripts/run-migrations.js` and `scripts/reset-db.js` for DB state.
 - `scripts/test-db.js` for connection validation.
 - `scripts/test-journey.js`, `scripts/test-route.js`, `scripts/test-api.sh` for focused checks.
+- `pnpm --filter @silicon-traveler/cli publish-seed-point --journey-id 1 --no-map-refresh` for quick end-to-end publish checks without external AI APIs.

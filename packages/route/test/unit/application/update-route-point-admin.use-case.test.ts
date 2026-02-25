@@ -11,8 +11,6 @@ const createRoutePoint = () =>
     { lat: 1, lng: 2 },
     'Old Country',
     'Old Region',
-    false,
-    null,
     null,
     null,
     null,

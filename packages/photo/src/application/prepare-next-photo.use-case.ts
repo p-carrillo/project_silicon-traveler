@@ -4,8 +4,8 @@ import {
   IRouteRepository,
   CalculateNextPointUseCase,
   FindNearestCityUseCase,
+  GeocodePlaceUseCase,
   GeocodePointUseCase,
-  DetectWaterUseCase,
   RoutePoint,
 } from '@silicon-traveler/route';
 import { PreparePhotoResult, PreparePhotoUseCase } from './prepare-photo.use-case';
@@ -30,7 +30,6 @@ export interface PrepareNextPhotoResult {
   region: string | null;
   country: string | null;
   coordinates: Point;
-  isFerryCrossing: boolean;
   createdNewRoutePoint: boolean;
   mode: PrepareNextPhotoMode;
   prepared: PreparePhotoResult | PreparePhotoPromptsResult;
@@ -52,8 +51,8 @@ export class PrepareNextPhotoUseCase {
     private readonly routeRepository: IRouteRepository,
     private readonly calculateNextPoint: CalculateNextPointUseCase,
     private readonly findNearestCity: FindNearestCityUseCase,
+    private readonly geocodePlace: GeocodePlaceUseCase,
     private readonly geocodePoint: GeocodePointUseCase,
-    private readonly detectWater: DetectWaterUseCase,
     private readonly preparePhotoUseCase: PreparePhotoUseCase,
     private readonly preparePhotoPromptsUseCase: PreparePhotoPromptsUseCase,
     config: Partial<PrepareNextPhotoConfig> = {}
@@ -82,14 +81,12 @@ export class PrepareNextPhotoUseCase {
       });
 
       const distanceFromPrevious = calculateDistance(journey.currentPosition, nextCoordinates);
-      const isWater = await this.safeExecute('water detection', () => this.detectWater.execute(journey.currentPosition), false);
 
       const lastSequence = await this.routeRepository.getLastSequence(journey.id);
       const routePointData = RoutePoint.create(
         journey.id,
         lastSequence + 1,
         nextCoordinates,
-        isWater,
         distanceFromPrevious
       );
       const createdRoutePoint = await this.routeRepository.create(routePointData);
@@ -103,6 +100,7 @@ export class PrepareNextPhotoUseCase {
       if (city) {
         createdRoutePoint.placeName = city.name;
         createdRoutePoint.osmData = city.tags;
+        createdRoutePoint.coordinates = { lat: city.lat, lng: city.lon };
       }
 
       const location = await this.safeExecute(
@@ -118,13 +116,14 @@ export class PrepareNextPhotoUseCase {
         }
       }
 
-      if (isWater) {
-        createdRoutePoint.placeName = `Ferry crossing near ${createdRoutePoint.placeName || 'unknown'}`;
+      const snappedCoordinates = await this.resolveCoordinatesFromPlace(createdRoutePoint);
+      if (snappedCoordinates) {
+        createdRoutePoint.coordinates = snappedCoordinates;
       }
 
       await this.routeRepository.update(createdRoutePoint);
 
-      journey.updatePosition(nextCoordinates);
+      journey.updatePosition(createdRoutePoint.coordinates);
       await this.journeyRepository.update(journey);
     }
 
@@ -148,11 +147,46 @@ export class PrepareNextPhotoUseCase {
       region: routePoint.region,
       country: routePoint.country,
       coordinates: routePoint.coordinates,
-      isFerryCrossing: routePoint.isFferryCrossing,
       createdNewRoutePoint,
       mode,
       prepared,
     };
+  }
+
+  private async resolveCoordinatesFromPlace(routePoint: RoutePoint): Promise<Point | null> {
+    const query = this.buildPlaceQuery(routePoint);
+    if (!query) {
+      return null;
+    }
+
+    const geocoded = await this.safeExecute('place geocoding', () => this.geocodePlace.execute(query), null);
+    if (!geocoded) {
+      return null;
+    }
+
+    if (this.isKnownPlace(geocoded.placeName)) {
+      routePoint.placeName = geocoded.placeName;
+    }
+    if (geocoded.country) {
+      routePoint.country = geocoded.country;
+    }
+    if (geocoded.region) {
+      routePoint.region = geocoded.region;
+    }
+
+    return geocoded.coordinates;
+  }
+
+  private buildPlaceQuery(routePoint: RoutePoint): string | null {
+    if (!this.isKnownPlace(routePoint.placeName)) {
+      return null;
+    }
+
+    const placeName = routePoint.placeName!.trim();
+    const region = routePoint.region?.trim();
+    const country = routePoint.country?.trim();
+
+    return [placeName, region, country].filter(Boolean).join(', ');
   }
 
   private resolveHeading(value: string | null | undefined): Heading {

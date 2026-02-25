@@ -21,7 +21,6 @@ describe('MariaDBRouteRepository (unit)', () => {
       coordinates: { lat: 43.26, lng: -2.93 },
       country: 'Spain',
       region: 'Basque Country',
-      isFferryCrossing: false,
       distanceFromPrevious: 24.5,
       osmData: null,
       researchSummary: null,

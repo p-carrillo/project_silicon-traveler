@@ -37,6 +37,7 @@ The system maintains a buffer of 10 pre-generated photos and displays them in a 
 - Login is rate-limited in web app memory: `5` failed attempts in `15` minutes blocks the key (`IP + username`) for `15` minutes, returning `error=too_many_attempts`.
 - Authenticated sessions can be closed from the admin `Logout` button.
 - Admin forms can calculate coordinates from city/country/region using the `Calculate coordinates` button.
+- New route-point creation performs a final geocode attempt from city/country/region on submit; when a match is found, stored coordinates are recalculated from that place.
 - Admin coordinate inputs accept dot or comma decimals (e.g. `43.36` or `43,36`) and show a success message after saving edits.
 - Admin route-point list supports status and city filters, ID sort order, and numbered pagination controls.
 - Editing a published route point in admin also syncs the linked `photos` record, so changes appear in `archive` and `map`.
@@ -141,9 +142,14 @@ docker-compose exec api pnpm --filter @silicon-traveler/cli init-journey
 ```bash
 # Generate 7 photos (research + prompts + images)
 docker-compose exec api pnpm --filter @silicon-traveler/cli prepare-prompts -- 7 --journey-id 1
+
+# Create + publish one new route point using local seed image + lorem ipsum
+docker-compose exec api pnpm --filter @silicon-traveler/cli publish-seed-point --journey-id 1
 ```
 
 **Note**: Requires `OPENAI_API_KEY` and `BRAVE_SEARCH_API_KEY` in `.env`.
+`publish-seed-point` does not require those keys. If no journey exists yet, it auto-creates one starting at Oleiros.
+Both scheduler-like generation and `publish-seed-point` now perform a final place-geocoding pass to snap coordinates to the selected city/place.
 
 ### 5. View logs
 
@@ -206,6 +212,9 @@ docker-compose exec api pnpm --filter @silicon-traveler/cli prepare-prompts -- 7
 
 # Prepare prompts only (skip images)
 docker-compose exec api pnpm --filter @silicon-traveler/cli prepare-prompts -- 7 --journey-id 1 --prompts-only
+
+# Create and publish one route point with local seed image + lorem narrative
+docker-compose exec api pnpm --filter @silicon-traveler/cli publish-seed-point --journey-id 1
 
 # Seed sample photos
 docker-compose exec api node scripts/seed-photos.js
@@ -309,6 +318,8 @@ All core domain modules implemented with hexagonal architecture:
    - ✅ Creates journey and 11 initial route points: Oleiros (sequence 0) + 10 following points with OSM/Nominatim enrichment
    - ✅ Tested successfully: Journey ID 1 created with route points
    - ✅ `prepare-prompts` generates research, prompts, and images for the next N days (same pipeline as Scheduler)
+   - ✅ `publish-seed-point` creates and publishes one new point using local seed image + lorem ipsum (no OpenAI/Brave required)
+   - ✅ Route-point generation performs a final place-based coordinate snap after city resolution to reduce straight-line drift
 
 2. **Scheduler app** - Automated photo generation and publishing
    - ✅ Generator job: Runs every 6 hours, maintains buffer of 10 `image_ready` photos
@@ -348,7 +359,7 @@ All core domain modules implemented with hexagonal architecture:
 ### 📚 Documentation
 
 - ADRs are stored in `.adr/` and track architecture decisions.
-- Latest: ADR 046 (Web image proxy path normalization and deploy guardrails).
+- Latest: ADR 061 (final place-based coordinate snap in automated generation).
 
 ## API Keys Required
 
@@ -418,7 +429,7 @@ Stores the single around-the-world journey.
 
 #### route_points
 Stores all route waypoints with processing status.
-- Fields: `id`, `journey_id`, `sequence`, `place_name`, `coordinates`, `country`, `region`, `is_ferry_crossing`, `distance_from_previous`, `osm_data`, `research_summary`, `image_prompt`, `narrative_prompt`, `camera_metadata`, `status`, `error_message`, `image_path`, `thumbnail_path`, `created_at`, `published_at`, `updated_at`
+- Fields: `id`, `journey_id`, `sequence`, `place_name`, `coordinates`, `country`, `region`, `distance_from_previous`, `osm_data`, `research_summary`, `image_prompt`, `narrative_prompt`, `camera_metadata`, `status`, `error_message`, `image_path`, `thumbnail_path`, `created_at`, `published_at`, `updated_at`
 - Status enum: `pending` → `researched` → `content_generated` → `image_ready` → `published` (or `failed`)
 - Indexes: `status`, `sequence`, foreign key to `journey`
 

@@ -10,5 +10,4 @@ export interface PlaceInfo {
 
 export interface IOverpassPort {
   findNearestCity(point: Point, radiusKm: number): Promise<PlaceInfo | null>;
-  isWater(point: Point): Promise<boolean>;
 }

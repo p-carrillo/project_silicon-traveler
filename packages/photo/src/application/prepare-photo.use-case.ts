@@ -60,7 +60,6 @@ export class PreparePhotoUseCase {
         country: routePoint.country || 'Unknown Country',
         region: routePoint.region || 'Unknown Region',
         researchSummary,
-        isFferryCrossing: routePoint.isFferryCrossing,
         language: baseLanguage,
         portraitParameters: selectPortraitParameters(),
       });

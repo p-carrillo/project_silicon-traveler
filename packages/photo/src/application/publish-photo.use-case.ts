@@ -54,7 +54,7 @@ export class PublishPhotoUseCase {
     const tags = this.buildTags(routePoint);
     const normalizedTags = tags.length ? tags : null;
     const editorial = this.buildEditorialMetadata(routePoint.sequence);
-    const metadata = this.buildMetadata(preparedPhoto, routePoint.imagePrompt, routePoint.isFferryCrossing);
+    const metadata = this.buildMetadata(preparedPhoto, routePoint.imagePrompt);
     const translationRecords: PhotoTranslation[] = supportedLanguages.map((language) => {
       const translation = translationMap.get(language);
       return {
@@ -95,7 +95,7 @@ export class PublishPhotoUseCase {
     return photoId;
   }
 
-  private buildTags(routePoint: { placeName?: string | null; region?: string | null; country?: string | null; osmData?: any; isFferryCrossing?: boolean }): string[] {
+  private buildTags(routePoint: { placeName?: string | null; region?: string | null; country?: string | null; osmData?: any }): string[] {
     const tags: string[] = [];
     const addTag = (value?: string | null) => {
       if (!value) return;
@@ -110,10 +110,6 @@ export class PublishPhotoUseCase {
 
     const osmPlace = routePoint.osmData?.place;
     addTag(typeof osmPlace === 'string' ? osmPlace : null);
-
-    if (routePoint.isFferryCrossing) {
-      tags.push('ferry', 'crossing', 'water');
-    }
 
     tags.push('documentary', 'black and white');
 
@@ -156,15 +152,13 @@ export class PublishPhotoUseCase {
 
   private buildMetadata(
     preparedPhoto: PreparePhotoResult,
-    imagePrompt: string | null,
-    isFferryCrossing: boolean
+    imagePrompt: string | null
   ): PhotoMetadata {
     return {
       aperture: preparedPhoto.aperture,
       revisedPrompt: preparedPhoto.revisedPrompt,
       heroThumbnailUrl: preparedPhoto.heroThumbnailUrl,
       imagePrompt: imagePrompt ?? null,
-      isFerryCrossing: isFferryCrossing,
     };
   }
 

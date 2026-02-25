@@ -32,7 +32,6 @@ const createRoutePoint = () =>
     { lat: 1, lng: 1 },
     'Testland',
     'Test Region',
-    false,
     42,
     null,
     null,
@@ -61,8 +60,8 @@ describe('PrepareNextPhotoUseCase', () => {
   };
   const calculateNextPoint = { execute: vi.fn() };
   const findNearestCity = { execute: vi.fn() };
+  const geocodePlace = { execute: vi.fn() };
   const geocodePoint = { execute: vi.fn() };
-  const detectWater = { execute: vi.fn() };
   const preparePhotoUseCase = { execute: vi.fn() };
   const preparePhotoPromptsUseCase = { execute: vi.fn() };
 
@@ -99,8 +98,8 @@ describe('PrepareNextPhotoUseCase', () => {
       routeRepository as any,
       calculateNextPoint as any,
       findNearestCity as any,
+      geocodePlace as any,
       geocodePoint as any,
-      detectWater as any,
       preparePhotoUseCase as any,
       preparePhotoPromptsUseCase as any
     );
@@ -116,7 +115,7 @@ describe('PrepareNextPhotoUseCase', () => {
     expect(calculateNextPoint.execute).not.toHaveBeenCalled();
   });
 
-  it('creates a new route point when none exist and tolerates water detection errors', async () => {
+  it('creates a new route point when none exist', async () => {
     const journey = createJourney('sideways');
 
     const createdRoutePoint = createRoutePoint();
@@ -130,8 +129,14 @@ describe('PrepareNextPhotoUseCase', () => {
       countryName: 'Testland',
     });
     calculateNextPoint.execute.mockReturnValue({ lat: 2, lng: 2 });
-    detectWater.execute.mockRejectedValue(new Error('overpass timeout'));
     findNearestCity.execute.mockResolvedValue(null);
+    geocodePlace.execute.mockResolvedValue({
+      coordinates: { lat: 3, lng: 3 },
+      country: 'Testland',
+      region: 'Test Region',
+      displayName: 'Test City, Test Region, Testland',
+      placeName: 'Test City',
+    });
     geocodePoint.execute.mockResolvedValue(null);
     routeRepository.create.mockResolvedValue(createdRoutePoint);
     preparePhotoUseCase.execute.mockResolvedValue({
@@ -147,21 +152,18 @@ describe('PrepareNextPhotoUseCase', () => {
       revisedPrompt: null,
     });
 
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
     const useCase = new PrepareNextPhotoUseCase(
       journeyRepository as any,
       routeRepository as any,
       calculateNextPoint as any,
       findNearestCity as any,
+      geocodePlace as any,
       geocodePoint as any,
-      detectWater as any,
       preparePhotoUseCase as any,
       preparePhotoPromptsUseCase as any
     );
     const result = await useCase.execute({ journeyId: 1 });
 
-    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('water detection failed'));
     expect(result.createdNewRoutePoint).toBe(true);
     expect(calculateNextPoint.execute).toHaveBeenCalledWith({
       currentPosition: { lat: 0, lng: 0 },
@@ -173,13 +175,12 @@ describe('PrepareNextPhotoUseCase', () => {
       expect.objectContaining({
         journeyId: 1,
         sequence: 5,
-        isFferryCrossing: false,
         distanceFromPrevious: 42,
       })
     );
     expect(routeRepository.update).toHaveBeenCalledWith(createdRoutePoint);
     expect(journeyRepository.update).toHaveBeenCalledWith(journey);
-    warnSpy.mockRestore();
+    expect(createdRoutePoint.coordinates).toEqual({ lat: 3, lng: 3 });
   });
 
   it('uses the prompts-only pipeline when configured', async () => {
@@ -201,7 +202,6 @@ describe('PrepareNextPhotoUseCase', () => {
       region: null,
       country: null,
       coordinates: { lat: 1, lng: 1 },
-      isFerryCrossing: false,
       researchQuery: 'Query',
       researchSummary: '',
       llmSystemPrompt: 'system',
@@ -223,8 +223,8 @@ describe('PrepareNextPhotoUseCase', () => {
       routeRepository as any,
       calculateNextPoint as any,
       findNearestCity as any,
+      geocodePlace as any,
       geocodePoint as any,
-      detectWater as any,
       preparePhotoUseCase as any,
       preparePhotoPromptsUseCase as any,
       { mode: 'prompts-only', minDistanceKm: 20, maxDistanceKm: 30, cityRadiusKm: 10, pendingSearchLimit: 20 }
@@ -250,8 +250,8 @@ describe('PrepareNextPhotoUseCase', () => {
       routeRepository as any,
       calculateNextPoint as any,
       findNearestCity as any,
+      geocodePlace as any,
       geocodePoint as any,
-      detectWater as any,
       preparePhotoUseCase as any,
       preparePhotoPromptsUseCase as any
     );

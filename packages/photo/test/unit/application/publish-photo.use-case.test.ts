@@ -25,7 +25,6 @@ describe('PublishPhotoUseCase', () => {
       coordinates: { lat: 41.15, lng: -8.61 },
       osmData: { place: 'city' },
       imagePrompt: 'Prompt',
-      isFferryCrossing: false,
       updateStatus: vi.fn(),
     };
 
@@ -92,9 +91,8 @@ describe('PublishPhotoUseCase', () => {
       aperture: 'f/2.8',
       revisedPrompt: null,
       imagePrompt: 'Prompt',
-      isFerryCrossing: false,
     });
     expect(routePoint.updateStatus).toHaveBeenCalledWith('published');
-    expect(routeRepo.update).toHaveBeenCalledWith(routePoint);
+    expect(routeRepo.update).toHaveBeenCalledWith(routePoint, undefined);
   });
 });

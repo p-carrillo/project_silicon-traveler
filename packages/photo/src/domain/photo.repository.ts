@@ -6,7 +6,6 @@ export interface PhotoMetadata {
   revisedPrompt?: string | null;
   heroThumbnailUrl?: string | null;
   imagePrompt?: string | null;
-  isFerryCrossing?: boolean;
 }
 
 export interface PhotoTranslation {

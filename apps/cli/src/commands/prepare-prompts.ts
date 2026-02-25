@@ -4,8 +4,8 @@ import {
   MariaDBRouteRepository,
   CalculateNextPointUseCase,
   FindNearestCityUseCase,
+  GeocodePlaceUseCase,
   GeocodePointUseCase,
-  DetectWaterUseCase,
   OverpassAdapter,
   NominatimAdapter,
 } from '@silicon-traveler/route';
@@ -40,8 +40,8 @@ export async function preparePrompts(options: PreparePromptsOptions): Promise<vo
 
   const calculateNextPoint = new CalculateNextPointUseCase();
   const findNearestCity = new FindNearestCityUseCase(overpass);
+  const geocodePlace = new GeocodePlaceUseCase(nominatim);
   const geocodePoint = new GeocodePointUseCase(nominatim);
-  const detectWater = new DetectWaterUseCase(overpass);
 
   const braveSearch = new BraveSearchAdapter();
   const llm = new OpenAIAdapter();
@@ -57,8 +57,8 @@ export async function preparePrompts(options: PreparePromptsOptions): Promise<vo
     routeRepo,
     calculateNextPoint,
     findNearestCity,
+    geocodePlace,
     geocodePoint,
-    detectWater,
     preparePhotoUseCase,
     preparePhotoPromptsUseCase,
     { mode }
@@ -126,7 +126,6 @@ export async function preparePrompts(options: PreparePromptsOptions): Promise<vo
         region: result.region,
         country: result.country,
         coordinates: result.coordinates,
-        isFerryCrossing: result.isFerryCrossing,
         createdNewRoutePoint: result.createdNewRoutePoint,
         mode: result.mode,
         prepared: preparedData,

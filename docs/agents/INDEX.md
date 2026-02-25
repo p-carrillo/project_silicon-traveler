@@ -10,6 +10,10 @@
 - `docs/agents/DEBUGGING.md`: Common issues and how to resolve them.
 
 ## Recent Decisions
+- `.adr/061-place-based-coordinate-snap-in-automated-generation.md`: Automated generation now snaps coordinates with final place-based geocoding.
+- `.adr/060-publish-seed-point-auto-create-journey.md`: `publish-seed-point` auto-creates a journey from Oleiros when no journeys exist.
+- `.adr/059-cli-publish-seed-point-command.md`: CLI command to create and publish one new route point using local seed images and lorem ipsum narrative.
+- `.adr/058-admin-final-geocode-on-route-point-creation.md`: Admin new route-point submission now performs a final geocode pass from place input.
 - `.adr/056-admin-transactional-route-point-update-and-delete.md`: Transactional admin update/delete orchestration with post-commit storage cleanup.
 - `.adr/057-admin-session-secret-and-login-rate-limit.md`: Dedicated admin session secret and login brute-force mitigation policy.
 

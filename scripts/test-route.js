@@ -2,7 +2,6 @@ const {
   CalculateNextPointUseCase,
   FindNearestCityUseCase,
   GeocodePointUseCase,
-  DetectWaterUseCase,
   OverpassAdapter,
   NominatimAdapter,
   RoutePoint,
@@ -22,7 +21,6 @@ async function testRoute() {
   const calculateUseCase = new CalculateNextPointUseCase();
   const findCityUseCase = new FindNearestCityUseCase(overpassAdapter);
   const geocodeUseCase = new GeocodePointUseCase(nominatimAdapter);
-  const detectWaterUseCase = new DetectWaterUseCase(overpassAdapter);
   
   try {
     // 1. Calculate next point from Oleiros heading east
@@ -64,18 +62,12 @@ async function testRoute() {
       console.log('  Geocoding failed\n');
     }
     
-    // 4. Detect if point is in water
-    console.log('4. Checking if point is in water...');
-    const isWater = await detectWaterUseCase.execute(nextPoint);
-    console.log(`  Is water: ${isWater}\n`);
-    
-    // 5. Create route point in database
-    console.log('5. Creating route point in database...');
+    // 4. Create route point in database
+    console.log('4. Creating route point in database...');
     const routePointData = RoutePoint.create(
       2, // journey_id from our test
       1, // sequence
       city ? { lat: city.lat, lng: city.lon } : nextPoint,
-      isWater,
       distance
     );
     
@@ -90,8 +82,8 @@ async function testRoute() {
     console.log(`  Place: ${savedRoute.placeName || 'Unknown'}`);
     console.log(`  Status: ${savedRoute.status}\n`);
     
-    // 6. Query back from database
-    console.log('6. Querying route points by status...');
+    // 5. Query back from database
+    console.log('5. Querying route points by status...');
     const pending = await routeRepository.findByStatus('pending', 5);
     console.log(`✓ Found ${pending.length} pending route points\n`);
     

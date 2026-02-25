@@ -36,10 +36,10 @@ const routeRepository = new MariaDBRouteRepository();
 const photoRepository = new MariaDBPhotoRepository(pool);
 
 const listRoutePointsUseCase = new ListRoutePointsUseCase(routeRepository);
-const createFutureRoutePointUseCase = new CreateFutureRoutePointUseCase(routeRepository);
 const updateRoutePointAdminUseCase = new UpdateRoutePointAdminUseCase(routeRepository);
 const deleteRoutePointAdminUseCase = new DeleteRoutePointAdminUseCase(routeRepository);
 const geocodePlaceUseCase = new GeocodePlaceUseCase(new NominatimAdapter());
+const createFutureRoutePointUseCase = new CreateFutureRoutePointUseCase(routeRepository, geocodePlaceUseCase);
 const publishPhotoUseCase = new PublishPhotoUseCase(photoRepository, routeRepository);
 const syncPublishedPhotoFromRoutePointUseCase = new SyncPublishedPhotoFromRoutePointUseCase(photoRepository);
 

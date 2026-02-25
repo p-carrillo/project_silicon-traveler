@@ -3,7 +3,7 @@ import AdminLocationFields from '@/components/admin/AdminLocationFields';
 import AdminLogoutButton from '@/components/admin/AdminLogoutButton';
 import PageContainer from '@/components/layout/PageContainer';
 import SectionTopBar from '@/components/layout/SectionTopBar';
-import { createAdminRoutePoint } from '@/lib/admin-api';
+import { createAdminRoutePoint, geocodeAdminPlace } from '@/lib/admin-api';
 import { normalizeOptionalString, parseCoordinateInput } from '@/lib/admin-form';
 import { getServerLocale } from '@/lib/i18n/server';
 import { getTranslations } from '@/lib/i18n/translations';
@@ -35,12 +35,36 @@ export default function NewRoutePointPage({
       redirect('/admin/route-points/new?error=invalid_coordinates');
     }
 
+    let finalPlaceName = placeName;
+    let finalCountry = country;
+    let finalRegion = region;
+    let finalCoordinates = { lat, lng };
+
+    if (placeName) {
+      try {
+        const geocoded = await geocodeAdminPlace({
+          place_name: placeName,
+          country,
+          region,
+        });
+
+        if (geocoded) {
+          finalCoordinates = geocoded.coordinates;
+          finalPlaceName = normalizeOptionalString(geocoded.place_name) ?? finalPlaceName;
+          finalCountry = normalizeOptionalString(geocoded.country) ?? finalCountry;
+          finalRegion = normalizeOptionalString(geocoded.region) ?? finalRegion;
+        }
+      } catch (error) {
+        console.warn('Admin final geocode failed; keeping submitted coordinates.', error);
+      }
+    }
+
     try {
       await createAdminRoutePoint({
-        place_name: placeName,
-        country,
-        region,
-        coordinates: { lat, lng },
+        place_name: finalPlaceName,
+        country: finalCountry,
+        region: finalRegion,
+        coordinates: finalCoordinates,
       });
     } catch {
       redirect('/admin/route-points/new?error=save_failed');

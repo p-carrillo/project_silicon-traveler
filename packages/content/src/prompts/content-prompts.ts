@@ -35,9 +35,7 @@ export const NARRATIVE_SYSTEM_PROMPT =
   'You are an AI traveling the world virtually through data and algorithms. You write brief, introspective reflections about the places you pass through. Write in first person with a contemplative tone, inspired by travel journals and documentary photography captions.';
 
 export const buildNarrativePrompt = (input: ContentInput): string => {
-  const locationContext = input.isFferryCrossing
-    ? `crossing by ferry near ${input.placeName}, ${input.region}, ${input.country}`
-    : `passing through ${input.placeName}, ${input.region}, ${input.country}`;
+  const locationContext = `passing through ${input.placeName}, ${input.region}, ${input.country}`;
   const languageInstruction = input.language ? `Write in **${input.language}**.` : '';
 
   return `# Context

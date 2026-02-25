@@ -46,27 +46,4 @@ export class OverpassAdapter implements IOverpassPort {
       return null;
     }
   }
-  
-  async isWater(point: Point): Promise<boolean> {
-    const query = `
-      [out:json];
-      is_in(${point.lat},${point.lng});
-      area._["natural"="water"];
-      out;
-    `;
-    
-    try {
-      const response = await axios.post(this.baseUrl, `data=${encodeURIComponent(query)}`, {
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        timeout: 10000,
-      });
-      
-      return response.data.elements && response.data.elements.length > 0;
-    } catch (error: any) {
-      const status = error?.response?.status;
-      const message = error?.message || 'Unknown error';
-      console.error(`Overpass API error (water detection): ${status ? `${status} ` : ''}${message}`);
-      return false;
-    }
-  }
 }

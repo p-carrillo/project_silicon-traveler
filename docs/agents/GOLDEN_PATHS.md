@@ -14,10 +14,16 @@
 
 ## 3. Generate and Publish Photos (Scheduler)
 1. Start `apps/scheduler` with the scheduler profile or run `pnpm --filter @silicon-traveler/scheduler build` then `pnpm --filter @silicon-traveler/scheduler start`.
-2. The generator job fills a buffer of `route_points` and updates statuses to `image_ready`.
+2. The generator job fills a buffer of `route_points`, performs a final place-based coordinate snap, and updates statuses to `image_ready`.
 3. The publisher job creates rows in `photos` and calls `/api/map/refresh` to update map state.
 
-## 4. Web UI Fetches Content (API + Web)
+## 4. Manual Seed Publish (CLI)
+1. Run `pnpm --filter @silicon-traveler/cli publish-seed-point --journey-id 1`.
+2. If no journey exists, the command auto-creates one from Oleiros (sequence `0`).
+3. The command creates one new route point with scheduler-like route logic, performs a final place-based coordinate snap, uses a local seed image, generates lorem ipsum narrative, and publishes the photo.
+4. It refreshes map state via `/api/map/refresh` unless `--no-map-refresh` is set.
+
+## 5. Web UI Fetches Content (API + Web)
 1. Start `apps/api` and `apps/web` via `pnpm dev` or Docker.
 2. Web calls `/api/photos/latest`, `/api/photos`, and `/api/map/pins` to render the grid and map.
 3. API serves images from `/images` and returns photo metadata with coordinates and tags.

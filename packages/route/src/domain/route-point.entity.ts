@@ -12,7 +12,6 @@ export class RoutePoint {
     public coordinates: Point,
     public country: string | null,
     public region: string | null,
-    public readonly isFferryCrossing: boolean,
     public readonly distanceFromPrevious: number | null,
     public osmData: any | null,
     public researchSummary: string | null,
@@ -66,7 +65,6 @@ export class RoutePoint {
     journeyId: number,
     sequence: number,
     coordinates: Point,
-    isFerry: boolean = false,
     distance: number | null = null
   ): RoutePointCreateParams {
     return {
@@ -76,7 +74,6 @@ export class RoutePoint {
       coordinates,
       country: null,
       region: null,
-      isFferryCrossing: isFerry,
       distanceFromPrevious: distance,
       osmData: null,
       researchSummary: null,

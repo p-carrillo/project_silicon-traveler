@@ -29,7 +29,6 @@ export interface ContentInput {
   country: string;
   region: string;
   researchSummary: string;
-  isFferryCrossing: boolean;
   language?: string;
   portraitParameters?: PortraitParameters;
 }

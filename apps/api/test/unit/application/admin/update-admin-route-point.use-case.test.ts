@@ -12,7 +12,6 @@ const createRoutePoint = (status: 'image_ready' | 'published' | 'pending') =>
     { lat: 40.4168, lng: -3.7038 },
     'Spain',
     'Community of Madrid',
-    false,
     null,
     null,
     null,

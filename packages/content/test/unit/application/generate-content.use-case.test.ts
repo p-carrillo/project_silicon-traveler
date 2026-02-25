@@ -23,7 +23,6 @@ describe('GenerateContentUseCase', () => {
       country: 'Country',
       region: 'Region',
       researchSummary: 'Summary',
-      isFferryCrossing: false,
       language: 'en',
     });
 

@@ -12,7 +12,6 @@ CREATE TABLE IF NOT EXISTS route_points (
   coordinates POINT NOT NULL,
   country VARCHAR(100),
   region VARCHAR(255),
-  is_ferry_crossing BOOLEAN NOT NULL DEFAULT FALSE,
   distance_from_previous DECIMAL(6,2),
   
   -- Research & content data
