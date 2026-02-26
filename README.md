@@ -42,6 +42,7 @@ The system maintains a buffer of 10 pre-generated photos and displays them in a 
 - Admin route-point list supports status and city filters, ID sort order, and numbered pagination controls.
 - Editing a published route point in admin also syncs the linked `photos` record, so changes appear in `archive` and `map`.
 - The route-point editor shows current status and includes a `Published` switch to publish/unpublish from the same form.
+- Route-point photo uploads are posted to a same-origin web proxy (`POST /admin/api/route-points/:id/photo`) that forwards bytes to the internal API with server-side credentials.
 - The edit screen includes a `Delete` button with confirmation modal before removing a route point.
 - Admin update/publish/unpublish/delete DB writes are orchestrated transactionally to avoid partial state across `route_points` and `photos`.
 

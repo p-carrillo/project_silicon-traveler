@@ -9,7 +9,6 @@ import {
   deleteAdminRoutePoint,
   getAdminRoutePoint,
   updateAdminRoutePoint,
-  uploadAdminRoutePointPhoto,
 } from '@/lib/admin-api';
 import { normalizeOptionalString, parseCoordinateInput, resolvePublishStatus } from '@/lib/admin-form';
 import { toProxyImageSrc } from '@/lib/images';
@@ -81,33 +80,6 @@ export default async function EditRoutePointPage({
     redirect(`/admin/route-points/${id}?saved=1`);
   }
 
-  async function uploadPhotoAction(formData: FormData) {
-    'use server';
-
-    const file = formData.get('photo');
-    if (!(file instanceof File)) {
-      redirect(`/admin/route-points/${id}?error=photo_required`);
-    }
-    const allowedMimeTypes = new Set(['image/jpeg', 'image/png']);
-    if (!allowedMimeTypes.has(file.type)) {
-      redirect(`/admin/route-points/${id}?error=photo_type`);
-    }
-    const contentType = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
-
-    const imageBuffer = await file.arrayBuffer();
-    if (imageBuffer.byteLength === 0) {
-      redirect(`/admin/route-points/${id}?error=photo_required`);
-    }
-
-    try {
-      await uploadAdminRoutePointPhoto(id, imageBuffer, contentType);
-    } catch {
-      redirect(`/admin/route-points/${id}?error=photo_failed`);
-    }
-
-    redirect(`/admin/route-points/${id}`);
-  }
-
   async function deleteAction() {
     'use server';
 
@@ -127,6 +99,7 @@ export default async function EditRoutePointPage({
         routePoint.updated_at
       )}`
     : null;
+  const uploadPhotoPath = `/admin/api/route-points/${id}/photo`;
 
   return (
     <div className="min-h-screen bg-zinc-100 text-zinc-900">
@@ -176,11 +149,17 @@ export default async function EditRoutePointPage({
                 )}
               </div>
 
-              <form action={uploadPhotoAction} className="mt-4 flex flex-col gap-3">
+              <form
+                action={uploadPhotoPath}
+                method="POST"
+                encType="multipart/form-data"
+                className="mt-4 flex flex-col gap-3"
+              >
                 <input
                   type="file"
                   name="photo"
                   accept="image/jpeg,image/png"
+                  required
                   className="block w-full text-sm"
                 />
                 <button
