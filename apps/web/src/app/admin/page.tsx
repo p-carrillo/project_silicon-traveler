@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import AdminLogoutButton from '@/components/admin/AdminLogoutButton';
 import PageContainer from '@/components/layout/PageContainer';
 import SectionTopBar from '@/components/layout/SectionTopBar';
@@ -11,6 +12,7 @@ import {
   resolveAdminPageLimit,
   resolveAdminPageOffset,
 } from '@/lib/admin-pagination';
+import { toProxyImageSrc } from '@/lib/images';
 import { getServerLocale } from '@/lib/i18n/server';
 import { getTranslations } from '@/lib/i18n/translations';
 
@@ -164,6 +166,7 @@ export default async function AdminPage({
             <table className="min-w-full text-left text-sm">
               <thead className="border-b border-zinc-200 bg-zinc-50 text-xs uppercase tracking-[0.2em] text-zinc-600">
                 <tr>
+                  <th className="px-4 py-3">{t.admin.fields.photo}</th>
                   <th className="px-4 py-3">{t.admin.table.sequence}</th>
                   <th className="px-4 py-3">{t.admin.table.status}</th>
                   <th className="px-4 py-3">{t.admin.table.city}</th>
@@ -173,32 +176,56 @@ export default async function AdminPage({
                 </tr>
               </thead>
               <tbody>
-                {list.route_points.map((rp) => (
-                  <tr key={rp.id} className="border-b border-zinc-100 last:border-b-0">
-                    <td className="px-4 py-3 font-mono text-xs text-zinc-700">{rp.sequence}</td>
-                    <td className="px-4 py-3">
-                      <span className="inline-flex rounded-full bg-zinc-100 px-2 py-1 text-xs font-semibold text-zinc-700">
-                        {rp.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">{rp.place_name || t.admin.fallback.unknown}</td>
-                    <td className="px-4 py-3">{rp.country || t.admin.fallback.unknown}</td>
-                    <td className="px-4 py-3 font-mono text-xs text-zinc-700">
-                      {new Date(rp.updated_at).toISOString()}
-                    </td>
-                    <td className="px-4 py-3">
-                      <Link
-                        href={`/admin/route-points/${rp.id}`}
-                        className="text-sm font-semibold text-zinc-900 underline underline-offset-4"
-                      >
-                        {t.admin.actions.edit}
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
+                {list.route_points.map((rp) => {
+                  const previewSrc = rp.thumbnail_path || rp.image_path;
+                  const imageProxySrc = previewSrc ? toProxyImageSrc(previewSrc) : null;
+                  const imagePreviewSrc = imageProxySrc
+                    ? `${imageProxySrc}${imageProxySrc.includes('?') ? '&' : '?'}v=${encodeURIComponent(
+                        rp.updated_at
+                      )}`
+                    : null;
+
+                  return (
+                    <tr key={rp.id} className="border-b border-zinc-100 last:border-b-0">
+                      <td className="px-4 py-3">
+                        {imagePreviewSrc ? (
+                          <Image
+                            src={imagePreviewSrc}
+                            alt={t.admin.alt.routePointPhoto}
+                            width={64}
+                            height={64}
+                            unoptimized
+                            className="h-14 w-14 rounded-md object-cover"
+                          />
+                        ) : (
+                          <div className="h-14 w-14 rounded-md bg-gradient-to-br from-zinc-300 via-zinc-200 to-zinc-300" />
+                        )}
+                      </td>
+                      <td className="px-4 py-3 font-mono text-xs text-zinc-700">{rp.sequence}</td>
+                      <td className="px-4 py-3">
+                        <span className="inline-flex rounded-full bg-zinc-100 px-2 py-1 text-xs font-semibold text-zinc-700">
+                          {rp.status}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">{rp.place_name || t.admin.fallback.unknown}</td>
+                      <td className="px-4 py-3">{rp.country || t.admin.fallback.unknown}</td>
+                      <td className="px-4 py-3 font-mono text-xs text-zinc-700">
+                        {new Date(rp.updated_at).toISOString()}
+                      </td>
+                      <td className="px-4 py-3">
+                        <Link
+                          href={`/admin/route-points/${rp.id}`}
+                          className="text-sm font-semibold text-zinc-900 underline underline-offset-4"
+                        >
+                          {t.admin.actions.edit}
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })}
                 {list.route_points.length === 0 ? (
                   <tr>
-                    <td className="px-4 py-10 text-sm text-zinc-600" colSpan={6}>
+                    <td className="px-4 py-10 text-sm text-zinc-600" colSpan={7}>
                       {t.admin.empty}
                     </td>
                   </tr>

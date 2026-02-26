@@ -168,7 +168,11 @@ export default async function EditRoutePointPage({
                     className="h-auto w-full"
                   />
                 ) : (
-                  <div className="p-6 text-sm text-zinc-600">{t.admin.fallback.noPhoto}</div>
+                  <div className="relative aspect-square w-full bg-gradient-to-br from-zinc-300 via-zinc-200 to-zinc-300">
+                    <span className="absolute bottom-3 left-3 text-xs font-medium uppercase tracking-[0.2em] text-zinc-600">
+                      {t.admin.fallback.noPhoto}
+                    </span>
+                  </div>
                 )}
               </div>
 
