@@ -121,6 +121,12 @@ export default async function EditRoutePointPage({
   }
 
   const imageSrc = routePoint.thumbnail_path || routePoint.image_path;
+  const imageProxySrc = imageSrc ? toProxyImageSrc(imageSrc) : null;
+  const imagePreviewSrc = imageProxySrc
+    ? `${imageProxySrc}${imageProxySrc.includes('?') ? '&' : '?'}v=${encodeURIComponent(
+        routePoint.updated_at
+      )}`
+    : null;
 
   return (
     <div className="min-h-screen bg-zinc-100 text-zinc-900">
@@ -152,12 +158,13 @@ export default async function EditRoutePointPage({
             <div className="rounded-lg border border-zinc-200 bg-white p-4">
               <div className="text-xs uppercase tracking-[0.2em] text-zinc-600">{t.admin.fields.photo}</div>
               <div className="mt-3 overflow-hidden rounded-md border border-zinc-200 bg-zinc-50">
-                {imageSrc ? (
+                {imagePreviewSrc ? (
                   <Image
-                    src={toProxyImageSrc(imageSrc)}
+                    src={imagePreviewSrc}
                     alt={t.admin.alt.routePointPhoto}
                     width={800}
                     height={800}
+                    unoptimized
                     className="h-auto w-full"
                   />
                 ) : (
