@@ -28,7 +28,7 @@
 | `I18N_CONTENT_BASE_LANGUAGE` | Content, photo | Base language for LLM generation | Default `en`.
 | `OPENAI_API_KEY` | content, image, photo | OpenAI for text and image generation | Required for real runs.
 | `IMAGE_MODEL` | image | OpenAI image generation model | Default `gpt-image-1.5`. Options: `gpt-image-1.5`, `gpt-image-1`, `gpt-image-1-mini`, `dall-e-3`, `dall-e-2`.
-| `BRAVE_SEARCH_API_KEY` | research, photo | Brave Search API | Required for real runs.
+| `WIKIPEDIA_USER_AGENT` | research, photo | Custom User-Agent for Wikipedia requests | Optional; defaults to `silicon-traveler/1.0 (https://github.com)`.
 
 ## Runtime Defaults
 - `docker-compose.yml` sets `NODE_ENV=development` for containers.

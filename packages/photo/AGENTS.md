@@ -36,7 +36,8 @@ Photo preparation and publishing pipeline orchestration.
 
 ## Configuration
 - `DB_*` variables for MariaDB.
-- `OPENAI_API_KEY` and `BRAVE_SEARCH_API_KEY` for generation.
+- `OPENAI_API_KEY` for generation.
+- `WIKIPEDIA_USER_AGENT` (optional) for research requests.
 
 ## Commands
 - `pnpm --filter @silicon-traveler/photo build`

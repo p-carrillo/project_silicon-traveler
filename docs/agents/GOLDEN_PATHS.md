@@ -6,7 +6,7 @@
 3. Verify `journey` and `route_points` rows exist in MariaDB.
 
 ## 2. Prepare Photos (CLI)
-1. Ensure `OPENAI_API_KEY` and `BRAVE_SEARCH_API_KEY` are set.
+1. Ensure `OPENAI_API_KEY` is set.
 2. Run `pnpm --filter @silicon-traveler/cli prepare-prompts -- 7 --journey-id 1`.
 3. The command prints JSON with prepared photo details and updates `route_points` status to `image_ready`.
 4. Use `--prompts-only` to stop after content generation (`content_generated`).

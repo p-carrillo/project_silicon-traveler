@@ -10,6 +10,7 @@
 - `docs/agents/DEBUGGING.md`: Common issues and how to resolve them.
 
 ## Recent Decisions
+- `.adr/063-switch-research-provider-to-wikipedia.md`: Research module now uses Wikipedia API instead of Brave Search.
 - `.adr/061-place-based-coordinate-snap-in-automated-generation.md`: Automated generation now snaps coordinates with final place-based geocoding.
 - `.adr/060-publish-seed-point-auto-create-journey.md`: `publish-seed-point` auto-creates a journey from Oleiros when no journeys exist.
 - `.adr/059-cli-publish-seed-point-command.md`: CLI command to create and publish one new route point using local seed images and lorem ipsum narrative.
@@ -49,7 +50,7 @@ Specialized agents used by commands. Cursor wrappers in `.cursor/agents/`, real 
 - `packages/journey/AGENTS.md`: Journey domain model and persistence.
 - `packages/map/AGENTS.md`: Map state and photo pins.
 - `packages/photo/AGENTS.md`: Photo preparation and publishing pipeline.
-- `packages/research/AGENTS.md`: Brave search adapter and research use case.
+- `packages/research/AGENTS.md`: Wikipedia search adapter and research use case.
 - `packages/route/AGENTS.md`: Route point computation and persistence.
 - `packages/shared/AGENTS.md`: Shared MariaDB pool and utilities.
 - `packages/storage/AGENTS.md`: Storage ports and local adapter.

@@ -1,7 +1,7 @@
 # AGENTS
 
 ## Purpose
-Research adapter and use case for place discovery using Brave Search.
+Research adapter and use case for place discovery using Wikipedia search.
 
 ## Responsibilities
 - Execute web searches for place context.
@@ -24,7 +24,8 @@ Research adapter and use case for place discovery using Brave Search.
 - Axios.
 
 ## Configuration
-- `BRAVE_SEARCH_API_KEY` or `BRAVE_API_KEY`.
+- `WIKIPEDIA_SEARCH_API_URL` (optional override; defaults to `https://en.wikipedia.org/w/api.php`).
+- `WIKIPEDIA_USER_AGENT` (optional custom User-Agent header).
 
 ## Commands
 - `pnpm --filter @silicon-traveler/research build`

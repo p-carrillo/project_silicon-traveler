@@ -34,7 +34,8 @@ Cron-based job runner that generates and publishes photos on a schedule.
 
 ## Configuration
 - `API_URL` and `API_KEY` for notifying the API after publish.
-- `OPENAI_API_KEY` and `BRAVE_SEARCH_API_KEY` for generation.
+- `OPENAI_API_KEY` for generation.
+- `WIKIPEDIA_USER_AGENT` (optional) for research requests.
 - `DB_*` variables for MariaDB.
 
 ## Commands

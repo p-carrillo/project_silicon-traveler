@@ -5,6 +5,7 @@ export interface PortraitParameters {
   shotType: string;
   expression: string;
   gaze: string;
+  facingDirection: string;
   posture: string;
   timeOfDay: string;
   activity: string;
@@ -63,6 +64,7 @@ const pick = <T>(options: readonly T[]): T => {
 };
 
 const randomAge = (): number => 5 + Math.floor(Math.random() * 76);
+const randomFacingDirection = (): 'left' | 'right' => (Math.random() < 0.5 ? 'left' : 'right');
 
 export const selectPortraitParameters = (): PortraitParameters => ({
   gender: pick(genderOptions),
@@ -71,6 +73,7 @@ export const selectPortraitParameters = (): PortraitParameters => ({
   shotType: pick(shotTypeOptions),
   expression: pick(expressionOptions),
   gaze: pick(gazeOptions),
+  facingDirection: randomFacingDirection(),
   posture: pick(postureOptions),
   timeOfDay: pick(timeOfDayOptions),
   activity: pick(activityOptions),

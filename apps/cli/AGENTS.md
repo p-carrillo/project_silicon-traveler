@@ -41,7 +41,8 @@ CLI for database migrations and journey setup workflows.
 
 ## Configuration
 - `DB_*` variables for MariaDB.
-- `OPENAI_API_KEY` and `BRAVE_SEARCH_API_KEY` for prompt preparation and image generation.
+- `OPENAI_API_KEY` for prompt preparation and image generation.
+- `WIKIPEDIA_USER_AGENT` (optional) for research requests.
 
 ## Commands
 - `pnpm --filter @silicon-traveler/cli build`

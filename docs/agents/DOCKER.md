@@ -22,7 +22,7 @@ DB_PASSWORD=your_secure_password
 DB_ROOT_PASSWORD=your_secure_root_password
 API_KEY=your_api_key
 OPENAI_API_KEY=your_openai_key
-BRAVE_SEARCH_API_KEY=your_brave_key
+WIKIPEDIA_USER_AGENT=silicon-traveler/1.0 (https://github.com)
 ```
 
 ## Development
@@ -239,7 +239,7 @@ See `.env.example` for the full list of variables.
 - `DB_ROOT_PASSWORD`: MariaDB root password
 - `API_KEY`: API authentication key
 - `OPENAI_API_KEY`: OpenAI key
-- `BRAVE_SEARCH_API_KEY`: Brave Search key
+- `WIKIPEDIA_USER_AGENT`: Optional custom User-Agent for Wikipedia requests
 - `CORS_ORIGINS`: Allowed CORS origins
 
 ## Volumes

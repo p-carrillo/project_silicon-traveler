@@ -36,6 +36,7 @@ describe('selectPortraitParameters', () => {
       'wary',
     ];
     const gazeOptions = ['direct to camera', 'looking away', 'downcast', 'sideways'];
+    const facingDirectionOptions = ['left', 'right'];
     const postureOptions = ['standing', 'sitting', 'leaning', 'walking'];
     const timeOfDayOptions = ['dawn', 'morning', 'midday', 'afternoon', 'dusk', 'night'];
     const activityOptions = ['resting', 'working', 'commuting', 'socializing', 'waiting', 'observing'];
@@ -51,6 +52,7 @@ describe('selectPortraitParameters', () => {
     expect(shotTypeOptions).toContain(parameters.shotType);
     expect(expressionOptions).toContain(parameters.expression);
     expect(gazeOptions).toContain(parameters.gaze);
+    expect(facingDirectionOptions).toContain(parameters.facingDirection);
     expect(postureOptions).toContain(parameters.posture);
     expect(timeOfDayOptions).toContain(parameters.timeOfDay);
     expect(activityOptions).toContain(parameters.activity);

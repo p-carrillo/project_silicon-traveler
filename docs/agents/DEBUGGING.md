@@ -10,7 +10,7 @@
 ## Common Issues
 - MariaDB connection failures usually mean `DB_HOST`, `DB_USER`, or `DB_PASSWORD` are incorrect.
 - API returns 401 in non-development when `API_KEY` is missing or mismatched.
-- OpenAI or Brave calls fail when `OPENAI_API_KEY` or `BRAVE_SEARCH_API_KEY` are missing.
+- OpenAI calls fail when `OPENAI_API_KEY` is missing; Wikipedia research can fail with network/rate-limit errors.
 - Missing images are often caused by the `/images` directory not being writable or not mounted.
 - Scheduler publish failures can happen when `API_URL` does not resolve inside Docker.
 

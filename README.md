@@ -69,7 +69,7 @@ Use this quick checklist after admin changes:
 
 - `journey` - Journey management (origin, current position, heading)
 - `route` - Route calculation, city finding, geocoding (Overpass, Nominatim)
-- `research` - Web research (Brave Search API)
+- `research` - Web research (Wikipedia API)
 - `content` - LLM content generation (GPT-4)
 - `image` - Image generation (DALL-E 3) and thumbnail creation
 - `storage` - Abstract file storage (local/cloud)
@@ -148,7 +148,7 @@ docker-compose exec api pnpm --filter @silicon-traveler/cli prepare-prompts -- 7
 docker-compose exec api pnpm --filter @silicon-traveler/cli publish-seed-point --journey-id 1
 ```
 
-**Note**: Requires `OPENAI_API_KEY` and `BRAVE_SEARCH_API_KEY` in `.env`.
+**Note**: Requires `OPENAI_API_KEY` in `.env`.
 `publish-seed-point` does not require those keys. If no journey exists yet, it auto-creates one starting at Oleiros.
 Both scheduler-like generation and `publish-seed-point` now perform a final place-geocoding pass to snap coordinates to the selected city/place.
 
@@ -306,7 +306,7 @@ All core domain modules implemented with hexagonal architecture:
 1. **Shared** - Database connection pool, geographic utilities (Haversine calculations)
 2. **Journey** - Journey entity, create/stats use cases, MariaDB repository
 3. **Route** - Route point entity, next point calculation, city finding (Overpass), geocoding (Nominatim)
-4. **Research** - Brave Search integration for location research
+4. **Research** - Wikipedia integration for location research
 5. **Content** - GPT-4 integration for prompt/narrative generation
 6. **Image** - DALL-E 3 image generation, Sharp thumbnail processing
 7. **Photo** - Pipeline orchestration (prepare & publish use cases), MariaDB repository
@@ -319,7 +319,7 @@ All core domain modules implemented with hexagonal architecture:
    - ✅ Creates journey and 11 initial route points: Oleiros (sequence 0) + 10 following points with OSM/Nominatim enrichment
    - ✅ Tested successfully: Journey ID 1 created with route points
    - ✅ `prepare-prompts` generates research, prompts, and images for the next N days (same pipeline as Scheduler)
-   - ✅ `publish-seed-point` creates and publishes one new point using local seed image + lorem ipsum (no OpenAI/Brave required)
+   - ✅ `publish-seed-point` creates and publishes one new point using local seed image + lorem ipsum (no OpenAI/Wikipedia required)
    - ✅ Route-point generation performs a final place-based coordinate snap after city resolution to reduce straight-line drift
 
 2. **Scheduler app** - Automated photo generation and publishing
@@ -327,7 +327,7 @@ All core domain modules implemented with hexagonal architecture:
    - ✅ Publisher job: Runs daily 18-20h (randomized), publishes one photo per day
    - ✅ Orchestrates entire pipeline: route → research → content → image → storage
    - ✅ Notifies map service on publish (`POST /api/map/refresh`)
-   - Note: Requires `OPENAI_API_KEY` and `BRAVE_SEARCH_API_KEY` in `.env`
+   - Note: Requires `OPENAI_API_KEY` in `.env` (Wikipedia research does not require an API key)
 
 3. **API app** - REST endpoints (Express, port 3000)
    - ✅ `GET /health` - Health check with database connection test
@@ -360,18 +360,18 @@ All core domain modules implemented with hexagonal architecture:
 ### 📚 Documentation
 
 - ADRs are stored in `.adr/` and track architecture decisions.
-- Latest: ADR 061 (final place-based coordinate snap in automated generation).
+- Latest: ADR 063 (switch research provider to Wikipedia).
 
-## API Keys Required
+## External API Configuration
 
-The following environment variables must be set to use external APIs:
+The following environment variables are used for external APIs:
 
 ```bash
 # OpenAI (GPT-4 for prompts, DALL-E 3 for images)
 OPENAI_API_KEY=sk-...
 
-# Brave Search (web research)
-BRAVE_SEARCH_API_KEY=...
+# Optional: custom User-Agent for Wikipedia requests
+WIKIPEDIA_USER_AGENT=silicon-traveler/1.0 (https://github.com)
 ```
 
 Add these to `.env` file or export in shell before running apps.
