@@ -11,6 +11,16 @@ afterEach(() => {
 });
 
 describe('admin upload photo proxy route', () => {
+  function buildRequest(url: string, formData: FormData | (() => Promise<FormData>)) {
+    return {
+      nextUrl: new URL(url),
+      formData:
+        typeof formData === 'function'
+          ? formData
+          : async () => formData,
+    } as any;
+  }
+
   it('proxies image upload to internal API and redirects back', async () => {
     // Arrange
     process.env.API_URL = 'http://api:3000';
@@ -33,7 +43,7 @@ describe('admin upload photo proxy route', () => {
 
     // Act
     const response = await POST(
-      { formData: async () => formData } as any,
+      buildRequest('https://traveler.example/admin/api/route-points/7/photo', formData),
       { params: { id: '7' } }
     );
 
@@ -52,7 +62,7 @@ describe('admin upload photo proxy route', () => {
     expect(headers.get('Authorization')).toBe('Bearer secret-key');
     expect(headers.get('Content-Type')).toBe('image/jpeg');
     expect(response.status).toBe(303);
-    expect(response.headers.get('location')).toBe('http://localhost/admin/route-points/7');
+    expect(response.headers.get('location')).toBe('/admin/route-points/7');
   });
 
   it('redirects with photo_required when file is missing', async () => {
@@ -66,7 +76,7 @@ describe('admin upload photo proxy route', () => {
 
     // Act
     const response = await POST(
-      { formData: async () => new FormData() } as any,
+      buildRequest('https://traveler.example/admin/api/route-points/5/photo', new FormData()),
       { params: { id: '5' } }
     );
 
@@ -74,7 +84,7 @@ describe('admin upload photo proxy route', () => {
     expect(fetchMock).not.toHaveBeenCalled();
     expect(response.status).toBe(303);
     expect(response.headers.get('location')).toBe(
-      'http://localhost/admin/route-points/5?error=photo_required'
+      '/admin/route-points/5?error=photo_required'
     );
   });
 
@@ -92,7 +102,7 @@ describe('admin upload photo proxy route', () => {
 
     // Act
     const response = await POST(
-      { formData: async () => formData } as any,
+      buildRequest('https://traveler.example/admin/api/route-points/8/photo', formData),
       { params: { id: '8' } }
     );
 
@@ -100,7 +110,32 @@ describe('admin upload photo proxy route', () => {
     expect(fetchMock).not.toHaveBeenCalled();
     expect(response.status).toBe(303);
     expect(response.headers.get('location')).toBe(
-      'http://localhost/admin/route-points/8?error=photo_type'
+      '/admin/route-points/8?error=photo_type'
+    );
+  });
+
+  it('redirects with photo_failed when form parsing throws', async () => {
+    // Arrange
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+
+    const { POST } = await import(
+      '../../../src/app/admin/api/route-points/[id]/photo/route'
+    );
+
+    // Act
+    const response = await POST(
+      buildRequest('https://traveler.example/admin/api/route-points/9/photo', async () => {
+        throw new Error('body too large');
+      }),
+      { params: { id: '9' } }
+    );
+
+    // Assert
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(response.status).toBe(303);
+    expect(response.headers.get('location')).toBe(
+      '/admin/route-points/9?error=photo_failed'
     );
   });
 });
