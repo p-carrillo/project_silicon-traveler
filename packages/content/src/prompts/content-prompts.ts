@@ -21,7 +21,6 @@ const formatPortraitParametersInline = (parameters: PortraitParameters): string 
     `shotType: ${parameters.shotType}`,
     `expression: ${parameters.expression}`,
     `gaze: ${parameters.gaze}`,
-    `facingDirection: looking to the ${parameters.facingDirection}`,
     `posture: ${parameters.posture}`,
     `timeOfDay: ${parameters.timeOfDay}`,
     `activity: ${parameters.activity}`,

@@ -13,7 +13,6 @@ vi.mock('@silicon-traveler/content', async () => {
       shotType: 'close-up',
       expression: 'pensive',
       gaze: 'looking away',
-      facingDirection: 'right',
       posture: 'standing',
       timeOfDay: 'dusk',
       activity: 'waiting',

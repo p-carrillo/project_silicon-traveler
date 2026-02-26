@@ -11,7 +11,6 @@ describe('buildImagePrompt', () => {
         shotType: 'close-up',
         expression: 'pensive',
         gaze: 'looking away',
-        facingDirection: 'right',
         posture: 'standing',
         timeOfDay: 'dusk',
         activity: 'waiting',
@@ -28,6 +27,5 @@ describe('buildImagePrompt', () => {
 
     expect(prompt).not.toContain('background:');
     expect(prompt).not.toContain('fondo:');
-    expect(prompt).toContain('facingDirection: looking to the right');
   });
 });
