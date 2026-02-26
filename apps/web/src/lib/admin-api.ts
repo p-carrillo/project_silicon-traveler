@@ -152,15 +152,19 @@ export async function deleteAdminRoutePoint(id: number): Promise<void> {
   }
 }
 
-export async function uploadAdminRoutePointPhoto(id: number, jpeg: ArrayBuffer): Promise<{
+export async function uploadAdminRoutePointPhoto(
+  id: number,
+  image: ArrayBuffer,
+  contentType: 'image/jpeg' | 'image/png'
+): Promise<{
   image_path: string;
   thumbnail_path: string | null;
   hero_thumbnail_path: string | null;
 }> {
   const res = await adminFetch(`/api/admin/route-points/${id}/photo`, {
     method: 'PUT',
-    headers: { 'Content-Type': 'image/jpeg' },
-    body: jpeg,
+    headers: { 'Content-Type': contentType },
+    body: image,
   });
 
   if (!res.ok) {

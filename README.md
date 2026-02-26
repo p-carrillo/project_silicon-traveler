@@ -50,7 +50,7 @@ The system maintains a buffer of 10 pre-generated photos and displays them in a 
 Use this quick checklist after admin changes:
 
 1. Open `GET /admin` and sign in.
-2. Open an existing route point that has a JPEG image uploaded.
+2. Open an existing route point that has a JPEG/PNG image uploaded.
 3. Toggle `Published` on and click `Save`.
 4. Confirm the point appears in `archive` and `map`.
 5. Edit location text (city/country/region), save again, and confirm changes are reflected in `archive` and `map`.

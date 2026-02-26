@@ -3,6 +3,25 @@ import sharp from 'sharp';
 import { SharpAdapter } from '../../../src/adapters/sharp.adapter';
 
 describe('SharpAdapter (integration)', () => {
+  it('normalizes png input to jpeg', async () => {
+    const pngBuffer = await sharp({
+      create: {
+        width: 20,
+        height: 20,
+        channels: 3,
+        background: { r: 20, g: 20, b: 20 },
+      },
+    })
+      .png()
+      .toBuffer();
+
+    const adapter = new SharpAdapter();
+    const jpegBuffer = await adapter.toJpeg(pngBuffer);
+    const metadata = await sharp(jpegBuffer).metadata();
+
+    expect(metadata.format).toBe('jpeg');
+  });
+
   it('generates thumbnails for provided sizes', async () => {
     const sourceBuffer = await sharp({
       create: {

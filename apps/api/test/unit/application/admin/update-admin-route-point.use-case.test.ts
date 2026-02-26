@@ -174,4 +174,48 @@ describe('UpdateAdminRoutePointUseCase', () => {
     expect(connection.commit).not.toHaveBeenCalled();
     expect(connection.rollback).toHaveBeenCalledTimes(1);
   });
+
+  it('syncs existing published photo assets when publishing transition has photo row', async () => {
+    const currentRoutePoint = createRoutePoint('image_ready');
+    const updatedRoutePoint = createRoutePoint('published');
+    updatedRoutePoint.imagePath = '/images/2026/02/12/10-new.jpg';
+    updatedRoutePoint.thumbnailPath = '/images/2026/02/12/10-new_grid.jpg';
+
+    routeRepository.findById.mockResolvedValue(currentRoutePoint);
+    routeRepository.upsertContentTranslations.mockResolvedValue(undefined);
+    photoRepository.hasByRoutePointId.mockResolvedValue(true);
+    updateRoutePointAdminUseCase.execute.mockResolvedValue(updatedRoutePoint);
+    syncPublishedPhotoFromRoutePointUseCase.execute.mockResolvedValue(undefined);
+
+    const connection = {
+      beginTransaction: vi.fn().mockResolvedValue(undefined),
+      commit: vi.fn().mockResolvedValue(undefined),
+      rollback: vi.fn().mockResolvedValue(undefined),
+      release: vi.fn(),
+      query: vi.fn(),
+    };
+    vi.spyOn(pool, 'getConnection').mockResolvedValue(connection as any);
+
+    const useCase = new UpdateAdminRoutePointUseCase(
+      routeRepository as any,
+      photoRepository as any,
+      updateRoutePointAdminUseCase as any,
+      publishPhotoUseCase as any,
+      syncPublishedPhotoFromRoutePointUseCase as any
+    );
+
+    await useCase.execute({ id: 10, status: 'published' });
+
+    expect(publishPhotoUseCase.execute).not.toHaveBeenCalled();
+    expect(syncPublishedPhotoFromRoutePointUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        routePointId: 10,
+        imagePath: '/images/2026/02/12/10-new.jpg',
+        thumbnailPath: '/images/2026/02/12/10-new_grid.jpg',
+      }),
+      { queryExecutor: connection }
+    );
+    expect(connection.commit).toHaveBeenCalledTimes(1);
+    expect(connection.rollback).not.toHaveBeenCalled();
+  });
 });

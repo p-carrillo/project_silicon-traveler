@@ -318,10 +318,10 @@ adminRouter.delete('/route-points/:id', async (req: Request, res: Response) => {
 });
 
 // Upload/replace the route point photo.
-// Body: raw JPEG bytes (Content-Type: image/jpeg)
+// Body: raw JPEG/PNG bytes (Content-Type: image/jpeg or image/png)
 adminRouter.put(
   '/route-points/:id/photo',
-  express.raw({ type: ['image/jpeg'], limit: '15mb' }),
+  express.raw({ type: ['image/jpeg', 'image/png'], limit: '25mb' }),
   async (req: Request, res: Response) => {
     try {
       const id = Number.parseInt(req.params.id, 10);
@@ -330,7 +330,7 @@ adminRouter.put(
       }
 
       if (!Buffer.isBuffer(req.body) || req.body.length === 0) {
-        return res.status(400).json({ error: 'JPEG body is required' });
+        return res.status(400).json({ error: 'JPEG or PNG body is required' });
       }
 
       const routePoint = await routeRepository.findById(id);
@@ -338,17 +338,21 @@ adminRouter.put(
         return res.status(404).json({ error: 'Route point not found' });
       }
 
-      // Best-effort delete previous files (ignore missing).
-      await deletePreviousImages(routePoint.imagePath, routePoint.thumbnailPath);
+      const previousImagePath = routePoint.imagePath;
+      const previousThumbnailPath = routePoint.thumbnailPath;
+      const wasPublished = routePoint.status === 'published';
 
-      const thumbnails = await thumbnailGenerator.generate(req.body, [
+      // Normalize to JPEG so stored extension/content always match.
+      const imageBuffer = await thumbnailGenerator.toJpeg(req.body);
+
+      const thumbnails = await thumbnailGenerator.generate(imageBuffer, [
         { width: 400, height: 400, suffix: '_grid' },
         { width: 1024, height: 1024, suffix: '_hero' },
       ]);
 
       const filename = `${id}.jpg`;
       const storageDate = await resolveStorageDate(routePoint.journeyId, routePoint.sequence);
-      const savedImage = await storage.saveImage(req.body, filename, storageDate);
+      const savedImage = await storage.saveImage(imageBuffer, filename, storageDate);
 
       const savedThumbnails = new Map<string, string>();
       for (const [suffix, buffer] of thumbnails) {
@@ -358,10 +362,33 @@ adminRouter.put(
 
       routePoint.imagePath = savedImage.url;
       routePoint.thumbnailPath = savedThumbnails.get('_grid') ?? null;
-      routePoint.status = 'image_ready';
       routePoint.errorMessage = null;
       routePoint.updatedAt = new Date();
+      if (!wasPublished) {
+        routePoint.status = 'image_ready';
+        routePoint.publishedAt = null;
+      }
       await routeRepository.update(routePoint);
+
+      if (wasPublished) {
+        await syncPublishedPhotoFromRoutePointUseCase.execute({
+          routePointId: routePoint.id,
+          placeName: routePoint.placeName,
+          country: routePoint.country,
+          region: routePoint.region,
+          coordinates: routePoint.coordinates,
+          imagePath: routePoint.imagePath ?? undefined,
+          thumbnailPath: routePoint.thumbnailPath ?? undefined,
+        });
+      }
+
+      // Best-effort delete previous files after persistence/sync to avoid broken public references.
+      if (
+        previousImagePath !== routePoint.imagePath ||
+        previousThumbnailPath !== routePoint.thumbnailPath
+      ) {
+        await deletePreviousImages(previousImagePath, previousThumbnailPath);
+      }
 
       return res.json({
         image_path: savedImage.url,

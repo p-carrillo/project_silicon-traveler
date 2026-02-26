@@ -88,17 +88,19 @@ export default async function EditRoutePointPage({
     if (!(file instanceof File)) {
       redirect(`/admin/route-points/${id}?error=photo_required`);
     }
-    if (file.type !== 'image/jpeg') {
+    const allowedMimeTypes = new Set(['image/jpeg', 'image/png']);
+    if (!allowedMimeTypes.has(file.type)) {
       redirect(`/admin/route-points/${id}?error=photo_type`);
     }
+    const contentType = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
 
-    const jpeg = await file.arrayBuffer();
-    if (jpeg.byteLength === 0) {
+    const imageBuffer = await file.arrayBuffer();
+    if (imageBuffer.byteLength === 0) {
       redirect(`/admin/route-points/${id}?error=photo_required`);
     }
 
     try {
-      await uploadAdminRoutePointPhoto(id, jpeg);
+      await uploadAdminRoutePointPhoto(id, imageBuffer, contentType);
     } catch {
       redirect(`/admin/route-points/${id}?error=photo_failed`);
     }
@@ -167,7 +169,7 @@ export default async function EditRoutePointPage({
                 <input
                   type="file"
                   name="photo"
-                  accept="image/jpeg"
+                  accept="image/jpeg,image/png"
                   className="block w-full text-sm"
                 />
                 <button

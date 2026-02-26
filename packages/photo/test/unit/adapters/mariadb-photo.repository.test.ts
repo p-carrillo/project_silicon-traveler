@@ -46,6 +46,8 @@ describe('MariaDBPhotoRepository (unit)', () => {
       title: 'Segovia',
       location: 'Segovia, Castilla y Leon, Spain',
       coordinates: { lat: 40.95, lng: -4.12 },
+      imagePath: '/images/2026/02/12/33.jpg',
+      thumbnailPath: '/images/2026/02/12/33_grid.jpg',
       translations: [
         { language: 'es', title: 'Segovia', location: 'Segovia, Castilla y Leon, Spain' },
         { language: 'en', title: 'Segovia', location: 'Segovia, Castilla y Leon, Spain' },
@@ -54,6 +56,8 @@ describe('MariaDBPhotoRepository (unit)', () => {
 
     expect(query).toHaveBeenCalledTimes(3);
     expect(query.mock.calls[0][0]).toContain('UPDATE photos');
+    expect(query.mock.calls[0][0]).toContain('image_path = ?');
+    expect(query.mock.calls[0][0]).toContain('thumbnail_path = ?');
     expect(query.mock.calls[1][0]).toContain('UPDATE photo_translations');
     expect(query.mock.calls[2][0]).toContain('UPDATE photo_translations');
   });

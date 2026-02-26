@@ -151,18 +151,32 @@ export class MariaDBPhotoRepository implements IPhotoRepository {
     queryExecutor?: QueryExecutor
   ): Promise<void> {
     const executor = queryExecutor ?? this.pool;
+    const photoSetClauses = [
+      'title = ?',
+      'location = ?',
+      'coordinates = ST_GeomFromText(?, 4326)',
+    ];
+    const photoParams: Array<string | number> = [
+      input.title,
+      input.location,
+      pointToWKT(input.coordinates),
+    ];
+
+    if (input.imagePath !== undefined) {
+      photoSetClauses.push('image_path = ?');
+      photoParams.push(input.imagePath);
+    }
+
+    if (input.thumbnailPath !== undefined) {
+      photoSetClauses.push('thumbnail_path = ?');
+      photoParams.push(input.thumbnailPath);
+    }
+
     await executor.query(
       `UPDATE photos
-       SET title = ?,
-           location = ?,
-           coordinates = ST_GeomFromText(?, 4326)
+       SET ${photoSetClauses.join(', ')}
        WHERE route_point_id = ?`,
-      [
-        input.title,
-        input.location,
-        pointToWKT(input.coordinates),
-        input.routePointId,
-      ]
+      [...photoParams, input.routePointId]
     );
 
     for (const translation of input.translations) {

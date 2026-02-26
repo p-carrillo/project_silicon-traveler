@@ -122,3 +122,35 @@ describe('geocodeAdminPlace', () => {
     await expect(geocodeAdminPlace({ place_name: 'Madrid' })).rejects.toThrow('Failed to geocode place');
   });
 });
+
+describe('uploadAdminRoutePointPhoto', () => {
+  it('sends PNG content type when uploading png data', async () => {
+    process.env.API_URL = 'http://api:3000';
+
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          image_path: '/images/2026/02/27/2.jpg',
+          thumbnail_path: '/images/2026/02/27/2_grid.jpg',
+          hero_thumbnail_path: '/images/2026/02/27/2_hero.jpg',
+        }),
+        { status: 200 }
+      )
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const { uploadAdminRoutePointPhoto } = await import('../../../src/lib/admin-api');
+
+    await uploadAdminRoutePointPhoto(2, new TextEncoder().encode('png').buffer, 'image/png');
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://api:3000/api/admin/route-points/2/photo',
+      expect.objectContaining({
+        method: 'PUT',
+        cache: 'no-store',
+      })
+    );
+    const headers = fetchMock.mock.calls[0][1].headers as Headers;
+    expect(headers.get('Content-Type')).toBe('image/png');
+  });
+});

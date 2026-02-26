@@ -76,4 +76,26 @@ describe('SyncPublishedPhotoFromRoutePointUseCase', () => {
       ])
     );
   });
+
+  it('includes updated image assets when provided', async () => {
+    const photoRepository = {
+      syncPublishedPhotoFromRoutePoint: vi.fn().mockResolvedValue(undefined),
+    };
+
+    const useCase = new SyncPublishedPhotoFromRoutePointUseCase(photoRepository as any);
+
+    await useCase.execute({
+      routePointId: 15,
+      placeName: 'Bilbao',
+      region: 'Basque Country',
+      country: 'Spain',
+      coordinates: { lat: 43.26, lng: -2.93 },
+      imagePath: '/images/2026/02/15/15.jpg',
+      thumbnailPath: '/images/2026/02/15/15_grid.jpg',
+    });
+
+    const input = photoRepository.syncPublishedPhotoFromRoutePoint.mock.calls[0][0];
+    expect(input.imagePath).toBe('/images/2026/02/15/15.jpg');
+    expect(input.thumbnailPath).toBe('/images/2026/02/15/15_grid.jpg');
+  });
 });

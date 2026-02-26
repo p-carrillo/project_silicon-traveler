@@ -26,6 +26,8 @@ export interface SyncPublishedPhotoFromRoutePointInput {
   title: string;
   location: string;
   coordinates: Point;
+  imagePath?: string;
+  thumbnailPath?: string;
   translations: SyncPublishedPhotoTranslationInput[];
 }
 

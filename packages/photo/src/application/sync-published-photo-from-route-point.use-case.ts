@@ -9,6 +9,8 @@ export interface SyncPublishedPhotoFromRoutePointUseCaseInput {
   region: string | null;
   country: string | null;
   coordinates: Point;
+  imagePath?: string;
+  thumbnailPath?: string;
 }
 
 export class SyncPublishedPhotoFromRoutePointUseCase {
@@ -28,7 +30,7 @@ export class SyncPublishedPhotoFromRoutePointUseCase {
       i18n.defaultLanguage
     );
 
-    await this.photoRepository.syncPublishedPhotoFromRoutePoint({
+    const syncInput = {
       routePointId: input.routePointId,
       title,
       location,
@@ -38,6 +40,16 @@ export class SyncPublishedPhotoFromRoutePointUseCase {
         title: buildPhotoTitle(input.placeName, language),
         location: buildPhotoLocation(input.placeName, input.region, input.country, language),
       })),
-    }, options?.queryExecutor);
+    };
+
+    if (input.imagePath !== undefined) {
+      Object.assign(syncInput, { imagePath: input.imagePath });
+    }
+
+    if (input.thumbnailPath !== undefined) {
+      Object.assign(syncInput, { thumbnailPath: input.thumbnailPath });
+    }
+
+    await this.photoRepository.syncPublishedPhotoFromRoutePoint(syncInput, options?.queryExecutor);
   }
 }

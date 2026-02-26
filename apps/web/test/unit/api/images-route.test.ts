@@ -30,7 +30,8 @@ describe('images proxy route', () => {
     });
 
     expect(fetchMock).toHaveBeenCalledWith(
-      'http://api:3000/images/2026/02/01/photo-1-thumb.jpg'
+      'http://api:3000/images/2026/02/01/photo-1-thumb.jpg',
+      expect.objectContaining({ cache: 'no-store' })
     );
   });
 
@@ -53,7 +54,8 @@ describe('images proxy route', () => {
     });
 
     expect(fetchMock).toHaveBeenCalledWith(
-      'http://localhost:3010/images/2026/02/01/photo-2-thumb.jpg'
+      'http://localhost:3010/images/2026/02/01/photo-2-thumb.jpg',
+      expect.objectContaining({ cache: 'no-store' })
     );
   });
 
@@ -75,7 +77,8 @@ describe('images proxy route', () => {
     });
 
     expect(fetchMock).toHaveBeenCalledWith(
-      'http://api:3000/images/2026/02/01/photo-3-thumb.jpg'
+      'http://api:3000/images/2026/02/01/photo-3-thumb.jpg',
+      expect.objectContaining({ cache: 'no-store' })
     );
   });
 });

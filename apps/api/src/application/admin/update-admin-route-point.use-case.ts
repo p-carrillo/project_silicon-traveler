@@ -84,6 +84,8 @@ export class UpdateAdminRoutePointUseCase {
             country: updated.country,
             region: updated.region,
             coordinates: updated.coordinates,
+            imagePath: updated.imagePath ?? undefined,
+            thumbnailPath: updated.thumbnailPath ?? undefined,
           },
           { queryExecutor }
         );
