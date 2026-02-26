@@ -35,8 +35,8 @@ describe('selectPortraitParameters', () => {
       'serene',
       'wary',
     ];
-    const gazeOptions = ['direct to camera', 'looking away', 'downcast', 'sideways', 'upward'];
-    const postureOptions = ['standing', 'sitting', 'leaning', 'walking', 'crouched'];
+    const gazeOptions = ['direct to camera', 'looking away', 'downcast', 'sideways'];
+    const postureOptions = ['standing', 'sitting', 'leaning', 'walking'];
     const timeOfDayOptions = ['dawn', 'morning', 'midday', 'afternoon', 'dusk', 'night'];
     const activityOptions = ['resting', 'working', 'commuting', 'socializing', 'waiting', 'observing'];
     const lightingContrastOptions = ['soft', 'medium', 'high contrast'];

@@ -48,9 +48,8 @@ const gazeOptions = [
   'looking away',
   'downcast',
   'sideways',
-  'upward',
 ] as const;
-const postureOptions = ['standing', 'sitting', 'leaning', 'walking', 'crouched'] as const;
+const postureOptions = ['standing', 'sitting', 'leaning', 'walking'] as const;
 const timeOfDayOptions = ['dawn', 'morning', 'midday', 'afternoon', 'dusk', 'night'] as const;
 const activityOptions = ['resting', 'working', 'commuting', 'socializing', 'waiting', 'observing'] as const;
 const lightingContrastOptions = ['soft', 'medium', 'high contrast'] as const;
