@@ -26,17 +26,6 @@ describe('selectPortraitParameters', () => {
       'three-quarter',
       'full body',
     ];
-    const backgroundOptions = [
-      'street',
-      'subject home',
-      'bar',
-      'subject workplace',
-      'landscape',
-      'market',
-      'public transit',
-      'park',
-      'community space',
-    ];
     const expressionOptions = [
       'neutral',
       'pensive',
@@ -60,7 +49,6 @@ describe('selectPortraitParameters', () => {
     expect(parameters.age).toBeLessThanOrEqual(112);
     expect(incomeClassOptions).toContain(parameters.incomeClass);
     expect(shotTypeOptions).toContain(parameters.shotType);
-    expect(backgroundOptions).toContain(parameters.background);
     expect(expressionOptions).toContain(parameters.expression);
     expect(gazeOptions).toContain(parameters.gaze);
     expect(postureOptions).toContain(parameters.posture);

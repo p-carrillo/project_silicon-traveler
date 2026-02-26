@@ -3,7 +3,6 @@ export interface PortraitParameters {
   age: number;
   incomeClass: string;
   shotType: string;
-  background: string;
   expression: string;
   gaze: string;
   posture: string;
@@ -34,17 +33,6 @@ const shotTypeOptions = [
   'medium (waist-up)',
   'three-quarter',
   'full body',
-] as const;
-const backgroundOptions = [
-  'street',
-  'subject home',
-  'bar',
-  'subject workplace',
-  'landscape',
-  'market',
-  'public transit',
-  'park',
-  'community space',
 ] as const;
 const expressionOptions = [
   'neutral',
@@ -82,7 +70,6 @@ export const selectPortraitParameters = (): PortraitParameters => ({
   age: randomAge(),
   incomeClass: pick(incomeClassOptions),
   shotType: pick(shotTypeOptions),
-  background: pick(backgroundOptions),
   expression: pick(expressionOptions),
   gaze: pick(gazeOptions),
   posture: pick(postureOptions),

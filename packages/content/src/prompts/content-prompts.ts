@@ -19,7 +19,6 @@ const formatPortraitParametersInline = (parameters: PortraitParameters): string 
     `age: ${parameters.age}`,
     `incomeClass: ${parameters.incomeClass}`,
     `shotType: ${parameters.shotType}`,
-    `background: ${parameters.background}`,
     `expression: ${parameters.expression}`,
     `gaze: ${parameters.gaze}`,
     `posture: ${parameters.posture}`,

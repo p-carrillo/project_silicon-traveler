@@ -11,7 +11,6 @@ vi.mock('@silicon-traveler/content', async () => {
       age: 34,
       incomeClass: 'middle class',
       shotType: 'close-up',
-      background: 'street',
       expression: 'pensive',
       gaze: 'looking away',
       posture: 'standing',
