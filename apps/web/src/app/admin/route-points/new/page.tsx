@@ -50,9 +50,9 @@ export default function NewRoutePointPage({
 
         if (geocoded) {
           finalCoordinates = geocoded.coordinates;
-          finalPlaceName = normalizeOptionalString(geocoded.place_name) ?? finalPlaceName;
-          finalCountry = normalizeOptionalString(geocoded.country) ?? finalCountry;
-          finalRegion = normalizeOptionalString(geocoded.region) ?? finalRegion;
+          finalPlaceName = normalizeOptionalString(geocoded.place_name ?? null) ?? finalPlaceName;
+          finalCountry = normalizeOptionalString(geocoded.country ?? null) ?? finalCountry;
+          finalRegion = normalizeOptionalString(geocoded.region ?? null) ?? finalRegion;
         }
       } catch (error) {
         console.warn('Admin final geocode failed; keeping submitted coordinates.', error);

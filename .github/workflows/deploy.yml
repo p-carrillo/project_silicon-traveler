@@ -105,6 +105,7 @@ jobs:
       - name: Build and deploy containers
         run: |
           ssh ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} << 'ENDSSH'
+            set -e
             cd ${{ secrets.DEPLOY_PATH }}
 
             echo "📦 Building production images..."
