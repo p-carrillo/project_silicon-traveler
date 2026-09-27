@@ -10,6 +10,7 @@ export * from './application/delete-route-point-admin.use-case';
 export * from './application/find-nearest-city.use-case';
 export * from './application/geocode-point.use-case';
 export * from './application/geocode-place.use-case';
+export * from './application/resolve-next-stop.use-case';
 export * from './adapters/overpass.adapter';
 export * from './adapters/nominatim.adapter';
 export * from './adapters/mariadb-route.repository';

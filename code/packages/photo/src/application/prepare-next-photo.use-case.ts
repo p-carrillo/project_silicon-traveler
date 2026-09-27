@@ -1,11 +1,8 @@
-import { calculateDistance, Point } from '@silicon-traveler/shared';
+import { Point } from '@silicon-traveler/shared';
 import { IJourneyRepository } from '@silicon-traveler/journey';
 import {
   IRouteRepository,
-  CalculateNextPointUseCase,
-  FindNearestCityUseCase,
-  GeocodePlaceUseCase,
-  GeocodePointUseCase,
+  ResolveNextStopUseCase,
   RoutePoint,
 } from '@silicon-traveler/route';
 import { PreparePhotoResult, PreparePhotoUseCase } from './prepare-photo.use-case';
@@ -49,10 +46,7 @@ export class PrepareNextPhotoUseCase {
   constructor(
     private readonly journeyRepository: IJourneyRepository,
     private readonly routeRepository: IRouteRepository,
-    private readonly calculateNextPoint: CalculateNextPointUseCase,
-    private readonly findNearestCity: FindNearestCityUseCase,
-    private readonly geocodePlace: GeocodePlaceUseCase,
-    private readonly geocodePoint: GeocodePointUseCase,
+    private readonly resolveNextStop: ResolveNextStopUseCase,
     private readonly preparePhotoUseCase: PreparePhotoUseCase,
     private readonly preparePhotoPromptsUseCase: PreparePhotoPromptsUseCase,
     config: Partial<PrepareNextPhotoConfig> = {}
@@ -73,53 +67,31 @@ export class PrepareNextPhotoUseCase {
       createdNewRoutePoint = true;
 
       const heading = this.resolveHeading(journey.heading);
-      const nextCoordinates = this.calculateNextPoint.execute({
-        currentPosition: journey.currentPosition,
+      const resolvedStop = await this.resolveNextStop.execute({
+        origin: journey.currentPosition,
         heading,
         minDistanceKm: this.config.minDistanceKm,
         maxDistanceKm: this.config.maxDistanceKm,
+        cityRadiusKm: this.config.cityRadiusKm,
       });
 
-      const distanceFromPrevious = calculateDistance(journey.currentPosition, nextCoordinates);
+      const distanceFromPrevious = resolvedStop.distanceFromOrigin;
 
       const lastSequence = await this.routeRepository.getLastSequence(journey.id);
       const routePointData = RoutePoint.create(
         journey.id,
         lastSequence + 1,
-        nextCoordinates,
+        resolvedStop.coordinates,
         distanceFromPrevious
       );
       const createdRoutePoint = await this.routeRepository.create(routePointData);
       routePoint = createdRoutePoint;
 
-      const city = await this.safeExecute(
-        'city lookup',
-        () => this.findNearestCity.execute(createdRoutePoint.coordinates, this.config.cityRadiusKm),
-        null
-      );
-      if (city) {
-        createdRoutePoint.placeName = city.name;
-        createdRoutePoint.osmData = city.tags;
-        createdRoutePoint.coordinates = { lat: city.lat, lng: city.lon };
-      }
-
-      const location = await this.safeExecute(
-        'geocoding',
-        () => this.geocodePoint.execute(createdRoutePoint.coordinates),
-        null
-      );
-      if (location) {
-        createdRoutePoint.country = location.country;
-        createdRoutePoint.region = location.region;
-        if (!createdRoutePoint.placeName && location.placeName && location.placeName !== 'Unknown') {
-          createdRoutePoint.placeName = location.placeName;
-        }
-      }
-
-      const snappedCoordinates = await this.resolveCoordinatesFromPlace(createdRoutePoint);
-      if (snappedCoordinates) {
-        createdRoutePoint.coordinates = snappedCoordinates;
-      }
+      createdRoutePoint.placeName = resolvedStop.placeName;
+      createdRoutePoint.region = resolvedStop.region;
+      createdRoutePoint.country = resolvedStop.country;
+      createdRoutePoint.osmData = resolvedStop.osmData;
+      createdRoutePoint.coordinates = resolvedStop.coordinates;
 
       await this.routeRepository.update(createdRoutePoint);
 
@@ -153,41 +125,6 @@ export class PrepareNextPhotoUseCase {
     };
   }
 
-  private async resolveCoordinatesFromPlace(routePoint: RoutePoint): Promise<Point | null> {
-    const query = this.buildPlaceQuery(routePoint);
-    if (!query) {
-      return null;
-    }
-
-    const geocoded = await this.safeExecute('place geocoding', () => this.geocodePlace.execute(query), null);
-    if (!geocoded) {
-      return null;
-    }
-
-    if (this.isKnownPlace(geocoded.placeName)) {
-      routePoint.placeName = geocoded.placeName;
-    }
-    if (geocoded.country) {
-      routePoint.country = geocoded.country;
-    }
-    if (geocoded.region) {
-      routePoint.region = geocoded.region;
-    }
-
-    return geocoded.coordinates;
-  }
-
-  private buildPlaceQuery(routePoint: RoutePoint): string | null {
-    if (!this.isKnownPlace(routePoint.placeName)) {
-      return null;
-    }
-
-    const placeName = routePoint.placeName!.trim();
-    const region = routePoint.region?.trim();
-    const country = routePoint.country?.trim();
-
-    return [placeName, region, country].filter(Boolean).join(', ');
-  }
 
   private resolveHeading(value: string | null | undefined): Heading {
     const allowed: Heading[] = ['east', 'west', 'north', 'south'];
@@ -200,16 +137,6 @@ export class PrepareNextPhotoUseCase {
   private async findPendingRoutePoint(journeyId: number): Promise<RoutePoint | null> {
     const pending = await this.routeRepository.findByStatus('pending', this.config.pendingSearchLimit);
     return pending.find((point) => point.journeyId === journeyId) || null;
-  }
-
-  private async safeExecute<T>(label: string, fn: () => Promise<T>, fallback: T): Promise<T> {
-    try {
-      return await fn();
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : String(error);
-      console.warn(`[prepare-next-photo] ${label} failed: ${message}`);
-      return fallback;
-    }
   }
 
   private async ensureKnownPlace(routePoint: RoutePoint): Promise<void> {

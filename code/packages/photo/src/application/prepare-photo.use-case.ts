@@ -1,10 +1,9 @@
-import axios from 'axios';
-import { IRouteRepository, RoutePointContentTranslation } from '@silicon-traveler/route';
-import { IBraveSearchPort, SearchResult } from '@silicon-traveler/research';
-import { ILLMPort, selectPortraitParameters } from '@silicon-traveler/content';
+import { IRouteRepository } from '@silicon-traveler/route';
+import { IBraveSearchPort } from '@silicon-traveler/research';
+import { ILLMPort } from '@silicon-traveler/content';
 import { IImageGeneratorPort, IThumbnailGeneratorPort } from '@silicon-traveler/image';
 import { IStoragePort } from '@silicon-traveler/storage';
-import { getI18nConfig } from '@silicon-traveler/shared';
+import { PhotoPreparationCore } from './photo-preparation-core';
 
 export interface PreparePhotoResult {
   imageUrl: string;
@@ -21,14 +20,15 @@ export interface PreparePhotoResult {
 }
 
 export class PreparePhotoUseCase {
+  private readonly core: PhotoPreparationCore;
   constructor(
     private readonly routeRepository: IRouteRepository,
-    private readonly braveSearch: IBraveSearchPort,
-    private readonly llm: ILLMPort,
-    private readonly imageGenerator: IImageGeneratorPort,
-    private readonly thumbnailGenerator: IThumbnailGeneratorPort,
+    braveSearch: IBraveSearchPort,
+    llm: ILLMPort,
+    imageGenerator: IImageGeneratorPort,
+    thumbnailGenerator: IThumbnailGeneratorPort,
     private readonly storage: IStoragePort
-  ) {}
+  ) { this.core = new PhotoPreparationCore(braveSearch, llm, imageGenerator, thumbnailGenerator); }
 
   async execute(routePointId: number): Promise<PreparePhotoResult> {
     // 1. Get route point
@@ -42,84 +42,20 @@ export class PreparePhotoUseCase {
     }
 
     try {
-      // 2. Research place
-      const query = `${routePoint.placeName || 'Unknown'} ${routePoint.country || ''} history culture tourism`;
-      const searchResults = await this.braveSearch.search(query, 3);
-      const researchSummary = searchResults.map((r: SearchResult) => r.description).join(' ');
-
-      // 3. Update status: researched + store summary
-      routePoint.updateResearch(researchSummary, routePoint.osmData);
+      const prepared = await this.core.execute(routePoint);
+      routePoint.updateResearch(prepared.researchSummary, routePoint.osmData);
       await this.routeRepository.update(routePoint);
-
-      // 4. Generate content
-      const { supportedLanguages, defaultLanguage, contentBaseLanguage } = getI18nConfig();
-      const baseLanguage = contentBaseLanguage || defaultLanguage;
-
-      const content = await this.llm.generateContent({
-        placeName: routePoint.placeName || 'Unknown Place',
-        country: routePoint.country || 'Unknown Country',
-        region: routePoint.region || 'Unknown Region',
-        researchSummary,
-        language: baseLanguage,
-        portraitParameters: selectPortraitParameters(),
-      });
-
-      const baseImagePrompt = this.normalizePrompt(content.imagePrompt);
-      const translations: RoutePointContentTranslation[] = [
-        {
-          language: baseLanguage,
-          imagePrompt: baseImagePrompt,
-          narrative: content.narrative,
-        },
-      ];
-
-      for (const language of supportedLanguages) {
-        if (language === baseLanguage) continue;
-        const translated = await this.llm.translateContent({
-          sourceLanguage: baseLanguage,
-          targetLanguage: language,
-          narrative: content.narrative,
-          imagePrompt: baseImagePrompt,
-        });
-
-        translations.push({
-          language,
-          imagePrompt: this.normalizePrompt(translated.imagePrompt),
-          narrative: translated.narrative,
-        });
-      }
-
-      const defaultTranslation =
-        translations.find((translation) => translation.language === defaultLanguage) ??
-        translations[0];
-
-      // 5. Update status: content_generated + store prompts/metadata
-      const imagePrompt = this.normalizePrompt(defaultTranslation.imagePrompt ?? baseImagePrompt);
-      const narrative = defaultTranslation.narrative || content.narrative;
-      routePoint.updateContent(imagePrompt, narrative, content.cameraMetadata);
+      routePoint.updateContent(prepared.imagePrompt, prepared.narrative, prepared.cameraMetadata);
       await this.routeRepository.update(routePoint);
-      await this.routeRepository.upsertContentTranslations(routePoint.id, translations);
-
-      // 6. Generate image
-      const image = await this.imageGenerator.generate(baseImagePrompt);
-
-      // 7. Download image
-      const imageResponse = await axios.get(image.url, { responseType: 'arraybuffer' });
-      const imageBuffer = Buffer.from(imageResponse.data);
-
-      // 8. Generate thumbnails
-      const thumbnails = await this.thumbnailGenerator.generate(imageBuffer, [
-        { width: 400, height: 400, suffix: '_grid' },
-        { width: 1024, height: 1024, suffix: '_hero' },
-      ]);
+      await this.routeRepository.upsertContentTranslations(routePoint.id, prepared.translations);
 
       // 9. Save to storage
       const date = await this.resolveStorageDate(routePoint.journeyId, routePoint.sequence);
       const filename = `${routePointId}.jpg`;
-      const savedImage = await this.storage.saveImage(imageBuffer, filename, date);
+      const savedImage = await this.storage.saveImage(prepared.imageBuffer, filename, date);
 
       const savedThumbnails = new Map<string, string>();
-      for (const [suffix, buffer] of thumbnails) {
+      for (const [suffix, buffer] of prepared.thumbnails) {
         const saved = await this.storage.saveThumbnail(buffer, filename, suffix, date);
         savedThumbnails.set(suffix, saved.url);
       }
@@ -132,39 +68,20 @@ export class PreparePhotoUseCase {
         imageUrl: savedImage.url,
         gridThumbnailUrl: savedThumbnails.get('_grid')!,
         heroThumbnailUrl: savedThumbnails.get('_hero')!,
-        narrative,
-        imagePrompt,
-        camera: content.cameraMetadata.camera,
-        lens: content.cameraMetadata.lens,
-        iso: content.cameraMetadata.iso,
-        shutterSpeed: content.cameraMetadata.shutterSpeed,
-        aperture: content.cameraMetadata.aperture,
-        revisedPrompt: image.revisedPrompt || null,
+        narrative: prepared.narrative,
+        imagePrompt: prepared.imagePrompt,
+        camera: prepared.cameraMetadata.camera,
+        lens: prepared.cameraMetadata.lens,
+        iso: prepared.cameraMetadata.iso,
+        shutterSpeed: prepared.cameraMetadata.shutterSpeed,
+        aperture: prepared.cameraMetadata.aperture,
+        revisedPrompt: prepared.revisedPrompt,
       };
     } catch (error: any) {
       routePoint.updateStatus('failed', error.message);
       await this.routeRepository.update(routePoint);
       throw error;
     }
-  }
-
-  private normalizePrompt(prompt: unknown): string {
-    if (typeof prompt === 'string' && prompt.trim().length > 0) {
-      return prompt;
-    }
-
-    if (prompt !== null && prompt !== undefined) {
-      try {
-        const stringified = JSON.stringify(prompt);
-        if (stringified && stringified !== 'null') {
-          return stringified;
-        }
-      } catch (error) {
-        console.warn('Failed to stringify image prompt:', error);
-      }
-    }
-
-    return 'A documentary black and white photograph of a street scene';
   }
 
   private async resolveStorageDate(journeyId: number, sequence: number): Promise<Date> {

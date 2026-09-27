@@ -3,6 +3,7 @@ import { MariaDBJourneyRepository } from '@silicon-traveler/journey';
 import {
   MariaDBRouteRepository,
   CalculateNextPointUseCase,
+  ResolveNextStopUseCase,
   FindNearestCityUseCase,
   GeocodePlaceUseCase,
   GeocodePointUseCase,
@@ -52,13 +53,16 @@ export async function preparePrompts(options: PreparePromptsOptions): Promise<vo
   const preparePhotoUseCase = new PreparePhotoUseCase(routeRepo, braveSearch, llm, dalle, sharp, storage);
   const preparePhotoPromptsUseCase = new PreparePhotoPromptsUseCase(routeRepo, braveSearch, llm);
   const mode: PrepareNextPhotoMode = options.promptsOnly ? 'prompts-only' : 'full';
-  const prepareNextPhotoUseCase = new PrepareNextPhotoUseCase(
-    journeyRepo,
-    routeRepo,
+  const resolveNextStop = new ResolveNextStopUseCase(
     calculateNextPoint,
     findNearestCity,
     geocodePlace,
-    geocodePoint,
+    geocodePoint
+  );
+  const prepareNextPhotoUseCase = new PrepareNextPhotoUseCase(
+    journeyRepo,
+    routeRepo,
+    resolveNextStop,
     preparePhotoUseCase,
     preparePhotoPromptsUseCase,
     { mode }

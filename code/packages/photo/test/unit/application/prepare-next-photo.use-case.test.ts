@@ -58,10 +58,7 @@ describe('PrepareNextPhotoUseCase', () => {
     create: vi.fn(),
     update: vi.fn(),
   };
-  const calculateNextPoint = { execute: vi.fn() };
-  const findNearestCity = { execute: vi.fn() };
-  const geocodePlace = { execute: vi.fn() };
-  const geocodePoint = { execute: vi.fn() };
+  const resolveNextStop = { execute: vi.fn() };
   const preparePhotoUseCase = { execute: vi.fn() };
   const preparePhotoPromptsUseCase = { execute: vi.fn() };
 
@@ -69,17 +66,17 @@ describe('PrepareNextPhotoUseCase', () => {
     vi.clearAllMocks();
   });
 
+  const createUseCase = (config = {}) => new PrepareNextPhotoUseCase(
+    journeyRepository as any, routeRepository as any, resolveNextStop as any,
+    preparePhotoUseCase as any, preparePhotoPromptsUseCase as any, config
+  );
+
   it('uses an existing pending route point when available', async () => {
     const journey = createJourney();
     const pendingPoint = createRoutePoint();
 
     journeyRepository.findById.mockResolvedValue(journey);
     routeRepository.findByStatus.mockResolvedValue([pendingPoint]);
-    findNearestCity.execute.mockResolvedValue({
-      placeName: 'Test City',
-      regionName: 'Test Region',
-      countryName: 'Testland',
-    });
     preparePhotoUseCase.execute.mockResolvedValue({
       imageUrl: '/images/1.jpg',
       gridThumbnailUrl: '/images/1_grid.jpg',
@@ -93,16 +90,7 @@ describe('PrepareNextPhotoUseCase', () => {
       revisedPrompt: null,
     });
 
-    const useCase = new PrepareNextPhotoUseCase(
-      journeyRepository as any,
-      routeRepository as any,
-      calculateNextPoint as any,
-      findNearestCity as any,
-      geocodePlace as any,
-      geocodePoint as any,
-      preparePhotoUseCase as any,
-      preparePhotoPromptsUseCase as any
-    );
+    const useCase = createUseCase();
 
     const result = await useCase.execute({ journeyId: 1 });
 
@@ -112,7 +100,7 @@ describe('PrepareNextPhotoUseCase', () => {
     expect(routeRepository.create).not.toHaveBeenCalled();
     expect(routeRepository.update).not.toHaveBeenCalled();
     expect(journeyRepository.update).not.toHaveBeenCalled();
-    expect(calculateNextPoint.execute).not.toHaveBeenCalled();
+    expect(resolveNextStop.execute).not.toHaveBeenCalled();
   });
 
   it('creates a new route point when none exist', async () => {
@@ -123,21 +111,7 @@ describe('PrepareNextPhotoUseCase', () => {
     journeyRepository.findById.mockResolvedValue(journey);
     routeRepository.findByStatus.mockResolvedValue([]);
     routeRepository.getLastSequence.mockResolvedValue(4);
-    findNearestCity.execute.mockResolvedValue({
-      placeName: 'Test City',
-      regionName: 'Test Region',
-      countryName: 'Testland',
-    });
-    calculateNextPoint.execute.mockReturnValue({ lat: 2, lng: 2 });
-    findNearestCity.execute.mockResolvedValue(null);
-    geocodePlace.execute.mockResolvedValue({
-      coordinates: { lat: 3, lng: 3 },
-      country: 'Testland',
-      region: 'Test Region',
-      displayName: 'Test City, Test Region, Testland',
-      placeName: 'Test City',
-    });
-    geocodePoint.execute.mockResolvedValue(null);
+    resolveNextStop.execute.mockResolvedValue({ coordinates: { lat: 3, lng: 3 }, distanceFromOrigin: 42, placeName: 'Test City', country: 'Testland', region: 'Test Region', osmData: null });
     routeRepository.create.mockResolvedValue(createdRoutePoint);
     preparePhotoUseCase.execute.mockResolvedValue({
       imageUrl: '/images/2.jpg',
@@ -152,24 +126,16 @@ describe('PrepareNextPhotoUseCase', () => {
       revisedPrompt: null,
     });
 
-    const useCase = new PrepareNextPhotoUseCase(
-      journeyRepository as any,
-      routeRepository as any,
-      calculateNextPoint as any,
-      findNearestCity as any,
-      geocodePlace as any,
-      geocodePoint as any,
-      preparePhotoUseCase as any,
-      preparePhotoPromptsUseCase as any
-    );
+    const useCase = createUseCase();
     const result = await useCase.execute({ journeyId: 1 });
 
     expect(result.createdNewRoutePoint).toBe(true);
-    expect(calculateNextPoint.execute).toHaveBeenCalledWith({
-      currentPosition: { lat: 0, lng: 0 },
+    expect(resolveNextStop.execute).toHaveBeenCalledWith({
+      origin: { lat: 0, lng: 0 },
       heading: 'east',
       minDistanceKm: 20,
       maxDistanceKm: 30,
+      cityRadiusKm: 10,
     });
     expect(routeRepository.create).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -189,11 +155,6 @@ describe('PrepareNextPhotoUseCase', () => {
 
     journeyRepository.findById.mockResolvedValue(journey);
     routeRepository.findByStatus.mockResolvedValue([pendingPoint]);
-    findNearestCity.execute.mockResolvedValue({
-      placeName: 'Test City',
-      regionName: 'Test Region',
-      countryName: 'Testland',
-    });
     preparePhotoPromptsUseCase.execute.mockResolvedValue({
       routePointId: 10,
       journeyId: 1,
@@ -218,17 +179,7 @@ describe('PrepareNextPhotoUseCase', () => {
       },
     });
 
-    const useCase = new PrepareNextPhotoUseCase(
-      journeyRepository as any,
-      routeRepository as any,
-      calculateNextPoint as any,
-      findNearestCity as any,
-      geocodePlace as any,
-      geocodePoint as any,
-      preparePhotoUseCase as any,
-      preparePhotoPromptsUseCase as any,
-      { mode: 'prompts-only', minDistanceKm: 20, maxDistanceKm: 30, cityRadiusKm: 10, pendingSearchLimit: 20 }
-    );
+    const useCase = createUseCase({ mode: 'prompts-only', minDistanceKm: 20, maxDistanceKm: 30, cityRadiusKm: 10, pendingSearchLimit: 20 });
 
     const result = await useCase.execute({ journeyId: 1 });
 
@@ -245,16 +196,7 @@ describe('PrepareNextPhotoUseCase', () => {
     journeyRepository.findById.mockResolvedValue(journey);
     routeRepository.findByStatus.mockResolvedValue([pendingPoint]);
 
-    const useCase = new PrepareNextPhotoUseCase(
-      journeyRepository as any,
-      routeRepository as any,
-      calculateNextPoint as any,
-      findNearestCity as any,
-      geocodePlace as any,
-      geocodePoint as any,
-      preparePhotoUseCase as any,
-      preparePhotoPromptsUseCase as any
-    );
+    const useCase = createUseCase();
 
     await expect(useCase.execute({ journeyId: 1 })).rejects.toThrow('Unknown place');
 
