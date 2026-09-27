@@ -50,22 +50,6 @@ jobs:
             -e "ssh -T -o LogLevel=QUIET" \
             ./context/pictures_seed/ "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }}/context/pictures_seed/"
 
-      - name: Verify required web image proxy route
-        run: |
-          ssh ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} << 'ENDSSH'
-            set -e
-            REQUIRED_ROUTE="${{ secrets.DEPLOY_PATH }}/code/apps/web/src/app/api/images/[...path]/route.ts"
-
-            if [ ! -f "$REQUIRED_ROUTE" ]; then
-              echo "❌ Missing required web route: $REQUIRED_ROUTE"
-              echo "📂 Current API route files under code/apps/web/src/app/api:"
-              find "${{ secrets.DEPLOY_PATH }}/code/apps/web/src/app/api" -maxdepth 5 -type f -name "route.ts" -print || true
-              exit 1
-            fi
-
-            echo "✅ Found required web route: $REQUIRED_ROUTE"
-          ENDSSH
-
       - name: Create production .env file
         run: |
           ssh ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} "cat > ${{ secrets.DEPLOY_PATH }}/code/.env << 'EOF'
