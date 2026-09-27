@@ -1,0 +1,21 @@
+{
+  "name": "@silicon-traveler/image",
+  "version": "1.0.0",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "pnpm -w vitest -c vitest.workspace.ts run --project image",
+    "test:unit": "pnpm -w vitest -c vitest.workspace.ts run --project image --dir test/unit",
+    "test:integration": "pnpm -w vitest -c vitest.workspace.ts run --project image --dir test/integration"
+  },
+  "dependencies": {
+    "openai": "^4.20.0",
+    "sharp": "^0.33.0",
+    "axios": "^1.6.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.0"
+  }
+}

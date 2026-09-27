@@ -1,0 +1,28 @@
+import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+describe('PhotoJournal', () => {
+  it('uses images proxy and square layout', () => {
+    const testDir = path.dirname(fileURLToPath(import.meta.url));
+    const repoRoot = path.resolve(testDir, '../../../../..');
+    const componentPath = path.join(
+      repoRoot,
+      'apps',
+      'web',
+      'src',
+      'components',
+      'photo',
+      'PhotoJournal.tsx'
+    );
+
+    const component = readFileSync(componentPath, 'utf8');
+
+    expect(component).toContain("from '@/lib/images'");
+    expect(component).toContain('src={toProxyImageSrc(photo.image_path)}');
+    expect(component).toContain('aspect-square');
+    expect(component).toContain('max-w-[calc(100vh-14rem)]');
+    expect(component).toContain('object-cover');
+  });
+});

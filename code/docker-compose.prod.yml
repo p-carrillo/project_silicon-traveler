@@ -1,0 +1,93 @@
+x-app-base: &app-base
+  build:
+    context: .
+    dockerfile: docker/Dockerfile.prod
+  environment:
+    - NODE_ENV=production
+    - DB_HOST=${DB_HOST:-mariadb}
+    - DB_PORT=3306
+    - DB_USER=${DB_USER}
+    - DB_PASSWORD=${DB_PASSWORD}
+    - DB_NAME=${DB_NAME}
+    - DB_POOL_SIZE=${DB_POOL_SIZE:-10}
+    - API_KEY=${API_KEY}
+    - ADMIN_BASIC_USER=${ADMIN_BASIC_USER:-}
+    - ADMIN_BASIC_PASSWORD=${ADMIN_BASIC_PASSWORD:-}
+    - ADMIN_SESSION_SECRET=${ADMIN_SESSION_SECRET:-}
+    - CORS_ORIGINS=${CORS_ORIGINS}
+    - I18N_LANGUAGES=${I18N_LANGUAGES:-es,en}
+    - I18N_DEFAULT_LANGUAGE=${I18N_DEFAULT_LANGUAGE:-es}
+    - I18N_CONTENT_BASE_LANGUAGE=${I18N_CONTENT_BASE_LANGUAGE:-en}
+    - OPENAI_API_KEY=${OPENAI_API_KEY}
+    - BRAVE_SEARCH_API_KEY=${BRAVE_SEARCH_API_KEY}
+    - API_URL=${API_URL:-http://api:3000}
+  volumes:
+    - ./images:/app/images
+    - ../context/pictures_seed:/context/pictures_seed:ro
+  restart: unless-stopped
+
+services:
+  mariadb:
+    image: mariadb:11
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  api:
+    <<: *app-base
+    ports:
+      - "3000:3000"
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    command: sh -c "node scripts/run-migrations.js && pnpm --filter @silicon-traveler/api start"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  web:
+    <<: *app-base
+    ports:
+      - "3001:3001"
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      api:
+        condition: service_healthy
+    command: pnpm --filter @silicon-traveler/web start
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  scheduler:
+    <<: *app-base
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      api:
+        condition: service_healthy
+    command: pnpm --filter @silicon-traveler/scheduler start
+    healthcheck:
+      test: ["CMD", "pgrep", "node"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  mariadb_data:

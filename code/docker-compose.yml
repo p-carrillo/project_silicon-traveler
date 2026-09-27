@@ -1,0 +1,133 @@
+x-app-base: &app-base
+  build:
+    context: .
+    dockerfile: docker/Dockerfile.dev
+  environment:
+    - NODE_ENV=production
+    - DB_HOST=${DB_HOST:-mariadb}
+    - DB_PORT=3306
+    - DB_USER=${DB_USER}
+    - DB_PASSWORD=${DB_PASSWORD}
+    - DB_NAME=${DB_NAME}
+    - DB_POOL_SIZE=${DB_POOL_SIZE:-10}
+    - API_KEY=${API_KEY}
+    - ADMIN_BASIC_USER=${ADMIN_BASIC_USER:-}
+    - ADMIN_BASIC_PASSWORD=${ADMIN_BASIC_PASSWORD:-}
+    - ADMIN_SESSION_SECRET=${ADMIN_SESSION_SECRET:-}
+    - CORS_ORIGINS=${CORS_ORIGINS}
+    - API_URL=${API_URL:-http://api:3000}
+    - I18N_LANGUAGES=${I18N_LANGUAGES:-es,en}
+    - I18N_DEFAULT_LANGUAGE=${I18N_DEFAULT_LANGUAGE:-es}
+    - I18N_CONTENT_BASE_LANGUAGE=${I18N_CONTENT_BASE_LANGUAGE:-en}
+    - OPENAI_API_KEY=${OPENAI_API_KEY}
+    - BRAVE_SEARCH_API_KEY=${BRAVE_SEARCH_API_KEY}
+  volumes:
+    - .:/app
+    - ../context:/context:ro
+    - node_modules:/app/node_modules
+
+services:
+  mariadb:
+    image: mariadb:11
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "${DB_PORT:-3316}:3306"
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    <<: *app-base
+    command: sh /app/scripts/app-prepare.sh
+    healthcheck:
+      test: ["CMD", "test", "-f", "/app/.dev_ready"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 120s
+
+  api:
+    <<: *app-base
+    ports:
+      - "3010:3000"
+    environment:
+      - NODE_ENV=development
+      - DB_HOST=${DB_HOST:-mariadb}
+      - DB_PORT=3306
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - DB_POOL_SIZE=${DB_POOL_SIZE:-10}
+      - API_KEY=${API_KEY}
+      - ADMIN_BASIC_USER=${ADMIN_BASIC_USER:-}
+      - ADMIN_BASIC_PASSWORD=${ADMIN_BASIC_PASSWORD:-}
+      - ADMIN_SESSION_SECRET=${ADMIN_SESSION_SECRET:-}
+      - CORS_ORIGINS=${CORS_ORIGINS}
+      - API_URL=${API_URL:-http://api:3000}
+      - I18N_LANGUAGES=${I18N_LANGUAGES:-es,en}
+      - I18N_DEFAULT_LANGUAGE=${I18N_DEFAULT_LANGUAGE:-es}
+      - I18N_CONTENT_BASE_LANGUAGE=${I18N_CONTENT_BASE_LANGUAGE:-en}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - BRAVE_SEARCH_API_KEY=${BRAVE_SEARCH_API_KEY}
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      app:
+        condition: service_healthy
+    command: sh /app/scripts/api-start.sh
+
+  web:
+    <<: *app-base
+    ports:
+      - "3011:3001"
+    environment:
+      - NODE_ENV=development
+      - DB_HOST=${DB_HOST:-mariadb}
+      - DB_PORT=3306
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - DB_POOL_SIZE=${DB_POOL_SIZE:-10}
+      - API_KEY=${API_KEY}
+      - ADMIN_BASIC_USER=${ADMIN_BASIC_USER:-}
+      - ADMIN_BASIC_PASSWORD=${ADMIN_BASIC_PASSWORD:-}
+      - ADMIN_SESSION_SECRET=${ADMIN_SESSION_SECRET:-}
+      - CORS_ORIGINS=${CORS_ORIGINS}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - BRAVE_SEARCH_API_KEY=${BRAVE_SEARCH_API_KEY}
+      - API_URL=http://api:3000
+      - NEXT_PUBLIC_API_URL=http://localhost:3010
+      - I18N_LANGUAGES=${I18N_LANGUAGES:-es,en}
+      - I18N_DEFAULT_LANGUAGE=${I18N_DEFAULT_LANGUAGE:-es}
+      - I18N_CONTENT_BASE_LANGUAGE=${I18N_CONTENT_BASE_LANGUAGE:-en}
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      app:
+        condition: service_healthy
+      api:
+        condition: service_started
+    command: pnpm --filter @silicon-traveler/web dev
+
+  scheduler:
+    <<: *app-base
+    profiles:
+      - scheduler
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      app:
+        condition: service_healthy
+    command: sh -c "pnpm --filter @silicon-traveler/scheduler build && pnpm --filter @silicon-traveler/scheduler start"
+
+volumes:
+  mariadb_data:
+  node_modules:

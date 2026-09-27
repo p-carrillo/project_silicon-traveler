@@ -1,0 +1,11 @@
+-- Migration: Create migrations tracking table
+-- Version: 20260202100000
+-- Description: Create migrations table to track applied migrations
+
+CREATE TABLE IF NOT EXISTS migrations (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  version VARCHAR(50) NOT NULL UNIQUE,
+  description VARCHAR(255) NOT NULL,
+  applied_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_version (version)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
