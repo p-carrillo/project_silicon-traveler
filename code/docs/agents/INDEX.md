@@ -11,6 +11,7 @@
 - [`../../../context/task/ROADMAP.md`](../../../context/task/ROADMAP.md): Recommended implementation order for the local task definitions.
 
 ## Recent Decisions
+- `.adr/066-summarize-wikipedia-research-with-shared-llm.md`: The shared research use case summarizes retrieved Wikipedia page content through the injected OpenAI adapter in both Admin and production flows.
 - `.adr/065-random-e2e-global-place-catalog.md`: The development-only global photo batch selects from a local GeoNames-derived catalog instead of calling an LLM for place selection.
 - `.adr/063-switch-research-provider-to-wikipedia.md`: Research module now uses Wikipedia API instead of Brave Search.
 - `.adr/061-place-based-coordinate-snap-in-automated-generation.md`: Automated generation now snaps coordinates with final place-based geocoding.
@@ -43,12 +44,12 @@ Specialized agents used by commands. Cursor wrappers in `../../.cursor/agents/`,
 - `apps/web/AGENTS.md`: Next.js frontend consuming the API.
 
 ## Packages
-- `packages/content/AGENTS.md`: LLM content generation and prompts.
+- `packages/content/AGENTS.md`: LLM content generation, research summaries, and prompts.
 - `packages/image/AGENTS.md`: Image generation and thumbnailing.
 - `packages/journey/AGENTS.md`: Journey domain model and persistence.
 - `packages/map/AGENTS.md`: Map state and photo pins.
 - `packages/photo/AGENTS.md`: Photo preparation and publishing pipeline.
-- `packages/research/AGENTS.md`: Wikipedia search adapter and shared place research use case.
+- `packages/research/AGENTS.md`: Wikipedia retrieval and shared place research/summarization use case.
 - `packages/route/AGENTS.md`: Route point computation and persistence.
 - `packages/shared/AGENTS.md`: Shared MariaDB pool and utilities.
 - `packages/storage/AGENTS.md`: Storage ports and local adapter.

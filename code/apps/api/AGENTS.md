@@ -24,6 +24,7 @@ HTTP API for photos, journey state, and map state. Also serves generated images 
 - `POST /api/map/refresh` updates `map_state` after publish.
 - Development-only Admin E2E commands use the shared photo and place research flows without persistent data; the global photo batch and random research-place selector use a local GeoNames-derived catalogue.
 - The Admin research geocoding request prefers the current interface language (Spanish or English) when resolving place names.
+- Admin place investigation and production photo preparation share the Wikipedia and LLM research-summary use cases/adapters; Admin summaries follow the selected UI language.
 
 ## Dependencies
 - `@silicon-traveler/shared`

@@ -1,4 +1,5 @@
 import OpenAI from 'openai';
+import type { ResearchSummaryInput } from '@silicon-traveler/research';
 import {
   ILLMPort,
   ContentInput,
@@ -9,6 +10,7 @@ import {
 import { generateCameraMetadata } from '../config/photographer';
 import {
   buildNarrativePrompt,
+  buildResearchSummaryPrompt,
   buildTranslationPrompt,
   buildImagePrompt,
   NARRATIVE_SYSTEM_PROMPT,
@@ -26,6 +28,25 @@ export class OpenAIAdapter implements ILLMPort {
     this.client = new OpenAI({
       apiKey: apiKey || process.env.OPENAI_API_KEY,
     });
+  }
+
+  async summarizeResearch(input: ResearchSummaryInput): Promise<string> {
+    const prompt = buildResearchSummaryPrompt(input);
+    try {
+      const response = await this.client.responses.create({
+        model: NARRATIVE_MODEL,
+        instructions: 'You are a careful research editor. Synthesize only facts present in the supplied sources.',
+        input: prompt,
+        max_output_tokens: 500,
+      });
+      const summary = response.output_text?.trim();
+      if (!summary) throw new Error('The model returned an empty summary');
+      return summary;
+    } catch (error: unknown) {
+      const details = error instanceof Error && error.message ? error.message : 'Unknown OpenAI research summary error';
+      console.error('OpenAI research summary error:', details);
+      throw new Error('Research summary generation failed: ' + details);
+    }
   }
 
   async generateContent(input: ContentInput): Promise<GeneratedContent> {

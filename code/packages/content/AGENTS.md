@@ -6,7 +6,7 @@ LLM-backed content generation for image prompts, narratives, and camera metadata
 ## Responsibilities
 - Build LLM prompts and parse responses using OpenAI Responses API.
 - Select camera presets and photographer configuration.
-- Provide content generation use case and OpenAI adapter.
+- Provide content generation use case, research-summary prompt, and OpenAI adapter.
 - Generate narratives using GPT-5 with medium-effort reasoning for improved contextual coherence.
 
 ## Boundaries
@@ -26,10 +26,12 @@ LLM-backed content generation for image prompts, narratives, and camera metadata
 - Build developer instructions and user input from `ContentInput`.
 - Call OpenAI Responses API with GPT-5 model and reasoning enabled.
 - Parse text response into `GeneratedContent` (narrative, imagePrompt, cameraMetadata).
+- Summarize retrieved Wikipedia source pages through the research summary port.
 - Translate content using Responses API with JSON output parsing.
 
 ## Dependencies
 - OpenAI SDK v6.18.0+ (Responses API support)
+- `@silicon-traveler/research` for its public summarization port contract
 
 ## Configuration
 - `OPENAI_API_KEY` for real LLM calls.

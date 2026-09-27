@@ -231,6 +231,9 @@ importers:
 
   packages/content:
     dependencies:
+      '@silicon-traveler/research':
+        specifier: workspace:*
+        version: link:../research
       openai:
         specifier: ^6.18.0
         version: 6.18.0

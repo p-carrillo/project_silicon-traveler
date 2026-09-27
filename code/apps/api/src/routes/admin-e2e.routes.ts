@@ -16,6 +16,7 @@ const coordinator = new E2EExecutionCoordinator();
 
 const llm = new OpenAIAdapter();
 const researchAdapter = new BraveSearchAdapter();
+const placeResearch = new ResearchPlaceUseCase(researchAdapter, llm);
 const photoCore = new PhotoPreparationCore(
   researchAdapter,
   llm,
@@ -27,7 +28,6 @@ const globalPhotoBatch = new GenerateGlobalPhotoBatchUseCase(
   placeSelector,
   new EphemeralPhotoExecution(photoCore)
 );
-const placeResearch = new ResearchPlaceUseCase(researchAdapter);
 const investigatePlace = new InvestigatePlaceUseCase(placeResearch);
 const selectRandomResearchPlace = new SelectRandomResearchPlaceUseCase(placeSelector);
 coordinator.register('global-photos', async (context, input) => globalPhotoBatch.execute(context, input));

@@ -24,6 +24,9 @@ interface Labels {
   sourceTextTitle: string;
   sourceTextMissing: string;
   pageContentTitle: string;
+  summaryStage: string;
+  llmSummaryTitle: string;
+  summaryFallbackTitle: string;
   noResults: string;
   noMatchesReason: string;
   noSummaryReason: string;
@@ -88,7 +91,7 @@ export default function E2EPlaceResearch({ labels, geocodingLanguage }: { labels
       setCoordinates(place.coordinates);
       setStatus(labels.researching);
       const researchCity = place.placeName?.trim() || enteredLocation;
-      await executeCommand('place-research', { location: researchCity }, (streamEvent) => {
+      await executeCommand('place-research', { location: researchCity, language: geocodingLanguage }, (streamEvent) => {
         if (streamEvent.type === 'progress' && streamEvent.data?.stage === 'researching') {
           setQuery(readString(streamEvent.data.query) ?? '');
         } else if (streamEvent.type === 'result') {
@@ -97,7 +100,10 @@ export default function E2EPlaceResearch({ labels, geocodingLanguage }: { labels
           setSources(readSources(streamEvent.data?.sources));
           setHasResult(true);
           const providerError = readString(streamEvent.data?.error);
-          setError(providerError ? { stage: labels.wikipediaStage, message: providerError } : null);
+          const summaryError = readString(streamEvent.data?.summaryError);
+          setError(providerError
+            ? { stage: labels.wikipediaStage, message: providerError }
+            : summaryError ? { stage: labels.summaryStage, message: summaryError } : null);
           setStatus(labels.completed);
         } else if (streamEvent.type === 'error') {
           const message = readString(streamEvent.data?.message) ?? labels.error;
@@ -150,7 +156,10 @@ export default function E2EPlaceResearch({ labels, geocodingLanguage }: { labels
       </section> : null}
       {hasResult ? <article className="flex flex-col gap-3 rounded-lg border border-zinc-200 bg-white p-4 md:p-6">
         <h3 className="font-bold text-zinc-950">{location}</h3>
-        {summary ? <p className="whitespace-pre-wrap text-sm leading-6 text-zinc-700">{summary}</p> : <div>
+        {summary ? <section>
+          <h4 className="font-semibold text-zinc-950">{error?.stage === labels.summaryStage ? labels.summaryFallbackTitle : labels.llmSummaryTitle}</h4>
+          <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-zinc-700">{summary}</p>
+        </section> : <div>
           <p className="text-sm text-zinc-600">{labels.noResults}</p>
           {!error ? <p role="status" className="mt-1 text-sm text-amber-800">{sources.length ? labels.noSummaryReason : labels.noMatchesReason}</p> : null}
         </div>}

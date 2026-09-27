@@ -53,17 +53,18 @@ export class PhotoPreparationCore {
     private readonly imageGenerator: IImageGeneratorPort,
     private readonly thumbnailGenerator: IThumbnailGeneratorPort,
     private readonly imageDownloader: IImageDownloadPort = new AxiosImageDownloadAdapter()
-  ) { this.researchPlace = new ResearchPlaceUseCase(braveSearch); }
+  ) { this.researchPlace = new ResearchPlaceUseCase(braveSearch, llm); }
 
   async execute(input: PhotoPreparationInput, hooks?: PhotoPreparationHooks): Promise<PhotoPreparationCoreResult> {
-    const location = [input.placeName || 'Unknown', input.country || ''].filter(Boolean).join(' ');
+    const location = input.placeName?.trim() ?? '';
+    const { supportedLanguages, defaultLanguage, contentBaseLanguage } = getI18nConfig();
+    const baseLanguage = contentBaseLanguage || defaultLanguage;
+    const summaryLanguage = baseLanguage.toLowerCase().startsWith('es') ? 'es' : 'en';
     await hooks?.researchStarted?.();
-    const research = await this.researchPlace.executeForPlace(location);
+    const research = await this.researchPlace.executeForPlace(location, { summaryLanguage });
     const researchSummary = research.summary;
     await hooks?.researched?.(researchSummary);
     await hooks?.researchSources?.(research.sources);
-    const { supportedLanguages, defaultLanguage, contentBaseLanguage } = getI18nConfig();
-    const baseLanguage = contentBaseLanguage || defaultLanguage;
     await hooks?.contentGenerationStarted?.();
     const content = await this.llm.generateContent({
       placeName: input.placeName || 'Unknown Place', country: input.country || 'Unknown Country',

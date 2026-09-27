@@ -11,6 +11,7 @@
     "test:integration": "pnpm -w vitest -c vitest.workspace.ts run --project content --dir test/integration"
   },
   "dependencies": {
+    "@silicon-traveler/research": "workspace:*",
     "openai": "^6.18.0"
   },
   "devDependencies": {

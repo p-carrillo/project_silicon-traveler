@@ -1,5 +1,5 @@
 import { IRouteRepository, RoutePointContentTranslation } from '@silicon-traveler/route';
-import { IBraveSearchPort, SearchResult } from '@silicon-traveler/research';
+import { IBraveSearchPort, ResearchPlaceUseCase } from '@silicon-traveler/research';
 import {
   ILLMPort,
   ContentInput,
@@ -34,11 +34,15 @@ export interface PreparePhotoPromptsResult {
 }
 
 export class PreparePhotoPromptsUseCase {
+  private readonly researchPlace: ResearchPlaceUseCase;
+
   constructor(
     private readonly routeRepository: IRouteRepository,
-    private readonly braveSearch: IBraveSearchPort,
+    braveSearch: IBraveSearchPort,
     private readonly llm: ILLMPort
-  ) {}
+  ) {
+    this.researchPlace = new ResearchPlaceUseCase(braveSearch, llm);
+  }
 
   async execute(routePointId: number): Promise<PreparePhotoPromptsResult> {
     const routePoint = await this.routeRepository.findById(routePointId);
@@ -50,15 +54,15 @@ export class PreparePhotoPromptsUseCase {
       throw new Error(`RoutePoint ${routePointId} already processed (status: ${routePoint.status})`);
     }
 
-    const query = `${routePoint.placeName || 'Unknown'} ${routePoint.country || ''} history culture tourism`;
-    const searchResults = await this.braveSearch.search(query, 3);
-    const researchSummary = searchResults.map((r: SearchResult) => r.description).join(' ');
+    const { supportedLanguages, defaultLanguage, contentBaseLanguage } = getI18nConfig();
+    const baseLanguage = contentBaseLanguage || defaultLanguage;
+    const summaryLanguage = baseLanguage.toLowerCase().startsWith('es') ? 'es' : 'en';
+    const research = await this.researchPlace.executeForPlace(routePoint.placeName || '', { summaryLanguage });
+    const query = research.query;
+    const researchSummary = research.summary;
 
     routePoint.updateResearch(researchSummary, routePoint.osmData);
     await this.routeRepository.update(routePoint);
-
-    const { supportedLanguages, defaultLanguage, contentBaseLanguage } = getI18nConfig();
-    const baseLanguage = contentBaseLanguage || defaultLanguage;
 
     const portraitParameters = selectPortraitParameters();
     const input: ContentInput = {

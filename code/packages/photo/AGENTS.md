@@ -4,7 +4,7 @@
 Photo preparation and publishing pipeline orchestration.
 
 ## Responsibilities
-- Prepare photos by researching places, generating content, creating images, and storing assets.
+- Prepare photos by using the shared research use case (Wikipedia plus LLM source summary), generating content, creating images, and storing assets.
 - Publish prepared photos and update route point status.
 - Persist photo metadata in MariaDB.
 

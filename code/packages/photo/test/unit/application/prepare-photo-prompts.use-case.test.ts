@@ -72,7 +72,7 @@ describe('PreparePhotoPromptsUseCase', () => {
     };
 
     const braveSearch = {
-      search: vi.fn().mockResolvedValue([{ description: 'Info' }]),
+      search: vi.fn().mockResolvedValue([{ title: 'Test City', description: 'Info', url: 'https://example.test' }]),
     };
 
     const llm = {
@@ -91,6 +91,7 @@ describe('PreparePhotoPromptsUseCase', () => {
         imagePrompt: 'Prompt ES',
         narrative: 'Narrativa',
       }),
+      summarizeResearch: vi.fn().mockResolvedValue('LLM research summary'),
     };
 
     const useCase = new PreparePhotoPromptsUseCase(
@@ -102,14 +103,14 @@ describe('PreparePhotoPromptsUseCase', () => {
     const result = await useCase.execute(1);
 
     expect(routeRepo.update).toHaveBeenCalledTimes(2);
-    expect(result.researchQuery).toBe('Test City Testland history culture tourism');
+    expect(result.researchQuery).toBe('Test City');
     expect(result.llmSystemPrompt).toBe(NARRATIVE_SYSTEM_PROMPT);
     expect(result.contentStatus).toBe('generated');
 
     // Check that the prompt contains the key elements
     expect(result.llmUserPrompt).toContain("I'm passing through Test City, Test Region, Testland");
     expect(result.llmUserPrompt).toContain('## Research about this place');
-    expect(result.llmUserPrompt).toContain('Info');
+    expect(result.llmUserPrompt).toContain('LLM research summary');
     expect(result.llmUserPrompt).toContain('40-60 words');
     expect(result.imagePrompt).toBe('Prompt ES');
     expect(result.narrative).toBe('Narrativa');

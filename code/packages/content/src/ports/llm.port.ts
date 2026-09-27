@@ -1,4 +1,5 @@
 import type { PortraitParameters } from '../config/portrait';
+import type { IResearchSummaryPort } from '@silicon-traveler/research';
 
 export interface GeneratedContent {
   imagePrompt: string;
@@ -33,7 +34,7 @@ export interface ContentInput {
   portraitParameters?: PortraitParameters;
 }
 
-export interface ILLMPort {
+export interface ILLMPort extends IResearchSummaryPort {
   generateContent(input: ContentInput): Promise<GeneratedContent>;
   translateContent(input: TranslateContentInput): Promise<TranslatedContent>;
 }
