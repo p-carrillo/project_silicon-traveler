@@ -20,7 +20,7 @@ GitHub Actions creates the complete box deployment layout before either `rsync` 
 - Update `.github/workflows/deploy.yml` to create `${DEPLOY_PATH}/code` and `${DEPLOY_PATH}/context/pictures_seed` in the initial SSH setup step.
 - Remove the pre-deployment filesystem assertion for the image proxy route. The post-deployment smoke test exercises that route through the running web service and is the authoritative check.
 - Preserve the existing exclusions, environment creation, production Compose commands, and verification steps.
-- Keep Forgejo and GitHub `main` synchronized; no Forgejo workflow change is required because it already creates the two directories.
+- Keep Forgejo and GitHub `main` synchronized, but run production deployment only from GitHub Actions. Remove the Forgejo deployment workflow to prevent duplicate production deploys.
 
 ## Acceptance criteria
 
@@ -28,6 +28,7 @@ GitHub Actions creates the complete box deployment layout before either `rsync` 
 - The code and seed `rsync` targets match the directories created in that step.
 - The workflow can progress past the synchronization step on a fresh deployment path.
 - The image proxy is verified after deployment through its HTTP endpoint, rather than through an intermediate remote file check.
+- A push to Forgejo does not initiate a production deployment.
 - Forgejo `main` receives the same commit as GitHub `main`.
 
 ## Implementation plan
