@@ -36,7 +36,7 @@ export class NominatimAdapter implements INominatimPort {
     }
   }
 
-  async geocodePlace(query: string): Promise<PlaceGeocodingResult | null> {
+  async geocodePlace(query: string, acceptLanguage?: string): Promise<PlaceGeocodingResult | null> {
     try {
       const response = await axios.get(`${this.baseUrl}/search`, {
         params: {
@@ -44,6 +44,7 @@ export class NominatimAdapter implements INominatimPort {
           format: 'json',
           addressdetails: 1,
           limit: 1,
+          ...(acceptLanguage ? { 'accept-language': acceptLanguage } : {}),
         },
         headers: {
           'User-Agent': 'SiliconTraveler/1.0',

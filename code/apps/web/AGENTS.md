@@ -6,6 +6,7 @@ Next.js frontend that renders the journey narrative, photo grid, and map UI.
 ## Responsibilities
 - Fetch photos and map state from the API.
 - Render the public website.
+- Provide development-only Admin E2E photo and place research tools.
 - Provide client-side map and grid interactions.
 
 ## Boundaries

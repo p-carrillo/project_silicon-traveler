@@ -18,6 +18,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         dashboard: t.admin.shell.dashboard,
         createRoutePoint: t.admin.shell.createRoutePoint,
         e2eTests: isE2EDevelopmentEnabled() ? t.admin.shell.e2eTests : undefined,
+        e2eResearch: isE2EDevelopmentEnabled() ? t.admin.shell.e2eResearch : undefined,
       }}
       productLabel={t.admin.shell.product}
     >

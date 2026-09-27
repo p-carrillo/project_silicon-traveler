@@ -18,7 +18,9 @@ Research adapter and use case for place discovery using Wikipedia search.
 - `src/ports/brave-search.port.ts`
 
 ## Key Flows
-- Build a query and return top results with summaries.
+- Search Wikipedia using only the trimmed city/place name, then return top results with summaries and up to 1,200 characters of plain-text article extracts in one Wikipedia API request.
+- Admin research can opt in to the full wikitext of the top pages in that same request; production callers do not request full page content by default.
+- Preserve optional provider diagnostics for the development-only Admin research command while allowing production callers to keep their safe fallback.
 
 ## Dependencies
 - Axios.

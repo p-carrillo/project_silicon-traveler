@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { ResearchPlaceUseCase } from '../../../src/application/research-place.use-case';
+import { buildPlaceResearchQuery, ResearchPlaceUseCase } from '../../../src/application/research-place.use-case';
 
 describe('ResearchPlaceUseCase', () => {
   it('returns a summary of results', async () => {
@@ -26,5 +26,23 @@ describe('ResearchPlaceUseCase', () => {
     const summary = await useCase.execute('Test', 'Country');
 
     expect(summary).toContain('No information found about Test, Country.');
+  });
+
+  it('searches Wikipedia using only the city name', async () => {
+    const queries: string[] = [];
+    const useCase = new ResearchPlaceUseCase({
+      search: async (query) => {
+        queries.push(query);
+        return [];
+      },
+    });
+
+    await useCase.execute('Pamplona', 'Spain');
+
+    expect(queries).toEqual(['Pamplona']);
+  });
+
+  it('uses the trimmed city name as the exact Wikipedia query', () => {
+    expect(buildPlaceResearchQuery('  Pamplona  ')).toBe('Pamplona');
   });
 });

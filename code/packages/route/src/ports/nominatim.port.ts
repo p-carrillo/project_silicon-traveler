@@ -13,5 +13,5 @@ export interface PlaceGeocodingResult extends GeocodingResult {
 
 export interface INominatimPort {
   reverseGeocode(point: Point): Promise<GeocodingResult | null>;
-  geocodePlace(query: string): Promise<PlaceGeocodingResult | null>;
+  geocodePlace(query: string, acceptLanguage?: string): Promise<PlaceGeocodingResult | null>;
 }

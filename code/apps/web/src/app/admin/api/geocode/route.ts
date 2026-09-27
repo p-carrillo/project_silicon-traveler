@@ -22,6 +22,11 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     targetUrl.searchParams.set('region', region);
   }
 
+  const language = request.nextUrl.searchParams.get('language')?.trim();
+  if (language === 'es' || language === 'en') {
+    targetUrl.searchParams.set('language', language);
+  }
+
   const headers = new Headers();
   if (API_KEY) {
     headers.set('Authorization', `Bearer ${API_KEY}`);

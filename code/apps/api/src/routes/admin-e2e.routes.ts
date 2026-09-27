@@ -2,28 +2,37 @@ import { Router, type Request, type Response } from 'express';
 import { OpenAIAdapter } from '@silicon-traveler/content';
 import { DalleAdapter, SharpAdapter } from '@silicon-traveler/image';
 import { PhotoPreparationCore } from '@silicon-traveler/photo';
-import { BraveSearchAdapter } from '@silicon-traveler/research';
+import { BraveSearchAdapter, ResearchPlaceUseCase } from '@silicon-traveler/research';
 import { E2EConflictError, E2EExecutionCoordinator, type E2EExecutionEvent } from '../application/e2e/e2e-execution';
 import { isE2EDevelopmentEnabled } from '../application/e2e/e2e-availability';
 import { EphemeralPhotoExecution } from '../application/e2e/ephemeral-photo-execution';
-import { E2EPreflightError, GenerateGlobalPhotoBatchUseCase } from '../application/e2e/generate-global-photo-batch.use-case';
+import { GenerateGlobalPhotoBatchUseCase } from '../application/e2e/generate-global-photo-batch.use-case';
 import { RandomGlobalPlaceSelector } from '../adapters/e2e/random-global-place-selector';
+import { InvestigatePlaceUseCase } from '../application/e2e/investigate-place.use-case';
+import { SelectRandomResearchPlaceUseCase } from '../application/e2e/select-random-research-place.use-case';
 
 export const adminE2ERouter: Router = Router();
 const coordinator = new E2EExecutionCoordinator();
 
 const llm = new OpenAIAdapter();
+const researchAdapter = new BraveSearchAdapter();
 const photoCore = new PhotoPreparationCore(
-  new BraveSearchAdapter(),
+  researchAdapter,
   llm,
   new DalleAdapter(),
   new SharpAdapter()
 );
+const placeSelector = new RandomGlobalPlaceSelector();
 const globalPhotoBatch = new GenerateGlobalPhotoBatchUseCase(
-  new RandomGlobalPlaceSelector(),
+  placeSelector,
   new EphemeralPhotoExecution(photoCore)
 );
+const placeResearch = new ResearchPlaceUseCase(researchAdapter);
+const investigatePlace = new InvestigatePlaceUseCase(placeResearch);
+const selectRandomResearchPlace = new SelectRandomResearchPlaceUseCase(placeSelector);
 coordinator.register('global-photos', async (context, input) => globalPhotoBatch.execute(context, input));
+coordinator.register('place-research', async (context, input) => investigatePlace.execute(context, input));
+coordinator.register('random-research-place', async (context) => selectRandomResearchPlace.execute(context));
 
 function sessionId(req: Request): string | null {
   const value = req.header('x-admin-e2e-session');
@@ -51,8 +60,10 @@ adminE2ERouter.post('/runs/:command', async (req: Request, res: Response): Promi
       await command(execution.context, req.body);
       execution.context.emit({ type: 'completed', index: 0, total: 0 });
     } catch (error: unknown) {
-      const message = error instanceof E2EPreflightError ? error.message : 'E2E execution failed';
-      execution.context.emit({ type: 'error', index: 0, total: 0, data: { message } });
+      console.error('Admin E2E command failed (' + req.params.command + '):', error);
+      const message = error instanceof Error ? error.message : 'Unknown E2E command error';
+      const errorName = error instanceof Error ? error.name : 'UnknownError';
+      execution.context.emit({ type: 'error', index: 0, total: 0, data: { message, errorName } });
     } finally {
       req.off('close', disconnect);
       execution.complete();
@@ -60,7 +71,9 @@ adminE2ERouter.post('/runs/:command', async (req: Request, res: Response): Promi
     }
   } catch (error: unknown) {
     if (error instanceof E2EConflictError) { res.status(409).json({ error: error.message }); return; }
-    res.status(500).json({ error: 'Unable to start E2E execution' });
+    console.error('Unable to start Admin E2E command (' + req.params.command + '):', error);
+    const message = error instanceof Error ? error.message : 'Unknown E2E start error';
+    res.status(500).json({ error: message });
   }
 });
 

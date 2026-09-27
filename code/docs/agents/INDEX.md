@@ -37,7 +37,7 @@ Specialized agents used by commands. Cursor wrappers in `../../.cursor/agents/`,
 - `review-security`, `review-duplications`, `review-dependencies`, `review-seo`, `review-bugs`, `review-refactor`.
 
 ## Apps
-- `apps/api/AGENTS.md`: HTTP API for photos, journey, and map state.
+- `apps/api/AGENTS.md`: HTTP API for photos, journey, map state, and development-only Admin E2E commands.
 - `apps/cli/AGENTS.md`: CLI commands for migrations and journey setup.
 - `apps/scheduler/AGENTS.md`: Cron-based generator and publisher jobs.
 - `apps/web/AGENTS.md`: Next.js frontend consuming the API.
@@ -48,7 +48,7 @@ Specialized agents used by commands. Cursor wrappers in `../../.cursor/agents/`,
 - `packages/journey/AGENTS.md`: Journey domain model and persistence.
 - `packages/map/AGENTS.md`: Map state and photo pins.
 - `packages/photo/AGENTS.md`: Photo preparation and publishing pipeline.
-- `packages/research/AGENTS.md`: Wikipedia search adapter and research use case.
+- `packages/research/AGENTS.md`: Wikipedia search adapter and shared place research use case.
 - `packages/route/AGENTS.md`: Route point computation and persistence.
 - `packages/shared/AGENTS.md`: Shared MariaDB pool and utilities.
 - `packages/storage/AGENTS.md`: Storage ports and local adapter.

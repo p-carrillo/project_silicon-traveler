@@ -2,7 +2,7 @@ import axios from 'axios';
 import { getI18nConfig } from '@silicon-traveler/shared';
 import { type ILLMPort, selectPortraitParameters } from '@silicon-traveler/content';
 import { type IImageGeneratorPort, type IThumbnailGeneratorPort } from '@silicon-traveler/image';
-import { type IBraveSearchPort, type SearchResult } from '@silicon-traveler/research';
+import { ResearchPlaceUseCase, type IBraveSearchPort, type SearchResult } from '@silicon-traveler/research';
 import type { RoutePointContentTranslation } from '@silicon-traveler/route';
 
 export interface PhotoPreparationInput {
@@ -45,21 +45,23 @@ export class AxiosImageDownloadAdapter implements IImageDownloadPort {
 
 /** Shared, persistence-free photo pipeline for production and ephemeral runs. */
 export class PhotoPreparationCore {
+  private readonly researchPlace: ResearchPlaceUseCase;
+
   constructor(
-    private readonly braveSearch: IBraveSearchPort,
+    braveSearch: IBraveSearchPort,
     private readonly llm: ILLMPort,
     private readonly imageGenerator: IImageGeneratorPort,
     private readonly thumbnailGenerator: IThumbnailGeneratorPort,
     private readonly imageDownloader: IImageDownloadPort = new AxiosImageDownloadAdapter()
-  ) {}
+  ) { this.researchPlace = new ResearchPlaceUseCase(braveSearch); }
 
   async execute(input: PhotoPreparationInput, hooks?: PhotoPreparationHooks): Promise<PhotoPreparationCoreResult> {
-    const query = `${input.placeName || 'Unknown'} ${input.country || ''} history culture tourism`;
+    const location = [input.placeName || 'Unknown', input.country || ''].filter(Boolean).join(' ');
     await hooks?.researchStarted?.();
-    const searchResults = await this.braveSearch.search(query, 3);
-    const researchSummary = searchResults.map((result: SearchResult) => result.description).join(' ');
+    const research = await this.researchPlace.executeForPlace(location);
+    const researchSummary = research.summary;
     await hooks?.researched?.(researchSummary);
-    await hooks?.researchSources?.(searchResults.map(({ title, url }: SearchResult) => ({ title, url })));
+    await hooks?.researchSources?.(research.sources);
     const { supportedLanguages, defaultLanguage, contentBaseLanguage } = getI18nConfig();
     const baseLanguage = contentBaseLanguage || defaultLanguage;
     await hooks?.contentGenerationStarted?.();

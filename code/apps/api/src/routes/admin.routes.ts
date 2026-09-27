@@ -134,8 +134,10 @@ adminRouter.get('/geocode', async (req: Request, res: Response) => {
     const country = normalizeQueryString(req.query.country);
     const region = normalizeQueryString(req.query.region);
     const query = [placeName, region, country].filter(Boolean).join(', ');
+    const language = normalizeQueryString(req.query.language);
+    const acceptLanguage = language === 'en' ? 'en,es' : language === 'es' ? 'es,en' : undefined;
 
-    const result = await geocodePlaceUseCase.execute(query);
+    const result = await geocodePlaceUseCase.execute(query, acceptLanguage);
     if (!result) {
       return res.status(404).json({ error: 'Location not found' });
     }

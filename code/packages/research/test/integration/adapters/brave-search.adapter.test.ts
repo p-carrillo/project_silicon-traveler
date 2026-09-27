@@ -4,7 +4,7 @@ import { BraveSearchAdapter } from '../../../src/adapters/brave-search.adapter';
 describe('BraveSearchAdapter (integration)', () => {
   it('returns a valid results array from Wikipedia search', async () => {
     const adapter = new BraveSearchAdapter();
-    const results = await adapter.search('Pamplona Spain history culture tourism', 1);
+    const results = await adapter.search('Pamplona', 1);
 
     // External search can return [] when network/rate-limit fails, but it must never throw
     expect(Array.isArray(results)).toBe(true);

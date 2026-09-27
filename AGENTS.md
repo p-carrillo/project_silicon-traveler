@@ -28,6 +28,8 @@ Do not load standards, task files, product flows, designs, or operational guides
 
 The project runs in Docker. Do not run `pnpm`, `npm`, `node`, `vitest`, or `tsx` on the host.
 
+Before marking a task that changes the website or its UI complete, inspect the affected page in a browser when one is available. Otherwise, request it from the running web service in Docker and check its HTTP status and rendered response, then inspect the relevant web logs for runtime errors. A successful build alone does not confirm the page works; when authentication blocks the page, report that limitation explicitly.
+
 ```bash
 cd code
 docker compose exec app pnpm test
