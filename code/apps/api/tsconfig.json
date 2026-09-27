@@ -13,6 +13,8 @@
     { "path": "../../packages/image" },
     { "path": "../../packages/storage" },
     { "path": "../../packages/photo" },
-    { "path": "../../packages/map" }
+    { "path": "../../packages/map" },
+    { "path": "../../packages/content" },
+    { "path": "../../packages/research" }
   ]
 }

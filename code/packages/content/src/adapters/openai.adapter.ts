@@ -117,9 +117,10 @@ export class OpenAIAdapter implements ILLMPort {
     input: TranslateContentInput
   ): TranslatedContent {
     try {
-      const parsed = this.parseJsonResponse(response) as any;
-      const imagePrompt = parsed?.imagePrompt || parsed?.image_prompt || input.imagePrompt;
-      const narrative = parsed?.narrative || input.narrative;
+      const parsed = this.parseJsonResponse(response);
+      const translation = isRecord(parsed) ? parsed : null;
+      const imagePrompt = readNonEmptyString(translation?.imagePrompt) ?? readNonEmptyString(translation?.image_prompt) ?? input.imagePrompt;
+      const narrative = readNonEmptyString(translation?.narrative) ?? input.narrative;
       return { imagePrompt, narrative };
     } catch (error) {
       console.error('Failed to parse translation response:', error);
@@ -140,4 +141,12 @@ export class OpenAIAdapter implements ILLMPort {
 
     return JSON.parse(cleaned);
   }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function readNonEmptyString(value: unknown): string | undefined {
+  return typeof value === 'string' && value.trim() ? value.trim() : undefined;
 }

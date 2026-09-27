@@ -23,6 +23,9 @@ importers:
 
   apps/api:
     dependencies:
+      '@silicon-traveler/content':
+        specifier: workspace:*
+        version: link:../../packages/content
       '@silicon-traveler/image':
         specifier: workspace:*
         version: link:../../packages/image
@@ -35,6 +38,9 @@ importers:
       '@silicon-traveler/photo':
         specifier: workspace:*
         version: link:../../packages/photo
+      '@silicon-traveler/research':
+        specifier: workspace:*
+        version: link:../../packages/research
       '@silicon-traveler/route':
         specifier: workspace:*
         version: link:../../packages/route

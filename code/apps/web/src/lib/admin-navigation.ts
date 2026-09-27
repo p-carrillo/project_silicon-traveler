@@ -1,6 +1,7 @@
 export interface AdminNavigationLabels {
   dashboard: string;
   createRoutePoint: string;
+  e2eTests?: string;
 }
 
 export interface AdminNavigationItem {
@@ -9,10 +10,12 @@ export interface AdminNavigationItem {
 }
 
 export function getAdminNavigationItems(labels: AdminNavigationLabels): AdminNavigationItem[] {
-  return [
+  const items: AdminNavigationItem[] = [
     { href: '/admin', label: labels.dashboard },
     { href: '/admin/route-points/new', label: labels.createRoutePoint },
   ];
+  if (labels.e2eTests) items.push({ href: '/admin/e2e', label: labels.e2eTests });
+  return items;
 }
 
 export function isAdminNavigationItemActive(href: string, pathname: string): boolean {

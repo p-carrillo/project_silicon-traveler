@@ -11,6 +11,7 @@
 - [`../../../context/task/ROADMAP.md`](../../../context/task/ROADMAP.md): Recommended implementation order for the local task definitions.
 
 ## Recent Decisions
+- `.adr/065-random-e2e-global-place-catalog.md`: The development-only global photo batch selects from a local GeoNames-derived catalog instead of calling an LLM for place selection.
 - `.adr/063-switch-research-provider-to-wikipedia.md`: Research module now uses Wikipedia API instead of Brave Search.
 - `.adr/061-place-based-coordinate-snap-in-automated-generation.md`: Automated generation now snaps coordinates with final place-based geocoding.
 - `.adr/060-publish-seed-point-auto-create-journey.md`: `publish-seed-point` auto-creates a journey from Oleiros when no journeys exist.
@@ -20,11 +21,7 @@
 - `.adr/057-admin-session-secret-and-login-rate-limit.md`: Dedicated admin session secret and login brute-force mitigation policy.
 
 ## Standards
-Project standards (IDE-agnostic) in `../../context/standards/`, grouped by context:
-
-**Common** (always apply): architecture, coding, test, commit, subagents.
-**Backend** (`apps/api`, `apps/cli`, `apps/scheduler`, `packages/*`): database.
-**Frontend** (`apps/web`): frontend, seo.
+Project standards (IDE-agnostic) are in `../../context/standards/`. Use `../../context/skills/project-foundations/SKILL.md` to select only the reference that affects the task; the root and module `AGENTS.md` files remain the always-applicable rules.
 
 ## Skills
 Actionable procedures (each in its own folder with `SKILL.md`): `../../context/skills/` (docker-security-audit, project-foundations).

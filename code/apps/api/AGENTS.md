@@ -22,6 +22,7 @@ HTTP API for photos, journey state, and map state. Also serves generated images 
 ## Key Flows
 - `GET /api/photos` and `GET /api/photos/latest` read from `photos`.
 - `POST /api/map/refresh` updates `map_state` after publish.
+- Development-only Admin E2E commands use the shared photo pipeline without persistent data; the global photo batch selects varied places from a local GeoNames-derived catalogue.
 
 ## Dependencies
 - `@silicon-traveler/shared`

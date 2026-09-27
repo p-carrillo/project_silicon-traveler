@@ -25,8 +25,15 @@ export interface PhotoPreparationCoreResult {
 
 export interface IImageDownloadPort { download(url: string): Promise<Buffer>; }
 export interface PhotoPreparationHooks {
+  researchStarted?(): Promise<void>;
   researched?(researchSummary: string): Promise<void>;
+  researchSources?(sources: Array<Pick<SearchResult, 'title' | 'url'>>): Promise<void>;
+  contentGenerationStarted?(): Promise<void>;
   contentGenerated(input: { imagePrompt: string; narrative: string; cameraMetadata: PhotoPreparationCoreResult['cameraMetadata']; translations: RoutePointContentTranslation[] }): Promise<void>;
+  imageGenerationStarted?(): Promise<void>;
+  imageGenerated?(): Promise<void>;
+  thumbnailGenerationStarted?(): Promise<void>;
+  thumbnailsGenerated?(): Promise<void>;
 }
 
 export class AxiosImageDownloadAdapter implements IImageDownloadPort {
@@ -48,11 +55,14 @@ export class PhotoPreparationCore {
 
   async execute(input: PhotoPreparationInput, hooks?: PhotoPreparationHooks): Promise<PhotoPreparationCoreResult> {
     const query = `${input.placeName || 'Unknown'} ${input.country || ''} history culture tourism`;
+    await hooks?.researchStarted?.();
     const searchResults = await this.braveSearch.search(query, 3);
     const researchSummary = searchResults.map((result: SearchResult) => result.description).join(' ');
     await hooks?.researched?.(researchSummary);
+    await hooks?.researchSources?.(searchResults.map(({ title, url }: SearchResult) => ({ title, url })));
     const { supportedLanguages, defaultLanguage, contentBaseLanguage } = getI18nConfig();
     const baseLanguage = contentBaseLanguage || defaultLanguage;
+    await hooks?.contentGenerationStarted?.();
     const content = await this.llm.generateContent({
       placeName: input.placeName || 'Unknown Place', country: input.country || 'Unknown Country',
       region: input.region || 'Unknown Region', researchSummary, language: baseLanguage,
@@ -69,11 +79,15 @@ export class PhotoPreparationCore {
     const imagePrompt = normalizePrompt(preferred.imagePrompt ?? baseImagePrompt);
     const narrative = preferred.narrative || content.narrative;
     await hooks?.contentGenerated({ imagePrompt, narrative, cameraMetadata: content.cameraMetadata, translations });
+    await hooks?.imageGenerationStarted?.();
     const image = await this.imageGenerator.generate(baseImagePrompt);
     const imageBuffer = await this.imageDownloader.download(image.url);
+    await hooks?.imageGenerated?.();
+    await hooks?.thumbnailGenerationStarted?.();
     const thumbnails = await this.thumbnailGenerator.generate(imageBuffer, [
       { width: 400, height: 400, suffix: '_grid' }, { width: 1024, height: 1024, suffix: '_hero' },
     ]);
+    await hooks?.thumbnailsGenerated?.();
     return { researchSummary, translations, imagePrompt, narrative, cameraMetadata: content.cameraMetadata, imageBuffer, thumbnails, revisedPrompt: image.revisedPrompt || null };
   }
 }
