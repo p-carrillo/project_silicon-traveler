@@ -2,6 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --font-sans: Arial;
+  --font-serif: Georgia;
+  --font-archive-serif: Georgia;
+  --font-narrative: Georgia;
+}
+
 body {
   @apply antialiased;
 }
