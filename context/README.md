@@ -8,7 +8,7 @@ This directory contains the non-deployable context used to guide AI-assisted wor
 | `skills/` | Repeatable workflows such as project orientation, SEO, and Docker security reviews. | A task matches a documented workflow. |
 | `agents/` | Review criteria for specialised code-review roles. | Running or defining a review. |
 | `commands/` | Review orchestration instructions independent of a specific IDE. | Performing a documented review workflow. |
-| `task/` | Local snapshots and refinement notes for planned work. | Reviewing or preparing the next task. |
+| `task/` | Local task snapshots, refinement notes, and the recommended implementation roadmap. | Reviewing or preparing the next task. Start with [task/ROADMAP.md](task/ROADMAP.md) when prioritising work. |
 | `designs/` | Visual reference assets. | Implementing or reviewing related UI. |
 | `pictures_seed/` | Local images used by development seed scripts. | Running seed workflows. |
 

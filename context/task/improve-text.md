@@ -2,7 +2,7 @@
 
 - **Monotask ID:** `de2a40ac-a872-4187-88db-c40f8e01d92f`
 - **Priority:** Medium
-- **Status:** Definition in progress — local plan not yet synchronized
+- **Status:** To do — definition synchronized
 - **Category:** General
 
 ## Problem
@@ -45,8 +45,9 @@ Each published entry should feel grounded in its specific place while retaining 
 6. Add a post-generation quality check. Regenerate once with targeted feedback when the factual anchor is absent or the text has high lexical overlap with recent entries.
 7. Extend unit and integration tests, then run an editorial sample review before enabling the new strategy for scheduled generation.
 
-## Risks and decisions to resolve
+## Decisions resolved
 
-- Research quality may be insufficient for very small settlements; define a transparent fallback that uses geography or route context without inventing facts.
-- Similarity detection can be heuristic initially; decide whether to use phrase overlap only or semantic embeddings in a later phase.
-- Decide whether the AI narrator should remain explicitly self-aware in every entry or only when editorially relevant.
+- When research is weak, the brief may use only verified route facts (settlement name, administrative area, coordinates, direction of travel) and observable geographic data already returned by a provider. It labels the mode as `route-observation`; it does not infer local customs, history, work, or landmarks.
+- Version one uses transparent phrase and token-overlap heuristics over a configurable recent window, plus required-anchor presence. Embeddings are deferred until samples show that this rule produces material false positives or misses.
+- The narrator is a restrained travelling system, not a repeated gimmick: first person is retained, but explicit references to being AI/software are optional and used only when they add an editorial contrast.
+- A quality failure triggers at most one regeneration with targeted feedback. If it still fails, the item is marked failed for editorial review rather than publishing generic prose.

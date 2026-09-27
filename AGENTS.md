@@ -51,6 +51,7 @@ See `code/docs/agents/DOCKER.md` for operational details.
 ## Task tracking
 
 - Each task has exactly one Markdown file in `context/task/`.
+- Consult the [task roadmap](context/task/ROADMAP.md) when choosing implementation order; it is a planning guide, while each task file remains the source of truth for its scope and status.
 - Define and refine the task locally first: scope, acceptance criteria, implementation plan, risks, and open decisions.
 - Do not create, update, move, complete, or delete a Monotask task until the user explicitly approves synchronization.
 - After approval and a Monotask task exists, keep its title, description, priority, status, lifecycle, and ID synchronized with the local file.
@@ -62,4 +63,5 @@ See `code/docs/agents/DOCKER.md` for operational details.
 - Domain packages: `code/packages/`
 - Context: `context/README.md`
 - Tasks: `context/task/`
+- Task roadmap: [context/task/ROADMAP.md](context/task/ROADMAP.md)
 - Agent documentation: `code/docs/agents/INDEX.md`

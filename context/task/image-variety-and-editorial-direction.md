@@ -1,8 +1,8 @@
 # Improve image variety and editorial direction
 
-- **Monotask ID:** Not created — local definition only
+- **Monotask ID:** `8d80e354-0496-433c-afa4-f6775e6688c0`
 - **Priority:** Medium
-- **Status:** Definition in progress — not synchronized
+- **Status:** To do — definition synchronized
 - **Category:** General
 
 ## Problem
@@ -50,9 +50,10 @@ Produce a coherent documentary journal with deliberate visual variety. Each imag
 7. Add a lightweight similarity policy: first compare metadata and prompt overlap; consider image embeddings only after measuring whether heuristic checks are insufficient.
 8. Create a curated review set of representative locations and manually evaluate variety, location fidelity, quality, and undesirable stereotypes before enabling it for the scheduler.
 
-## Risks and decisions to resolve
+## Decisions resolved
 
-- Documentary prompts can stereotypically depict locations; use research-grounded constraints and reject broad cultural shorthand.
-- Image-model adherence is probabilistic, so the first version should optimize prompt and selection quality rather than promise exact visual guarantees.
-- Decide whether the permanent look is strictly black-and-white or whether rare, intentional colour series are allowed as an editorial exception.
-- Determine storage and migration strategy for visual briefs and similarity metadata.
+- Documentary prompts must cite a concrete research/route anchor and include constraints against generic cultural shorthand. The selector must reject a category that cannot be grounded in available facts.
+- Version one evaluates variety from chosen brief metadata and prompt overlap. It does not promise image-model adherence or add embeddings before a measured need.
+- The default house style remains black and white. Colour is not part of the scheduler's automatic choice; it may be introduced later only as a named, explicitly approved editorial series.
+- Store the compact selected `VisualBrief` and original/final prompts as JSON in additive columns on `route_points`, with an indexed published-time query for recent briefs. Keep image-derived similarity data out of the first migration.
+- One contrasting regeneration is allowed only after the metadata/prompt quality gate fails and must use a different permitted category or composition; otherwise the image is retained for manual review.

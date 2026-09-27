@@ -8,6 +8,7 @@
 - `docs/agents/DATABASE.md`: MariaDB schema overview and migration notes.
 - `docs/agents/GOLDEN_PATHS.md`: End-to-end flows for the core product.
 - `docs/agents/DEBUGGING.md`: Common issues and how to resolve them.
+- [`../../../context/task/ROADMAP.md`](../../../context/task/ROADMAP.md): Recommended implementation order for the local task definitions.
 
 ## Recent Decisions
 - `.adr/063-switch-research-provider-to-wikipedia.md`: Research module now uses Wikipedia API instead of Brave Search.
