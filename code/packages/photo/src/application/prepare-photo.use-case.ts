@@ -1,6 +1,10 @@
 import { IRouteRepository } from '@silicon-traveler/route';
 import { IBraveSearchPort } from '@silicon-traveler/research';
-import { ILLMPort } from '@silicon-traveler/content';
+import {
+  getEditorialGenerationConfig,
+  type EditorialGenerationConfig,
+  type ILLMPort,
+} from '@silicon-traveler/content';
 import { IImageGeneratorPort, IThumbnailGeneratorPort } from '@silicon-traveler/image';
 import { IStoragePort } from '@silicon-traveler/storage';
 import { PhotoPreparationCore } from './photo-preparation-core';
@@ -21,14 +25,19 @@ export interface PreparePhotoResult {
 
 export class PreparePhotoUseCase {
   private readonly core: PhotoPreparationCore;
+  private readonly editorialConfig: EditorialGenerationConfig;
   constructor(
     private readonly routeRepository: IRouteRepository,
     braveSearch: IBraveSearchPort,
     llm: ILLMPort,
     imageGenerator: IImageGeneratorPort,
     thumbnailGenerator: IThumbnailGeneratorPort,
-    private readonly storage: IStoragePort
-  ) { this.core = new PhotoPreparationCore(braveSearch, llm, imageGenerator, thumbnailGenerator); }
+    private readonly storage: IStoragePort,
+    editorialConfig: EditorialGenerationConfig = getEditorialGenerationConfig()
+  ) {
+    this.editorialConfig = editorialConfig;
+    this.core = new PhotoPreparationCore(braveSearch, llm, imageGenerator, thumbnailGenerator, undefined, editorialConfig);
+  }
 
   async execute(routePointId: number): Promise<PreparePhotoResult> {
     // 1. Get route point
@@ -42,7 +51,15 @@ export class PreparePhotoUseCase {
     }
 
     try {
-      const prepared = await this.core.execute(routePoint, {
+      const recentNarratives = this.editorialConfig.recentHistoryLimit > 0
+        ? await this.routeRepository.findRecentNarrativesByJourney(
+            routePoint.journeyId, routePoint.sequence, this.editorialConfig.recentHistoryLimit
+          )
+        : [];
+      const prepared = await this.core.execute({
+        ...routePoint,
+        recentNarratives: recentNarratives.map((entry) => entry.narrative),
+      }, {
         researched: async (researchSummary) => {
           routePoint.updateResearch(researchSummary, routePoint.osmData);
           await this.routeRepository.update(routePoint);
@@ -82,8 +99,9 @@ export class PreparePhotoUseCase {
         aperture: prepared.cameraMetadata.aperture,
         revisedPrompt: prepared.revisedPrompt,
       };
-    } catch (error: any) {
-      routePoint.updateStatus('failed', error.message);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Photo preparation failed';
+      routePoint.updateStatus('failed', message);
       await this.routeRepository.update(routePoint);
       throw error;
     }

@@ -2,7 +2,7 @@
 
 - **Monotask ID:** `de2a40ac-a872-4187-88db-c40f8e01d92f`
 - **Priority:** Medium
-- **Status:** To do — definition synchronized
+- **Status:** Done — implementation accepted; editorial sample review deferred
 - **Category:** General
 
 ## Problem

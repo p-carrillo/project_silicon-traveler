@@ -63,6 +63,7 @@ describe('PreparePhotoUseCase (integration)', () => {
 
     const routeRepo = {
       findById: vi.fn().mockResolvedValue(routePoint),
+      findRecentNarrativesByJourney: vi.fn().mockResolvedValue([]),
       findFirstScheduledByJourney: vi.fn().mockResolvedValue(routePoint),
       update: vi.fn().mockResolvedValue(undefined),
       upsertContentTranslations: vi.fn().mockResolvedValue(undefined),
@@ -73,9 +74,10 @@ describe('PreparePhotoUseCase (integration)', () => {
     };
 
     const llm = {
+      summarizeResearch: vi.fn().mockResolvedValue('Test City'),
       generateContent: vi.fn().mockResolvedValue({
         imagePrompt: 'Prompt',
-        narrative: 'Narrative',
+        narrative: 'I record Test City in Test Region, Testland as a specific point on the route. The coordinates mark where this entry belongs, while the distance from the previous stop gives it a measurable place in the sequence.',
         cameraMetadata: {
           camera: 'Leica',
           lens: '35mm',
@@ -168,6 +170,7 @@ describe('PreparePhotoUseCase (integration)', () => {
 
     const routeRepo = {
       findById: vi.fn().mockResolvedValue(routePoint),
+      findRecentNarrativesByJourney: vi.fn().mockResolvedValue([]),
       findFirstScheduledByJourney: vi.fn().mockResolvedValue(routePoint),
       update: vi.fn().mockResolvedValue(undefined),
       upsertContentTranslations: vi.fn().mockResolvedValue(undefined),
@@ -178,9 +181,10 @@ describe('PreparePhotoUseCase (integration)', () => {
     };
 
     const llm = {
+      summarizeResearch: vi.fn().mockResolvedValue('Test City'),
       generateContent: vi.fn().mockResolvedValue({
         imagePrompt: { text: 'Prompt' },
-        narrative: 'Narrative',
+        narrative: 'I record Test City in Test Region, Testland as a specific point on the route. The coordinates mark where this entry belongs, while the distance from the previous stop gives it a measurable place in the sequence.',
         cameraMetadata: {
           camera: 'Leica',
           lens: '35mm',
@@ -270,6 +274,7 @@ describe('PreparePhotoUseCase (integration)', () => {
 
     const routeRepo = {
       findById: vi.fn().mockResolvedValue(routePoint),
+      findRecentNarrativesByJourney: vi.fn().mockResolvedValue([]),
       findFirstScheduledByJourney: vi
         .fn()
         .mockResolvedValue({ ...routePoint, sequence: 5 }),
@@ -282,9 +287,10 @@ describe('PreparePhotoUseCase (integration)', () => {
     };
 
     const llm = {
+      summarizeResearch: vi.fn().mockResolvedValue('Test City'),
       generateContent: vi.fn().mockResolvedValue({
         imagePrompt: 'Prompt',
-        narrative: 'Narrative',
+        narrative: 'I record Test City in Test Region, Testland as a specific point on the route. The coordinates mark where this entry belongs, while the distance from the previous stop gives it a measurable place in the sequence.',
         cameraMetadata: {
           camera: 'Leica',
           lens: '35mm',

@@ -6,7 +6,7 @@ Route point computation and enrichment for the journey path.
 ## Responsibilities
 - Calculate next route point coordinates.
 - Enrich points with nearest city and geocoding.
-- Persist route points in MariaDB.
+- Persist route points and provide recent same-journey narrative history for editorial variety.
 
 ## Boundaries
 - No LLM content generation.

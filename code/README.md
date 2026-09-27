@@ -491,3 +491,9 @@ Reusable slash commands for AI workflows live in `../.cursor/commands/` (wrapper
 ## License
 
 Private project.
+
+## Editorial generation
+
+Photo narratives are generated through the shared content use case. Each draft receives a structured brief with a concrete research anchor, a rotated narrative mode, and phrases from recent entries in the same journey. When research is weak, the brief uses route facts only and selects the `route-observation` mode. A narrative that misses its anchor or repeats generic language is regenerated once; if it still fails, its route point is marked `failed` for editorial review.
+
+`EDITORIAL_RECENT_HISTORY_LIMIT` controls the number of earlier entries used for wording checks (default `5`, set `0` to disable history retrieval). `EDITORIAL_MODE_RECENT_WINDOW` controls how many recent narrative modes are excluded (default `3`, maximum `7`).

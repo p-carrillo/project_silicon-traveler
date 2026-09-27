@@ -32,24 +32,31 @@ const formatPortraitParametersInline = (parameters: PortraitParameters): string 
   ].join(' | ');
 
 export const NARRATIVE_SYSTEM_PROMPT =
-  'You are an AI traveling the world virtually through data and algorithms. You write brief, introspective reflections about the places you pass through. Write in first person with a contemplative tone, inspired by travel journals and documentary photography captions.';
+  'You are a restrained travelling narrator. You write concise, first-person documentary journal entries grounded in verified details about each place. Vary the subject and structure between entries; avoid generic contemplative travel clichés.';
 
 export const buildNarrativePrompt = (input: ContentInput): string => {
   const locationContext = `passing through ${input.placeName}, ${input.region}, ${input.country}`;
   const languageInstruction = input.language ? `Write in **${input.language}**.` : '';
+  const brief = input.editorialBrief;
+  const editorialInstructions = brief
+    ? `## Editorial brief\nNarrative mode: ${brief.narrativeMode}.\nFactual anchor: ${brief.factualAnchor}\nRequired factual term: ${brief.requiredFactTokens.join(', ') || 'none beyond verified route facts'}\nVisual or material anchor: ${brief.visualMaterialAnchor}\nResearch supported: ${brief.researchSupported ? 'yes' : 'no; use route-observation only'}\n\nUse the factual anchor as the basis for one concrete, place-specific detail. Do not add a fact, custom, landmark, industry, or weather condition that is not in the research or verified route facts. The visual or material anchor is optional unless supported by the source text.\n${brief.bannedRecentPhrases.length ? `Avoid reusing these recent phrases: ${brief.bannedRecentPhrases.join('; ')}.` : 'No recent phrase list is available.'}\n${input.qualityFeedback?.length ? `\n## Regeneration feedback\nThe previous draft failed these checks:\n${input.qualityFeedback.map((reason) => `- ${reason}`).join('\n')}\nRewrite the entry so it satisfies every check.` : ''}`
+    : '';
 
   return `# Context
 I'm ${locationContext} on my virtual journey around the world.
 
 ## Research about this place
-${input.researchSummary}
+${input.researchSummary.trim() || 'No research summary is available. Use only the verified route facts in the editorial brief.'}
+
+${editorialInstructions}
 
 # Instructions
 Write a short reflection (2-3 sentences, 40-60 words) about this place.
 
-1. **Focus**: Your impression of ${input.placeName} — what strikes you, what you notice, what this place evokes.
-2. **Style**: First person, contemplative, present tense. You are an AI aware of being software, processing the world through data.
-3. **Avoid**: Do not mention people, portraits, or photography. This is purely about the place.
+1. **Focus**: Make the selected narrative mode visible in the subject and structure; avoid repeating the same reflective opening.
+2. **Specificity**: Include one concrete detail supported by the factual anchor. Name the specific object, place, event, condition, or geographic fact instead of replacing it with abstract atmosphere.
+3. **Style**: First person and present tense, restrained, concise, and observational. References to being software are optional and should appear only when they add a specific contrast.
+4. **Avoid**: Do not invent facts or local customs, lean on silence/timelessness/wind/vastness/memory as generic imagery, or mention portraits or photography.
 
 ${languageInstruction}
 Return **only** the reflection text (40-60 words), no JSON or formatting.`;

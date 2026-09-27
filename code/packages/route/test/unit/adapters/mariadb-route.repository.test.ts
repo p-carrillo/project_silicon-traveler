@@ -39,6 +39,23 @@ describe('MariaDBRouteRepository (unit)', () => {
     expect(release).toHaveBeenCalledTimes(1);
   });
 
+  it('reads a bounded recent narrative history for the same journey', async () => {
+    const release = vi.fn();
+    const query = vi.fn().mockResolvedValue([
+      { sequence: 8, narrative_prompt: 'A grounded entry about a bridge.' },
+    ]);
+    vi.spyOn(pool, 'getConnection').mockResolvedValue({ query, release } as any);
+
+    const repo = new MariaDBRouteRepository();
+    const history = await repo.findRecentNarrativesByJourney(4, 9, 5);
+
+    expect(history).toEqual([{ sequence: 8, narrative: 'A grounded entry about a bridge.' }]);
+    expect(String(query.mock.calls[0][0])).toContain('journey_id = ?');
+    expect(String(query.mock.calls[0][0])).toContain('sequence < ?');
+    expect(query.mock.calls[0][1]).toEqual([4, 9, 5]);
+    expect(release).toHaveBeenCalledTimes(1);
+  });
+
   it('applies city filter and id sort when listing route points', async () => {
     const release = vi.fn();
     const query = vi.fn().mockResolvedValue([]);

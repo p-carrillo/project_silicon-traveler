@@ -6,8 +6,12 @@ import {
   buildNarrativePrompt,
   NARRATIVE_SYSTEM_PROMPT,
   selectPortraitParameters,
+  GenerateEditorialContentUseCase,
+  getEditorialGenerationConfig,
+  type EditorialGenerationConfig,
 } from '@silicon-traveler/content';
 import { Point, getI18nConfig } from '@silicon-traveler/shared';
+import { getVerifiedPlaceObservations } from './verified-place-observations';
 
 export interface PreparePhotoPromptsResult {
   routePointId: number;
@@ -35,13 +39,18 @@ export interface PreparePhotoPromptsResult {
 
 export class PreparePhotoPromptsUseCase {
   private readonly researchPlace: ResearchPlaceUseCase;
+  private readonly editorialContent: GenerateEditorialContentUseCase;
+  private readonly editorialConfig: EditorialGenerationConfig;
 
   constructor(
     private readonly routeRepository: IRouteRepository,
     braveSearch: IBraveSearchPort,
-    private readonly llm: ILLMPort
+    private readonly llm: ILLMPort,
+    editorialConfig: EditorialGenerationConfig = getEditorialGenerationConfig()
   ) {
     this.researchPlace = new ResearchPlaceUseCase(braveSearch, llm);
+    this.editorialConfig = editorialConfig;
+    this.editorialContent = new GenerateEditorialContentUseCase(llm, editorialConfig);
   }
 
   async execute(routePointId: number): Promise<PreparePhotoPromptsResult> {
@@ -61,6 +70,11 @@ export class PreparePhotoPromptsUseCase {
     const query = research.query;
     const researchSummary = research.summary;
 
+    const recentNarratives = this.editorialConfig.recentHistoryLimit > 0
+      ? await this.routeRepository.findRecentNarrativesByJourney(
+          routePoint.journeyId, routePoint.sequence, this.editorialConfig.recentHistoryLimit
+        )
+      : [];
     routePoint.updateResearch(researchSummary, routePoint.osmData);
     await this.routeRepository.update(routePoint);
 
@@ -74,9 +88,22 @@ export class PreparePhotoPromptsUseCase {
       portraitParameters,
     };
 
-    const llmUserPrompt = buildNarrativePrompt(input);
-
-    const content = await this.llm.generateContent(input);
+    let generated: Awaited<ReturnType<GenerateEditorialContentUseCase['execute']>>;
+    try {
+      generated = await this.editorialContent.execute(input, {
+        sequence: routePoint.sequence,
+        coordinates: routePoint.coordinates,
+        distanceFromPrevious: routePoint.distanceFromPrevious,
+        recentNarratives: recentNarratives.map((entry) => entry.narrative),
+        verifiedGeographicObservations: getVerifiedPlaceObservations(routePoint.osmData, routePoint.placeName),
+      });
+    } catch (error: unknown) {
+      routePoint.updateStatus('failed', error instanceof Error ? error.message : 'Editorial generation failed');
+      await this.routeRepository.update(routePoint);
+      throw error;
+    }
+    const { content, brief } = generated;
+    const llmUserPrompt = buildNarrativePrompt({ ...input, editorialBrief: brief });
 
     const baseImagePrompt = this.normalizePrompt(content.imagePrompt);
     const translations: RoutePointContentTranslation[] = [

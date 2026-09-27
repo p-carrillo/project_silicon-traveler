@@ -4,7 +4,7 @@
 Photo preparation and publishing pipeline orchestration.
 
 ## Responsibilities
-- Prepare photos by using the shared research use case (Wikipedia plus LLM source summary), generating content, creating images, and storing assets.
+- Prepare photos by using the shared research use case, gathering same-journey narrative history, generating checked editorial content, creating images, and storing assets.
 - Publish prepared photos and update route point status.
 - Persist photo metadata in MariaDB.
 
@@ -22,7 +22,7 @@ Photo preparation and publishing pipeline orchestration.
 
 ## Key Flows
 - Prepare photo from a `route_points` row and update status to `image_ready`.
-- Prepare the next photo by ensuring a pending `route_points` entry exists (create + enrich if needed) and running the full photo pipeline.
+- Prepare the next photo by ensuring a pending `route_points` entry exists (create + enrich if needed), loading a bounded same-journey narrative history, and running the full photo pipeline.
 - Prepare the next photo in prompts-only mode to stop after content generation (`content_generated`).
 - Publish a prepared photo into the `photos` table and mark `route_points` as `published`.
 

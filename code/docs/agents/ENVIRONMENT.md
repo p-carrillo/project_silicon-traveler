@@ -40,3 +40,10 @@
 - `/admin` and `/admin/login` are fail-closed (404) if `ADMIN_BASIC_USER`, `ADMIN_BASIC_PASSWORD`, or `ADMIN_SESSION_SECRET` is missing.
 - Admin login attempts are rate-limited in web app memory: 5 failed attempts in 15 minutes block for 15 minutes.
 - Scheduler calls `API_URL` to refresh map state after publishing.
+
+## Editorial generation
+
+| Variable | Services | Purpose | Default |
+| --- | --- | --- | --- |
+| `EDITORIAL_RECENT_HISTORY_LIMIT` | scheduler, CLI | Number of previous route narratives considered for phrase and wording repetition checks; `0` disables history retrieval. | `5` (valid `0–50`) |
+| `EDITORIAL_MODE_RECENT_WINDOW` | scheduler, CLI, API | Number of preceding route sequences excluded when selecting a narrative mode. | `3` (valid `0–7`) |

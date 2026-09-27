@@ -7,7 +7,7 @@ LLM-backed content generation for image prompts, narratives, and camera metadata
 - Build LLM prompts and parse responses using OpenAI Responses API.
 - Select camera presets and photographer configuration.
 - Provide content generation use case, research-summary prompt, and OpenAI adapter.
-- Generate narratives using GPT-5 with medium-effort reasoning for improved contextual coherence.
+- Build a verified editorial brief, rotate narrative modes, check recent wording, and regenerate one failed draft before rejecting it.
 
 ## Boundaries
 - No database access.
@@ -16,6 +16,9 @@ LLM-backed content generation for image prompts, narratives, and camera metadata
 ## Entry Points
 - `src/index.ts`
 - `src/application/generate-content.use-case.ts`
+- `src/application/generate-editorial-content.use-case.ts`
+- `src/domain/editorial-brief.ts`
+- `src/config/editorial.ts`
 - `src/adapters/openai.adapter.ts`
 - `src/config/photographer.ts`
 - `src/config/portrait.ts`
@@ -23,7 +26,9 @@ LLM-backed content generation for image prompts, narratives, and camera metadata
 - `src/ports/llm.port.ts`
 
 ## Key Flows
-- Build developer instructions and user input from `ContentInput`.
+- Build a structured editorial brief from place research and verified route facts.
+- Build mode-aware developer instructions and user input from `ContentInput`.
+- Reject generic or repetitive output after one targeted regeneration.
 - Call OpenAI Responses API with GPT-5 model and reasoning enabled.
 - Parse text response into `GeneratedContent` (narrative, imagePrompt, cameraMetadata).
 - Summarize retrieved Wikipedia source pages through the research summary port.

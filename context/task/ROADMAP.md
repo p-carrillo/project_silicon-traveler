@@ -15,7 +15,7 @@ This roadmap is an implementation-order guide, not a Monotask task and not a sta
 3. ✅ [Comando E2E de diez fotografías globales en Admin](admin-e2e-photo-batch.md) — completed; makes the editorial pipeline observable through a bounded real batch.
 4. [Destination-led journey route planner](path-finder.md) — establishes the production itinerary and the shared operation inspected by the route diagnostic.
 5. [Comando E2E de inspección de ruta hacia destino en Admin](admin-e2e-eastbound-route.md) — exposes the completed planner in Admin for iterative verification.
-6. [Improve editorial text variety and place specificity](improve-text.md) — the most contained editorial improvement using the available place context.
+6. ✅ [Improve editorial text variety and place specificity](improve-text.md) — completed; adds research-backed place details, rotating narrative modes, and recent-entry repetition checks.
 7. [Improve image variety and editorial direction](image-variety-and-editorial-direction.md) — builds visual direction on available place and route context.
 8. [Manual editorial replacement and image-prompt preview](manual-photos-and-image-prompt.md) — completes the remaining Admin workflow once its visual-brief dependency is available.
 9. [Web accessibility and alternative text](web-alt-and-accessibility.md) — applies the shared accessibility baseline across public and Admin flows.

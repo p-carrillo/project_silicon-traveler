@@ -3,6 +3,7 @@ import {
   FindRoutePointsByJourneyParams,
   IRouteRepository,
   RoutePointContentTranslation,
+  RecentEditorialNarrative,
   RoutePointCreateParams,
 } from '../ports/route-repository.port';
 import { RoutePoint, RouteStatus } from '../domain/route-point.entity';
@@ -191,6 +192,35 @@ export class MariaDBRouteRepository implements IRouteRepository {
       );
 
       return rows.map((row: any) => this.toDomain(row));
+    } finally {
+      conn.release();
+    }
+  }
+
+  async findRecentNarrativesByJourney(
+    journeyId: number,
+    beforeSequence: number,
+    limit: number
+  ): Promise<RecentEditorialNarrative[]> {
+    const conn = await pool.getConnection();
+    try {
+      const rows = await conn.query(
+        `SELECT sequence, narrative_prompt
+         FROM route_points
+         WHERE journey_id = ?
+           AND sequence < ?
+           AND status IN ('content_generated', 'image_ready', 'published')
+           AND narrative_prompt IS NOT NULL
+           AND TRIM(narrative_prompt) <> ''
+         ORDER BY sequence DESC
+         LIMIT ?`,
+        [journeyId, beforeSequence, limit]
+      );
+
+      return rows.map((row: { sequence: number | string; narrative_prompt: string }) => ({
+        sequence: Number(row.sequence),
+        narrative: row.narrative_prompt,
+      }));
     } finally {
       conn.release();
     }

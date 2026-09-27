@@ -1,15 +1,26 @@
 import axios from 'axios';
 import { getI18nConfig } from '@silicon-traveler/shared';
-import { type ILLMPort, selectPortraitParameters } from '@silicon-traveler/content';
+import {
+  type ILLMPort,
+  type EditorialGenerationConfig,
+  GenerateEditorialContentUseCase,
+  getEditorialGenerationConfig,
+  selectPortraitParameters,
+} from '@silicon-traveler/content';
 import { type IImageGeneratorPort, type IThumbnailGeneratorPort } from '@silicon-traveler/image';
 import { ResearchPlaceUseCase, type IBraveSearchPort, type SearchResult } from '@silicon-traveler/research';
 import type { RoutePointContentTranslation } from '@silicon-traveler/route';
+import { getVerifiedPlaceObservations } from './verified-place-observations';
 
 export interface PhotoPreparationInput {
   placeName: string | null;
   country: string | null;
   region: string | null;
   osmData: unknown | null;
+  sequence?: number;
+  coordinates?: { lat: number; lng: number } | null;
+  distanceFromPrevious?: number | null;
+  recentNarratives?: readonly string[];
 }
 
 export interface PhotoPreparationCoreResult {
@@ -46,14 +57,19 @@ export class AxiosImageDownloadAdapter implements IImageDownloadPort {
 /** Shared, persistence-free photo pipeline for production and ephemeral runs. */
 export class PhotoPreparationCore {
   private readonly researchPlace: ResearchPlaceUseCase;
+  private readonly editorialContent: GenerateEditorialContentUseCase;
 
   constructor(
     braveSearch: IBraveSearchPort,
     private readonly llm: ILLMPort,
     private readonly imageGenerator: IImageGeneratorPort,
     private readonly thumbnailGenerator: IThumbnailGeneratorPort,
-    private readonly imageDownloader: IImageDownloadPort = new AxiosImageDownloadAdapter()
-  ) { this.researchPlace = new ResearchPlaceUseCase(braveSearch, llm); }
+    private readonly imageDownloader: IImageDownloadPort = new AxiosImageDownloadAdapter(),
+    editorialConfig: EditorialGenerationConfig = getEditorialGenerationConfig()
+  ) {
+    this.researchPlace = new ResearchPlaceUseCase(braveSearch, llm);
+    this.editorialContent = new GenerateEditorialContentUseCase(llm, editorialConfig);
+  }
 
   async execute(input: PhotoPreparationInput, hooks?: PhotoPreparationHooks): Promise<PhotoPreparationCoreResult> {
     const location = input.placeName?.trim() ?? '';
@@ -66,10 +82,16 @@ export class PhotoPreparationCore {
     await hooks?.researched?.(researchSummary);
     await hooks?.researchSources?.(research.sources);
     await hooks?.contentGenerationStarted?.();
-    const content = await this.llm.generateContent({
+    const { content } = await this.editorialContent.execute({
       placeName: input.placeName || 'Unknown Place', country: input.country || 'Unknown Country',
       region: input.region || 'Unknown Region', researchSummary, language: baseLanguage,
       portraitParameters: selectPortraitParameters(),
+    }, {
+      sequence: input.sequence ?? 0,
+      coordinates: input.coordinates,
+      distanceFromPrevious: input.distanceFromPrevious,
+      recentNarratives: input.recentNarratives,
+      verifiedGeographicObservations: getVerifiedPlaceObservations(input.osmData, input.placeName),
     });
     const baseImagePrompt = normalizePrompt(content.imagePrompt);
     const translations: RoutePointContentTranslation[] = [{ language: baseLanguage, imagePrompt: baseImagePrompt, narrative: content.narrative }];

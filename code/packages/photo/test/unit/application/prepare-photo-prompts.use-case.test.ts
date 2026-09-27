@@ -67,6 +67,7 @@ describe('PreparePhotoPromptsUseCase', () => {
 
     const routeRepo = {
       findById: vi.fn().mockResolvedValue(routePoint),
+      findRecentNarrativesByJourney: vi.fn().mockResolvedValue([]),
       update: vi.fn().mockResolvedValue(undefined),
       upsertContentTranslations: vi.fn().mockResolvedValue(undefined),
     };
@@ -78,7 +79,7 @@ describe('PreparePhotoPromptsUseCase', () => {
     const llm = {
       generateContent: vi.fn().mockResolvedValue({
         imagePrompt: 'Prompt',
-        narrative: 'Narrative',
+        narrative: 'I record Test City in Test Region, Testland as a specific point on the route. The coordinates mark where this entry belongs, while the distance from the previous stop gives it a measurable place in the sequence.',
         cameraMetadata: {
           camera: 'Leica',
           lens: '35mm',
@@ -141,6 +142,7 @@ describe('PreparePhotoPromptsUseCase', () => {
 
     const routeRepo = {
       findById: vi.fn().mockResolvedValue(routePoint),
+      findRecentNarrativesByJourney: vi.fn().mockResolvedValue([]),
       update: vi.fn().mockResolvedValue(undefined),
       upsertContentTranslations: vi.fn().mockResolvedValue(undefined),
     };
@@ -152,7 +154,7 @@ describe('PreparePhotoPromptsUseCase', () => {
     const llm = {
       generateContent: vi.fn().mockResolvedValue({
         imagePrompt: 'Prompt',
-        narrative: 'Narrative',
+        narrative: 'I record Nowhere in Test Region, Testland as a specific point on the route. The coordinates mark where this entry belongs, while the distance from the previous stop gives it a measurable place in the sequence.',
         cameraMetadata: {
           camera: 'Leica',
           lens: '35mm',
@@ -181,4 +183,40 @@ describe('PreparePhotoPromptsUseCase', () => {
     expect(result.contentStatus).toBe('generated');
     expect(result.imagePrompt).toBe('Prompt ES');
   });
+  it('marks an editorially invalid entry as failed after its one regeneration', async () => {
+    const routePoint: any = {
+      id: 3, journeyId: 1, sequence: 3, status: 'pending', placeName: 'Pamplona',
+      country: 'Spain', region: 'Navarre', coordinates: { lat: 42.8, lng: -1.6 },
+      distanceFromPrevious: 20, osmData: null, researchSummary: null, narrativePrompt: null,
+      updateStatus(status: string, errorMessage: string | null) {
+        this.status = status;
+        this.errorMessage = errorMessage;
+      },
+      updateResearch(summary: string) { this.researchSummary = summary; this.status = 'researched'; },
+      updateContent: vi.fn(),
+    };
+    const routeRepo = {
+      findById: vi.fn().mockResolvedValue(routePoint),
+      findRecentNarrativesByJourney: vi.fn().mockResolvedValue([]),
+      update: vi.fn().mockResolvedValue(undefined),
+      upsertContentTranslations: vi.fn().mockResolvedValue(undefined),
+    };
+    const braveSearch = { search: vi.fn().mockResolvedValue([]) };
+    const llm = {
+      generateContent: vi.fn().mockResolvedValue({
+        imagePrompt: 'Prompt',
+        narrative: 'A timeless place where silence speaks through memory.',
+        cameraMetadata: { camera: 'Leica', lens: '35mm', iso: 100, shutterSpeed: '1/100', aperture: 'f/2.8' },
+      }),
+      translateContent: vi.fn(),
+    };
+    const useCase = new PreparePhotoPromptsUseCase(routeRepo as any, braveSearch as any, llm as any);
+
+    await expect(useCase.execute(3)).rejects.toThrow('Editorial quality check failed after one regeneration');
+
+    expect(llm.generateContent).toHaveBeenCalledTimes(2);
+    expect(routePoint.status).toBe('failed');
+    expect(routePoint.errorMessage).toContain('Editorial quality check failed');
+  });
+
 });

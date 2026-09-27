@@ -28,6 +28,11 @@ export interface RoutePointCreateParams {
   publishedAt: Date | null;
 }
 
+export interface RecentEditorialNarrative {
+  sequence: number;
+  narrative: string;
+}
+
 export interface FindRoutePointsByJourneyParams {
   statuses?: RouteStatus[];
   cityQuery?: string;
@@ -45,6 +50,7 @@ export interface IRouteRepository {
   findFirstScheduledByJourney(journeyId: number): Promise<RoutePoint | null>;
   findNextBySequence(journeyId: number): Promise<RoutePoint | null>;
   findByJourney(journeyId: number, params: FindRoutePointsByJourneyParams): Promise<RoutePoint[]>;
+  findRecentNarrativesByJourney(journeyId: number, beforeSequence: number, limit: number): Promise<RecentEditorialNarrative[]>;
   countByJourney(journeyId: number, statuses?: RouteStatus[], cityQuery?: string): Promise<number>;
   countByStatuses(statuses: RouteStatus[]): Promise<number>;
   upsertContentTranslations(
