@@ -10,8 +10,8 @@ describe('map page latest photo wiring', () => {
     const pagePath = path.join(repoRoot, 'apps', 'web', 'src', 'app', 'map', 'page.tsx');
     const page = readFileSync(pagePath, 'utf8');
 
-    expect(page).toContain('import { getLatestPhoto } from \'@/lib/api\'');
-    expect(page).toContain('const latestPhoto = await getLatestPhoto(locale)');
+    expect(page).toContain("import { getLatestPhoto, getJourneyStats } from '@/lib/api';");
+    expect(page).toContain('getLatestPhoto(locale)');
     expect(page).toContain('<MapExplorer locale={locale} latestPhoto={latestPhoto} />');
   });
 });

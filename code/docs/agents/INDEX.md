@@ -11,6 +11,7 @@
 - [`../../../context/task/ROADMAP.md`](../../../context/task/ROADMAP.md): Recommended implementation order for the local task definitions.
 
 ## Recent Decisions
+- `.adr/068-research-grounded-visual-briefs.md`: Grounded scene direction is stored with original and provider-revised prompts; Admin E2E supports manual batch review without a hard similarity gate.
 - `.adr/067-editorial-briefs-and-variety-guards.md`: Production content uses research-backed editorial briefs, rotating modes, recent-history guards, and one bounded regeneration.
 - `.adr/066-summarize-wikipedia-research-with-shared-llm.md`: The shared research use case summarizes retrieved Wikipedia page content through the injected OpenAI adapter in both Admin and production flows.
 - `.adr/065-random-e2e-global-place-catalog.md`: The development-only global photo batch selects from a local GeoNames-derived catalog instead of calling an LLM for place selection.

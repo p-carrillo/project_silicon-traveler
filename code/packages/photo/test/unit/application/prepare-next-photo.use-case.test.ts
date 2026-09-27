@@ -38,6 +38,7 @@ const createRoutePoint = () =>
     null,
     null,
     null,
+    null,
     'pending',
     null,
     null,

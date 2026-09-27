@@ -64,10 +64,14 @@ export class PreparePhotoUseCase {
           routePoint.updateResearch(researchSummary, routePoint.osmData);
           await this.routeRepository.update(routePoint);
         },
-        contentGenerated: async ({ imagePrompt, narrative, cameraMetadata, translations }) => {
-          routePoint.updateContent(imagePrompt, narrative, cameraMetadata);
+        contentGenerated: async ({ imagePrompt, narrative, cameraMetadata, translations, visualBrief }) => {
+          routePoint.updateContent(imagePrompt, narrative, cameraMetadata, visualBrief);
           await this.routeRepository.update(routePoint);
           await this.routeRepository.upsertContentTranslations(routePoint.id, translations);
+        },
+        visualBriefFinalized: async (visualBrief) => {
+          routePoint.updateVisualBrief(visualBrief);
+          await this.routeRepository.update(routePoint);
         },
       });
 

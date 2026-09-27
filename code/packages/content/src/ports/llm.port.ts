@@ -1,6 +1,6 @@
-import type { PortraitParameters } from '../config/portrait';
 import type { IResearchSummaryPort } from '@silicon-traveler/research';
 import type { EditorialBrief } from '../domain/editorial-brief';
+import type { VisualBrief } from '../domain/visual-brief';
 
 export interface GeneratedContent {
   imagePrompt: string;
@@ -32,8 +32,8 @@ export interface ContentInput {
   region: string;
   researchSummary: string;
   language?: string;
-  portraitParameters?: PortraitParameters;
   editorialBrief?: EditorialBrief;
+  visualBrief?: VisualBrief;
   qualityFeedback?: string[];
 }
 

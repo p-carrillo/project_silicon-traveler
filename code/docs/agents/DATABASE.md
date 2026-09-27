@@ -10,7 +10,7 @@
 | --- | --- | --- | --- |
 | `migrations` | Tracks applied migrations | Core | `20260202100000_create_migrations_table.sql` |
 | `journey` | Journey origin, current position, heading | `@silicon-traveler/journey` | `20260202100001_create_journey_table.sql` |
-| `route_points` | Route points, research data, content, status | `@silicon-traveler/route` | `20260202100002_create_route_points_table.sql` |
+| `route_points` | Route points, research data, content, visual brief and prompt audit data, status | `@silicon-traveler/route` | `20260202100002_create_route_points_table.sql`, `20260925120000_add_visual_brief_to_route_points.sql` |
 | `route_point_translations` | Multilingual prompts and narratives per route point | `@silicon-traveler/route` | `20260205120000_create_route_point_translations_table.sql` |
 | `photos` | Published photos metadata | `@silicon-traveler/photo` | `20260202100003_create_photos_table.sql` |
 | `photo_translations` | Multilingual photo metadata | `@silicon-traveler/photo` | `20260205120010_create_photo_translations_table.sql` |
@@ -23,6 +23,8 @@
 - `photo_translations.photo_id` references `photos.id`.
 
 ## Status Flow
+`route_points.visual_brief` stores the selected scene category, source anchor, visual direction, original image prompt, and provider-revised prompt.
+
 `route_points.status` is an enum with values `pending`, `researched`, `content_generated`, `image_ready`, `published`, `failed`.
 
 ## Repositories

@@ -19,6 +19,7 @@ export interface RoutePointCreateParams {
   osmData: unknown | null;
   researchSummary: string | null;
   imagePrompt: string | null;
+  visualBrief: unknown | null;
   narrativePrompt: string | null;
   cameraMetadata: unknown | null;
   status: RouteStatus;

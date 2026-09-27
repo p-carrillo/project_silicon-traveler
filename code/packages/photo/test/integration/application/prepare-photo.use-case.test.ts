@@ -54,6 +54,7 @@ describe('PreparePhotoUseCase (integration)', () => {
         this.cameraMetadata = cameraMetadata;
         this.status = 'content_generated';
       },
+      updateVisualBrief(visualBrief: unknown) { this.visualBrief = visualBrief; },
       updateImages(imagePath: string, thumbnailPath: string) {
         this.imagePath = imagePath;
         this.thumbnailPath = thumbnailPath;
@@ -80,8 +81,8 @@ describe('PreparePhotoUseCase (integration)', () => {
         narrative: 'I record Test City in Test Region, Testland as a specific point on the route. The coordinates mark where this entry belongs, while the distance from the previous stop gives it a measurable place in the sequence.',
         cameraMetadata: {
           camera: 'Leica',
-          lens: '35mm',
-          iso: 100,
+          lens: '50mm',
+          iso: 400,
           shutterSpeed: '1/100',
           aperture: 'f/2.8',
         },
@@ -93,7 +94,7 @@ describe('PreparePhotoUseCase (integration)', () => {
     };
 
     const imageGenerator = {
-      generate: vi.fn().mockResolvedValue({ url: 'http://image', revisedPrompt: null }),
+      generate: vi.fn().mockResolvedValue({ url: 'http://image', revisedPrompt: 'Provider revised image prompt' }),
     };
 
     const thumbnailGenerator = {
@@ -130,6 +131,7 @@ describe('PreparePhotoUseCase (integration)', () => {
     expect(imageGenerator.generate).toHaveBeenCalledWith('Prompt');
     expect(thumbnailGenerator.generate).toHaveBeenCalled();
     expect(result.narrative).toBe('Narrativa');
+    expect(routePoint.visualBrief).toMatchObject({ originalPrompt: 'Prompt', revisedPrompt: 'Provider revised image prompt' });
   });
 
   it('normalizes non-string image prompts', async () => {
@@ -161,6 +163,7 @@ describe('PreparePhotoUseCase (integration)', () => {
         this.cameraMetadata = cameraMetadata;
         this.status = 'content_generated';
       },
+      updateVisualBrief(visualBrief: unknown) { this.visualBrief = visualBrief; },
       updateImages(imagePath: string, thumbnailPath: string) {
         this.imagePath = imagePath;
         this.thumbnailPath = thumbnailPath;
@@ -187,8 +190,8 @@ describe('PreparePhotoUseCase (integration)', () => {
         narrative: 'I record Test City in Test Region, Testland as a specific point on the route. The coordinates mark where this entry belongs, while the distance from the previous stop gives it a measurable place in the sequence.',
         cameraMetadata: {
           camera: 'Leica',
-          lens: '35mm',
-          iso: 100,
+          lens: '50mm',
+          iso: 400,
           shutterSpeed: '1/100',
           aperture: 'f/2.8',
         },
@@ -265,6 +268,7 @@ describe('PreparePhotoUseCase (integration)', () => {
         this.cameraMetadata = cameraMetadata;
         this.status = 'content_generated';
       },
+      updateVisualBrief(visualBrief: unknown) { this.visualBrief = visualBrief; },
       updateImages(imagePath: string, thumbnailPath: string) {
         this.imagePath = imagePath;
         this.thumbnailPath = thumbnailPath;

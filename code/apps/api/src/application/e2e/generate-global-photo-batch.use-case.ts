@@ -26,7 +26,7 @@ export class GenerateGlobalPhotoBatchUseCase {
       if (context.signal.aborted) throw new Error('E2E execution was cancelled');
       const index = offset + 1;
       try {
-        await this.photoExecution.execute(context, toPhotoPreparationInput(place), index, count);
+        await this.photoExecution.execute(context, { ...toPhotoPreparationInput(place), sequence: index }, index, count);
       } catch (error: unknown) {
         const connector = error instanceof E2EPhotoExecutionError ? error.connector : undefined;
         context.emit({

@@ -186,6 +186,11 @@ export default async function EditRoutePointPage({
                   }}
                 />
 
+                {routePoint.visual_brief ? <section className="md:col-span-2 rounded-md bg-zinc-50 p-4">
+                  <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-600">{t.admin.fields.visualBrief}</h2>
+                  <pre className="mt-2 overflow-x-auto whitespace-pre-wrap break-words text-sm text-zinc-800">{JSON.stringify(routePoint.visual_brief, null, 2)}</pre>
+                </section> : null}
+
                 <label className="md:col-span-2 flex flex-col gap-1 text-xs uppercase tracking-[0.2em] text-zinc-600">
                   {t.admin.fields.prompt}
                   <textarea

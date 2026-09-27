@@ -22,7 +22,8 @@ describe('PhotoJournal', () => {
     expect(component).toContain("from '@/lib/images'");
     expect(component).toContain('src={toProxyImageSrc(photo.image_path)}');
     expect(component).toContain('aspect-square');
-    expect(component).toContain('max-w-[calc(100vh-14rem)]');
+    expect(component).toContain('lg:w-[calc(100vh-14rem)]');
+    expect(component).toContain('lg:max-w-[60vw]');
     expect(component).toContain('object-cover');
   });
 });

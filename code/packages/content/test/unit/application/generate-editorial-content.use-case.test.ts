@@ -37,6 +37,7 @@ describe('GenerateEditorialContentUseCase', () => {
       expect.stringContaining('generic contemplative'),
     ]));
     expect(result.content.narrative).toBe(validContent.narrative);
+    expect(result.visualBrief.category).toBe('built-environment');
   });
 
   it('fails after the single allowed regeneration if the narrative remains generic', async () => {
@@ -68,6 +69,8 @@ describe('GenerateEditorialContentUseCase', () => {
     });
 
     expect(result.brief.narrativeMode).toBe('route-observation');
+    expect(result.visualBrief.category).toBe('movement');
+    expect(result.visualBrief.anchorSource).toBe('route');
     expect(result.content.narrative).toContain('Pamplona');
     expect(generateContent).toHaveBeenCalledTimes(1);
   });

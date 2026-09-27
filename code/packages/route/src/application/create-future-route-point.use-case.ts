@@ -53,6 +53,7 @@ export class CreateFutureRoutePointUseCase {
       osmData: null,
       researchSummary: null,
       imagePrompt: null,
+      visualBrief: null,
       narrativePrompt: null,
       cameraMetadata: null,
       status: input.status ?? 'pending',

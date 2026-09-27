@@ -25,6 +25,7 @@ describe('MariaDBRouteRepository (unit)', () => {
       osmData: null,
       researchSummary: null,
       imagePrompt: null,
+      visualBrief: { category: 'movement', anchor: 'A walking route through Bilbao.' },
       narrativePrompt: null,
       cameraMetadata: null,
       status: 'pending',
@@ -35,6 +36,9 @@ describe('MariaDBRouteRepository (unit)', () => {
     });
 
     expect(created.id).toBe(42);
+    expect(created.visualBrief).toEqual({ category: 'movement', anchor: 'A walking route through Bilbao.' });
+    const insertParams = query.mock.calls[0][1] as unknown[];
+    expect(insertParams[10]).toBe(JSON.stringify(created.visualBrief));
     expect(typeof created.id).toBe('number');
     expect(release).toHaveBeenCalledTimes(1);
   });

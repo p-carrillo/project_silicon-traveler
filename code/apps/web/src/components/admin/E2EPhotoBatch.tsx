@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type ReactNode } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 
 interface E2EPhotoBatchLabels {
   photosTitle: string;
@@ -11,6 +11,9 @@ interface E2EPhotoBatchLabels {
   photo: string;
   photos: string;
   running: string;
+  stop: string;
+  stopping: string;
+  stopped: string;
   progress: string;
   selectingPlaces: string;
   preparingPhoto: string;
@@ -31,6 +34,16 @@ interface E2EPhotoBatchLabels {
   connectorSuccess: string;
   connectorError: string;
   imagePrompt: string;
+  revisedPrompt: string;
+  visualDirection: string;
+  reflection: string;
+  sourceAnchor: string;
+  subject: string;
+  setting: string;
+  composition: string;
+  lightWeather: string;
+  visualConstraints: string;
+  negativeConstraints: string;
   camera: string;
   noResults: string;
 }
@@ -46,9 +59,13 @@ interface Result extends Place {
   researchSummary?: string;
   researchSources?: Array<{ title: string; url: string }>;
   translations?: Array<{ language: string; imagePrompt: string; narrative: string }>;
+  visualBrief?: VisualBrief;
+  revisedPrompt?: string;
   connectors: Record<Connector, ConnectorStatus>;
   errorMessage?: string;
 }
+
+interface VisualBrief { category: string; reflection?: string; anchor: string; anchorSource: string; subject: string; setting: string; composition: string; timeAndWeather: string; visualConstraints: string[]; negativeConstraints: string[]; originalPrompt?: string; revisedPrompt?: string | null; }
 
 interface StreamEvent { type: string; index: number; total: number; data?: Record<string, unknown>; }
 type Connector = 'research' | 'content' | 'image' | 'thumbnails';
@@ -59,14 +76,23 @@ export default function E2EPhotoBatch({ labels }: { labels: E2EPhotoBatchLabels 
   const [results, setResults] = useState<Result[]>([]);
   const [runId, setRunId] = useState<string | null>(null);
   const [isRunning, setIsRunning] = useState(false);
+  const [isStopping, setIsStopping] = useState(false);
   const [completed, setCompleted] = useState(0);
   const [count, setCount] = useState(10);
   const [status, setStatus] = useState('');
   const [errors, setErrors] = useState<string[]>([]);
+  const cancelController = useRef<AbortController | null>(null);
+  const activeRunId = useRef<string | null>(null);
+  const stopRequested = useRef(false);
 
   async function start(): Promise<void> {
     setResults([]);
     setRunId(null);
+    activeRunId.current = null;
+    stopRequested.current = false;
+    const controller = new AbortController();
+    cancelController.current = controller;
+    setIsStopping(false);
     setCompleted(0);
     setErrors([]);
     setStatus(labels.selectingPlaces);
@@ -74,24 +100,50 @@ export default function E2EPhotoBatch({ labels }: { labels: E2EPhotoBatchLabels 
     try {
       const response = await fetch('/admin/api/e2e/runs/global-photos', {
         method: 'POST',
+        signal: controller.signal,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ count }),
       });
       if (!response.ok || !response.body) throw new Error('Unable to start the global photo batch');
       await readEventStream(response.body, (event) => applyEvent(event));
     } catch (error: unknown) {
+      if (stopRequested.current) setStatus(labels.stopped);
+      else {
+        const message = error instanceof Error ? error.message : labels.error;
+        setStatus(message);
+        addError(message);
+      }
+    } finally {
+      cancelController.current = null;
+      activeRunId.current = null;
+      setIsRunning(false);
+    }
+  }
+
+  async function stop(): Promise<void> {
+    const currentRunId = activeRunId.current;
+    if (!currentRunId || stopRequested.current) return;
+    stopRequested.current = true;
+    setIsStopping(true);
+    setStatus(labels.stopping);
+    try {
+      const response = await fetch(`/admin/api/e2e/runs/${encodeURIComponent(currentRunId)}/cancel`, { method: 'POST' });
+      if (!response.ok) throw new Error('Unable to stop the photo batch');
+      cancelController.current?.abort();
+      setStatus(labels.stopped);
+    } catch (error: unknown) {
+      stopRequested.current = false;
+      setIsStopping(false);
       const message = error instanceof Error ? error.message : labels.error;
       setStatus(message);
       addError(message);
-    } finally {
-      setIsRunning(false);
     }
   }
 
   function applyEvent(event: StreamEvent): void {
     if (event.type === 'started') {
       const nextRunId = readString(event.data?.runId);
-      if (nextRunId) setRunId(nextRunId);
+      if (nextRunId) { activeRunId.current = nextRunId; setRunId(nextRunId); }
       return;
     }
     if (event.type === 'progress' && event.data?.stage === 'places_selected') {
@@ -145,7 +197,7 @@ export default function E2EPhotoBatch({ labels }: { labels: E2EPhotoBatchLabels 
       addError(message);
       return;
     }
-    if (event.type === 'completed') setStatus(labels.completed);
+    if (event.type === 'completed') { setStatus(labels.completed); setIsRunning(false); }
   }
 
   function updateResult(index: number, update: (result: Result) => Result): void {
@@ -171,6 +223,7 @@ export default function E2EPhotoBatch({ labels }: { labels: E2EPhotoBatchLabels 
         <button type="button" onClick={() => void start()} disabled={isRunning} className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-zinc-500">
           {isRunning ? labels.running : `${labels.start} ${count} ${count === 1 ? labels.photo : labels.photos}`}
         </button>
+        {isRunning ? <button type="button" onClick={() => void stop()} disabled={!runId || isStopping} className="rounded-md border border-red-300 px-4 py-2 text-sm font-semibold text-red-800 disabled:cursor-not-allowed disabled:opacity-50">{isStopping ? labels.stopping : labels.stop}</button> : null}
         <p aria-live="polite" role="status" className="text-sm text-zinc-700">{status}</p>
       </div>
       <div aria-label={progressLabel(labels, completed, count)} aria-valuemax={count} aria-valuemin={0} aria-valuenow={completed} role="progressbar" className="h-3 overflow-hidden rounded-full bg-zinc-200">
@@ -193,10 +246,11 @@ function ResultCard({ result, index, total, runId, labels }: { result: Result; i
       <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">{index}/{total} · {result.status}</p>
       <h3 className="font-bold text-zinc-950">{[result.placeName, result.region, result.country].filter(Boolean).join(', ')}</h3>
       {result.narrative ? <p className="text-sm text-zinc-700">{result.narrative}</p> : null}
-      {result.imagePrompt ? <p className="text-xs text-zinc-600"><span className="font-semibold">{labels.imagePrompt}:</span> {result.imagePrompt}</p> : null}
+      {(result.visualBrief?.originalPrompt || result.imagePrompt) ? <p className="text-xs text-zinc-600"><span className="font-semibold">{labels.imagePrompt}:</span> {result.visualBrief?.originalPrompt ?? result.imagePrompt}</p> : null}
+      {result.visualBrief?.revisedPrompt ? <p className="text-xs text-zinc-600"><span className="font-semibold">{labels.revisedPrompt}:</span> {result.visualBrief.revisedPrompt}</p> : null}
       {result.cameraMetadata ? <p className="text-xs text-zinc-600"><span className="font-semibold">{labels.camera}:</span> {result.cameraMetadata.camera}, {result.cameraMetadata.lens} · ISO {result.cameraMetadata.iso} · {result.cameraMetadata.shutterSpeed} · f/{result.cameraMetadata.aperture}</p> : null}
       {result.researchSummary ? <section className="rounded-md bg-zinc-50 p-3 text-sm text-zinc-700"><h4 className="font-semibold text-zinc-950">{labels.research}</h4><p className="mt-1">{result.researchSummary}</p></section> : null}
-      <div className="flex flex-wrap gap-2">{result.researchSources?.length ? <Popup label={labels.sources} close={labels.close}><ul className="list-disc space-y-2 pl-5">{result.researchSources.map((source) => <li key={source.url}><a href={source.url} target="_blank" rel="noreferrer" className="underline">{source.title}</a></li>)}</ul></Popup> : null}{result.translations?.length ? <Popup label={labels.translations} close={labels.close}><div className="flex flex-col gap-4">{result.translations.map((translation) => <section key={translation.language}><h5 className="font-semibold">{translation.language}</h5><p className="mt-1 text-sm">{translation.narrative}</p><p className="mt-1 text-xs text-zinc-600">{translation.imagePrompt}</p></section>)}</div></Popup> : null}</div>
+      <div className="flex flex-wrap gap-2">{result.visualBrief ? <Popup label={labels.visualDirection} close={labels.close}><section className="flex flex-col gap-2 text-sm"><p><span className="font-semibold">{labels.visualDirection}:</span> {result.visualBrief.category}</p>{result.visualBrief.reflection ? <p><span className="font-semibold">{labels.reflection}:</span> {result.visualBrief.reflection}</p> : null}<p><span className="font-semibold">{labels.sourceAnchor}:</span> ({result.visualBrief.anchorSource}) {result.visualBrief.anchor}</p><p><span className="font-semibold">{labels.subject}:</span> {result.visualBrief.subject}</p><p><span className="font-semibold">{labels.setting}:</span> {result.visualBrief.setting}</p><p><span className="font-semibold">{labels.composition}:</span> {result.visualBrief.composition}</p><p><span className="font-semibold">{labels.lightWeather}:</span> {result.visualBrief.timeAndWeather}</p><div><h5 className="font-semibold">{labels.visualConstraints}</h5><ul className="list-disc pl-5">{result.visualBrief.visualConstraints.map((item) => <li key={item}>{item}</li>)}</ul></div><div><h5 className="font-semibold">{labels.negativeConstraints}</h5><ul className="list-disc pl-5">{result.visualBrief.negativeConstraints.map((item) => <li key={item}>{item}</li>)}</ul></div></section></Popup> : null}{result.researchSources?.length ? <Popup label={labels.sources} close={labels.close}><ul className="list-disc space-y-2 pl-5">{result.researchSources.map((source) => <li key={source.url}><a href={source.url} target="_blank" rel="noreferrer" className="underline">{source.title}</a></li>)}</ul></Popup> : null}{result.translations?.length ? <Popup label={labels.translations} close={labels.close}><div className="flex flex-col gap-4">{result.translations.map((translation) => <section key={translation.language}><h5 className="font-semibold">{translation.language}</h5><p className="mt-1 text-sm">{translation.narrative}</p><p className="mt-1 text-xs text-zinc-600">{translation.imagePrompt}</p></section>)}</div></Popup> : null}</div>
       <ConnectorStatuses connectors={result.connectors} labels={labels} />
       {result.errorMessage ? <p role="alert" className="text-sm font-medium text-red-700">{result.errorMessage}</p> : null}
     </div>
@@ -242,8 +296,25 @@ function readResult(value: unknown): Partial<Result> {
     researchSummary: readString(value.researchSummary),
     translations: readTranslations(value.translations),
     cameraMetadata: readCameraMetadata(value.cameraMetadata),
+    visualBrief: readVisualBrief(value.visualBrief),
+    revisedPrompt: readString(value.revisedPrompt),
   };
 }
+function readVisualBrief(value: unknown): VisualBrief | undefined {
+  if (!isRecord(value)) return undefined;
+  const category = readString(value.category);
+  const anchor = readString(value.anchor);
+  const anchorSource = value.anchorSource === 'research' || value.anchorSource === 'route' ? value.anchorSource : undefined;
+  const subject = readString(value.subject);
+  const setting = readString(value.setting);
+  const composition = readString(value.composition);
+  const timeAndWeather = readString(value.timeAndWeather);
+  const visualConstraints = readStringArray(value.visualConstraints);
+  const negativeConstraints = readStringArray(value.negativeConstraints);
+  if (!category || !anchor || !anchorSource || !subject || !setting || !composition || !timeAndWeather || !visualConstraints || !negativeConstraints) return undefined;
+  return { category, reflection: readString(value.reflection), anchor, anchorSource, subject, setting, composition, timeAndWeather, visualConstraints, negativeConstraints, originalPrompt: readString(value.originalPrompt), revisedPrompt: value.revisedPrompt === null ? null : readString(value.revisedPrompt) };
+}
+function readStringArray(value: unknown): string[] | undefined { return Array.isArray(value) && value.every((item) => typeof item === 'string') ? value : undefined; }
 function readCameraMetadata(value: unknown): CameraMetadata | undefined {
   if (!isRecord(value)) return undefined;
   const camera = readString(value.camera);

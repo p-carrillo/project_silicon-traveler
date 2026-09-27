@@ -18,6 +18,7 @@ const createRoutePoint = () =>
     null,
     null,
     null,
+    null,
     'image_ready',
     null,
     '/images/2026/02/12/10.jpg',

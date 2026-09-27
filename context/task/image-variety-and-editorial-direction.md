@@ -2,7 +2,7 @@
 
 - **Monotask ID:** `8d80e354-0496-433c-afa4-f6775e6688c0`
 - **Priority:** Medium
-- **Status:** To do — definition synchronized
+- **Status:** In progress — locally refined; Monotask sync pending approval
 - **Category:** General
 
 ## Problem
@@ -11,15 +11,18 @@ The image pipeline begins every generation with the same visual recipe: black-an
 
 ## Outcome
 
-Produce a coherent documentary journal with deliberate visual variety. Each image should have a clear relationship to the location and should differ meaningfully from nearby publications in subject, framing, time, environment, and visual emphasis while preserving a recognisable project identity.
+Produce a coherent documentary journal with deliberate visual variety. Each image should have a clear relationship to the location and an intentional subject, framing, time, environment, and visual emphasis while preserving a recognisable project identity. Some repetition is natural in a photographer’s body of work and is acceptable.
 
 ## Scope
 
 - Replace the fixed image-prompt template with a research-informed visual brief.
-- Make portraits one selectable editorial category rather than the default output.
-- Introduce scene categories, composition rules, and a recent-history diversity window.
+- Use a hard Kodak Tri-X 400-inspired black-and-white treatment and a fixed 50 mm focal length.
+- Keep human presence as an optional scene category, portray local inhabitants in place-specific everyday contexts, and avoid the generic backpacking visitor. Leave appearance and pose to the image model.
+- Introduce scene categories and composition guidance while allowing repeated categories and visual attributes.
 - Store the selected visual direction and final revised prompt for auditability.
-- Add a quality gate that can request one contrasting regeneration when a result is too similar to recent work.
+- Include the generated reflection in the image prompt so the image expresses the same observation as the text.
+- Expose visual direction, reflection, source anchors, and provider-revised prompt in the existing Admin E2E photo batch for manual review.
+- Allow an active Admin E2E photo batch to be stopped; finish the current photo if its provider request is already in flight, then stop before starting another.
 
 ## Proposed visual taxonomy
 
@@ -33,27 +36,31 @@ Produce a coherent documentary journal with deliberate visual variety. Each imag
 ## Acceptance criteria
 
 - The image prompt uses at least one concrete research or route-derived anchor beyond the place name.
+- The prompt requests a high-contrast Tri-X 400-inspired monochrome look with visible grain.
+- Generated camera metadata always records a 50 mm lens and ISO 400.
 - The visual taxonomy category is recorded for each generated image.
-- No category, dominant framing, or time-of-day value repeats inside a configurable recent window unless no viable alternative exists.
-- Portrait-specific parameters are only generated when the selected category requires human presence.
-- A generated image can be audited through its visual brief, source anchors, selected category, original prompt, and revised prompt.
-- Unit tests cover category selection, diversity constraints, prompt construction, and fallbacks with sparse research.
+- Repetition in category, framing, or time of day does not trigger rejection or automatic regeneration.
+- Human-presence scenes depict local inhabitants in a source-grounded everyday context and avoid the default young backpacker. Gender presentation, skin tone, age, expression, and pose remain mood-led model choices without stereotypes.
+- A generated image can be audited through its visual brief, reflection, source anchors, selected category, original prompt, and provider-revised prompt.
+- The Admin E2E photo batch displays the visual brief, reflection, and revised prompt alongside each generated image for manual review of a batch of up to ten images.
+- The Admin E2E photo batch provides a stop button that cancels remaining work in the active batch.
+- Batch image assets remain available long enough to review the full batch after generation.
+- Unit tests cover category selection, anchor grounding, prompt construction, and fallbacks with sparse research.
 
 ## Implementation plan
 
-1. Audit the latest published images and prompts to establish a baseline by subject, framing, tonal treatment, and repeated visual language.
+1. Use the existing Admin E2E photo batch to generate up to ten images and review visual direction, place fidelity, and repetition manually.
 2. Define a pure domain model for `VisualBrief`, including category, factual anchor, subject, setting, composition, time/weather, visual constraints, and negative constraints.
-3. Add a repository query for recent published visual briefs and metadata; introduce a diversity selector that excludes recently repeated attributes.
+3. Keep repetition as an allowed editorial outcome; do not add a recent-visual-history query or automatic similarity check.
 4. Extract visual anchors from research and route context, then choose a category and composition appropriate to the place.
-5. Build image prompts from the visual brief. Keep the documentary identity as a flexible style layer, not a fixed scene definition.
-6. Generate the image and persist both the initial prompt and provider-revised prompt with the brief.
-7. Add a lightweight similarity policy: first compare metadata and prompt overlap; consider image embeddings only after measuring whether heuristic checks are insufficient.
-8. Create a curated review set of representative locations and manually evaluate variety, location fidelity, quality, and undesirable stereotypes before enabling it for the scheduler.
+5. Build image prompts from the visual brief and generated reflection. Leave human depiction choices to the image model while preserving factual anchors. Keep the documentary identity as a flexible style layer, not a fixed scene definition.
+6. Persist the selected brief, its source anchors, the original image prompt, and the provider-revised prompt.
+7. Review the generated batch in Admin and adjust the taxonomy or prompt rules based on manual feedback before relying on it in the scheduler.
 
 ## Decisions resolved
 
-- Documentary prompts must cite a concrete research/route anchor and include constraints against generic cultural shorthand. The selector must reject a category that cannot be grounded in available facts.
-- Version one evaluates variety from chosen brief metadata and prompt overlap. It does not promise image-model adherence or add embeddings before a measured need.
+- Documentary prompts must cite a concrete research/route anchor and include constraints against generic cultural shorthand. Human-presence prompts do not specify demographic or portrait attributes; the image model chooses them. The selector chooses a category supported by available research or route facts; when research is sparse, it uses the known walking route as a conservative fallback.
+- Version one treats variety as editorial direction, not a hard diversity constraint. It does not compare image embeddings or automatically regenerate images for similarity.
 - The default house style remains black and white. Colour is not part of the scheduler's automatic choice; it may be introduced later only as a named, explicitly approved editorial series.
-- Store the compact selected `VisualBrief` and original/final prompts as JSON in additive columns on `route_points`, with an indexed published-time query for recent briefs. Keep image-derived similarity data out of the first migration.
-- One contrasting regeneration is allowed only after the metadata/prompt quality gate fails and must use a different permitted category or composition; otherwise the image is retained for manual review.
+- Store the compact selected `VisualBrief`, source anchor, original prompt, and provider-revised prompt as JSON in an additive `route_points.visual_brief` column. No recent-history index is needed in version one.
+- Manual review of the existing ten-photo Admin E2E batch is the quality check for visual variety and location fidelity.

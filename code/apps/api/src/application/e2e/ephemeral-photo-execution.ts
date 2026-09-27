@@ -9,6 +9,7 @@ export interface EphemeralPhotoExecutionResult {
   imagePrompt: string;
   researchSummary: string;
   cameraMetadata: PhotoPreparationCoreResult['cameraMetadata'];
+  visualBrief: PhotoPreparationCoreResult['visualBrief'];
   revisedPrompt: string | null;
 }
 
@@ -38,9 +39,9 @@ export class EphemeralPhotoExecution {
         },
         researchSources: async (sources) => context.emit({ type: 'progress', index, total, data: { stage: 'research_sources', sources } }),
         contentGenerationStarted: async () => updateConnector('content', 'running'),
-        contentGenerated: async ({ imagePrompt, narrative, cameraMetadata, translations }) => {
+        contentGenerated: async ({ imagePrompt, narrative, cameraMetadata, translations, visualBrief }) => {
           updateConnector('content', 'success');
-          context.emit({ type: 'progress', index, total, data: { stage: 'content_completed', imagePrompt, narrative, cameraMetadata, translations } });
+          context.emit({ type: 'progress', index, total, data: { stage: 'content_completed', imagePrompt, narrative, cameraMetadata, translations, visualBrief } });
         },
         imageGenerationStarted: async () => updateConnector('image', 'running'),
         imageGenerated: async () => updateConnector('image', 'success'),
@@ -65,6 +66,7 @@ export class EphemeralPhotoExecution {
       researchSummary: prepared.researchSummary,
       cameraMetadata: prepared.cameraMetadata,
       revisedPrompt: prepared.revisedPrompt,
+      visualBrief: prepared.visualBrief,
     };
     context.emit({ type: 'result', index, total, data: result });
     return result;

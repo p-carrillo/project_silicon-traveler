@@ -6,7 +6,7 @@ Route point computation and enrichment for the journey path.
 ## Responsibilities
 - Calculate next route point coordinates.
 - Enrich points with nearest city and geocoding.
-- Persist route points and provide recent same-journey narrative history for editorial variety.
+- Persist route points, including their visual brief JSON, and provide recent same-journey narrative history for editorial variety.
 
 ## Boundaries
 - No LLM content generation.

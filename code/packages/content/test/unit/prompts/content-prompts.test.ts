@@ -1,32 +1,43 @@
 import { describe, expect, it } from 'vitest';
 import { buildImagePrompt, buildResearchSummaryPrompt } from '../../../src/prompts/content-prompts';
+import { buildVisualBrief } from '../../../src/domain/visual-brief';
 
 describe('buildImagePrompt', () => {
-  it('does not include background in inline portrait parameters', () => {
+  it('uses the reflection and leaves human depiction choices open', () => {
+    const visualBrief = buildVisualBrief({ placeName: 'A Coruna', factualAnchor: 'Residents live in A Coruna.', visualMaterialAnchor: 'Residents live in the community.', researchSupported: true, sequence: 0 });
     const prompt = buildImagePrompt({
-      portraitParameters: {
-        gender: 'woman',
-        age: 34,
-        incomeClass: 'middle class',
-        shotType: 'close-up',
-        expression: 'pensive',
-        gaze: 'looking away',
-        posture: 'standing',
-        timeOfDay: 'dusk',
-        activity: 'waiting',
-        lightingContrast: 'high contrast',
-        filmGrain: 'medium',
-        cameraHeight: 'eye level',
-        depthOfField: 'shallow',
-      },
+      visualBrief,
       placeName: 'A Coruna',
       region: 'Galicia',
       country: 'Spain',
-      language: 'es',
+      reflection: 'I notice the railway entering the city.',
+      language: 'en',
     });
 
-    expect(prompt).not.toContain('background:');
-    expect(prompt).not.toContain('fondo:');
+    expect(visualBrief.category).toBe('human-presence');
+    expect(prompt).toContain('I notice the railway entering the city.');
+    expect(prompt).toContain('Kodak Tri-X 400');
+    expect(prompt).toContain('50mm lens');
+    expect(prompt).toContain('pronounced visible film grain');
+    expect(prompt).toContain('depict a local resident');
+    expect(prompt).toContain('Avoid the recurring young man with a backpack');
+    expect(prompt).toContain('Let apparent ethnicity, skin tone, gender presentation, age, expression, and posture follow the mood');
+    expect(prompt).toContain('unverified traditional clothing');
+    expect(prompt).not.toContain('gender:');
+    expect(prompt).not.toContain('age:');
+    expect(prompt).not.toContain('shotType:');
+    expect(prompt).not.toContain('expression:');
+    expect(prompt).not.toContain('gaze:');
+  });
+
+  it('keeps scene anchors for non-human scenes without injecting portrait recipes', () => {
+    const visualBrief = buildVisualBrief({ placeName: 'Pamplona', factualAnchor: 'The Arga River crosses Pamplona.', visualMaterialAnchor: 'The Arga River crosses the city.', researchSupported: true, sequence: 0 });
+    const prompt = buildImagePrompt({
+      visualBrief, placeName: 'Pamplona', region: 'Navarre', country: 'Spain',
+      reflection: 'The river crosses my path.', language: 'en',
+    });
+    expect(prompt).toContain('The Arga River crosses the city.');
+    expect(prompt).not.toContain('Portrait parameters');
   });
 });
 

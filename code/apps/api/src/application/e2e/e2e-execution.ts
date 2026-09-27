@@ -1,4 +1,4 @@
-export const E2E_ASSET_TTL_MS = 60_000;
+export const E2E_ASSET_TTL_MS = 15 * 60_000;
 export const E2E_MAX_ASSET_BYTES = 50 * 1024 * 1024;
 
 export type E2EEventType = 'started' | 'progress' | 'result' | 'error' | 'completed';
@@ -20,7 +20,7 @@ export interface E2EExecutionContext {
 export type E2ECommand = (context: E2EExecutionContext, input: unknown) => Promise<void>;
 
 interface Asset { buffer: Buffer; contentType: string; expiresAt: number; }
-interface Run { sessionId: string; controller: AbortController; assets: Map<string, Asset>; bytes: number; cleanupTimer?: NodeJS.Timeout; }
+interface Run { sessionId: string; controller: AbortController; assets: Map<string, Asset>; bytes: number; completed: boolean; cleanupTimer?: NodeJS.Timeout; }
 
 export class E2EExecutionCoordinator {
   private readonly runs = new Map<string, Run>();
@@ -37,7 +37,7 @@ export class E2EExecutionCoordinator {
   start(sessionId: string, emit: (event: E2EExecutionEvent) => void): { runId: string; context: E2EExecutionContext; complete: () => void } {
     if (this.activeSessionRuns.has(sessionId)) throw new E2EConflictError();
     const runId = crypto.randomUUID();
-    const run: Run = { sessionId, controller: new AbortController(), assets: new Map(), bytes: 0 };
+    const run: Run = { sessionId, controller: new AbortController(), assets: new Map(), bytes: 0, completed: false };
     this.runs.set(runId, run);
     this.activeSessionRuns.set(sessionId, runId);
     const context: E2EExecutionContext = {
@@ -48,7 +48,12 @@ export class E2EExecutionCoordinator {
     return { runId, context, complete: () => this.complete(runId) };
   }
 
-  cancel(runId: string): void { this.runs.get(runId)?.controller.abort(); this.complete(runId); }
+  cancel(sessionId: string, runId: string): boolean {
+    const run = this.runs.get(runId);
+    if (!run || run.sessionId !== sessionId) return false;
+    if (!run.completed) run.controller.abort();
+    return true;
+  }
 
   getAsset(sessionId: string, runId: string, assetId: string): Asset | null {
     const run = this.runs.get(runId);
@@ -71,6 +76,7 @@ export class E2EExecutionCoordinator {
     const run = this.runs.get(runId);
     if (!run) return;
     this.activeSessionRuns.delete(run.sessionId);
+    run.completed = true;
     run.cleanupTimer ??= setTimeout(() => this.runs.delete(runId), E2E_ASSET_TTL_MS);
   }
 }

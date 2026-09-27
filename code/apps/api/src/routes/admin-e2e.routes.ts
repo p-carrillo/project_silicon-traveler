@@ -53,8 +53,8 @@ adminE2ERouter.post('/runs/:command', async (req: Request, res: Response): Promi
     res.setHeader('Cache-Control', 'no-cache, no-transform');
     res.setHeader('Connection', 'keep-alive');
     res.flushHeaders();
-    const disconnect = (): void => coordinator.cancel(execution.runId);
-    req.once('close', disconnect);
+    const disconnect = (): void => { if (!res.writableEnded) coordinator.cancel(session, execution.runId); };
+    res.once('close', disconnect);
     try {
       execution.context.emit({ type: 'started', index: 0, total: 0, data: { runId: execution.runId } });
       await command(execution.context, req.body);
@@ -65,7 +65,7 @@ adminE2ERouter.post('/runs/:command', async (req: Request, res: Response): Promi
       const errorName = error instanceof Error ? error.name : 'UnknownError';
       execution.context.emit({ type: 'error', index: 0, total: 0, data: { message, errorName } });
     } finally {
-      req.off('close', disconnect);
+      res.off('close', disconnect);
       execution.complete();
       res.end();
     }
@@ -75,6 +75,14 @@ adminE2ERouter.post('/runs/:command', async (req: Request, res: Response): Promi
     const message = error instanceof Error ? error.message : 'Unknown E2E start error';
     res.status(500).json({ error: message });
   }
+});
+
+adminE2ERouter.post('/runs/:runId/cancel', (req: Request, res: Response): void => {
+  if (!isE2EDevelopmentEnabled()) { res.status(404).json({ error: 'Endpoint not found' }); return; }
+  const session = sessionId(req);
+  if (!session) { res.status(401).json({ error: 'Missing Admin E2E session' }); return; }
+  if (!coordinator.cancel(session, req.params.runId)) { res.status(409).json({ error: 'E2E execution is no longer active' }); return; }
+  res.status(202).json({ cancelled: true });
 });
 
 adminE2ERouter.get('/assets/:runId/:assetId', (req: Request, res: Response): void => {

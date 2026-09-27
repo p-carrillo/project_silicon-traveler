@@ -16,9 +16,9 @@ export class MariaDBRouteRepository implements IRouteRepository {
         `INSERT INTO route_points (
           journey_id, sequence, place_name, coordinates, country, region,
           distance_from_previous, osm_data, research_summary,
-          image_prompt, narrative_prompt, camera_metadata, status, error_message,
+          image_prompt, visual_brief, narrative_prompt, camera_metadata, status, error_message,
           image_path, thumbnail_path, published_at
-        ) VALUES (?, ?, ?, ST_GeomFromText(?, 4326), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        ) VALUES (?, ?, ?, ST_GeomFromText(?, 4326), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           routePoint.journeyId,
           routePoint.sequence,
@@ -30,6 +30,7 @@ export class MariaDBRouteRepository implements IRouteRepository {
           routePoint.osmData ? JSON.stringify(routePoint.osmData) : null,
           routePoint.researchSummary,
           routePoint.imagePrompt,
+          routePoint.visualBrief ? JSON.stringify(routePoint.visualBrief) : null,
           routePoint.narrativePrompt,
           routePoint.cameraMetadata ? JSON.stringify(routePoint.cameraMetadata) : null,
           routePoint.status,
@@ -52,6 +53,7 @@ export class MariaDBRouteRepository implements IRouteRepository {
         routePoint.osmData,
         routePoint.researchSummary,
         routePoint.imagePrompt,
+        routePoint.visualBrief,
         routePoint.narrativePrompt,
         routePoint.cameraMetadata,
         routePoint.status,
@@ -73,7 +75,7 @@ export class MariaDBRouteRepository implements IRouteRepository {
         `SELECT id, journey_id, sequence, place_name,
                 ST_AsText(coordinates) as coordinates,
                 country, region, distance_from_previous,
-                osm_data, research_summary, image_prompt, narrative_prompt,
+                osm_data, research_summary, image_prompt, visual_brief, narrative_prompt,
                 camera_metadata, status, error_message, image_path, thumbnail_path,
                 created_at, published_at, updated_at
          FROM route_points WHERE id = ?`,
@@ -92,7 +94,7 @@ export class MariaDBRouteRepository implements IRouteRepository {
         `SELECT id, journey_id, sequence, place_name,
                 ST_AsText(coordinates) as coordinates,
                 country, region, distance_from_previous,
-                osm_data, research_summary, image_prompt, narrative_prompt,
+                osm_data, research_summary, image_prompt, visual_brief, narrative_prompt,
                 camera_metadata, status, error_message, image_path, thumbnail_path,
                 created_at, published_at, updated_at
          FROM route_points
@@ -115,7 +117,7 @@ export class MariaDBRouteRepository implements IRouteRepository {
         `SELECT id, journey_id, sequence, place_name,
                 ST_AsText(coordinates) as coordinates,
                 country, region, distance_from_previous,
-                osm_data, research_summary, image_prompt, narrative_prompt,
+                osm_data, research_summary, image_prompt, visual_brief, narrative_prompt,
                 camera_metadata, status, error_message, image_path, thumbnail_path,
                 created_at, published_at, updated_at
          FROM route_points
@@ -140,7 +142,7 @@ export class MariaDBRouteRepository implements IRouteRepository {
         `SELECT id, journey_id, sequence, place_name,
                 ST_AsText(coordinates) as coordinates,
                 country, region, distance_from_previous,
-                osm_data, research_summary, image_prompt, narrative_prompt,
+                osm_data, research_summary, image_prompt, visual_brief, narrative_prompt,
                 camera_metadata, status, error_message, image_path, thumbnail_path,
                 created_at, published_at, updated_at
          FROM route_points
@@ -181,7 +183,7 @@ export class MariaDBRouteRepository implements IRouteRepository {
         `SELECT id, journey_id, sequence, place_name,
                 ST_AsText(coordinates) as coordinates,
                 country, region, distance_from_previous,
-                osm_data, research_summary, image_prompt, narrative_prompt,
+                osm_data, research_summary, image_prompt, visual_brief, narrative_prompt,
                 camera_metadata, status, error_message, image_path, thumbnail_path,
                 created_at, published_at, updated_at
          FROM route_points
@@ -333,7 +335,7 @@ export class MariaDBRouteRepository implements IRouteRepository {
         `UPDATE route_points
          SET place_name = ?, coordinates = ST_GeomFromText(?, 4326), country = ?, region = ?,
              osm_data = ?, research_summary = ?,
-             image_prompt = ?, narrative_prompt = ?, camera_metadata = ?,
+             image_prompt = ?, visual_brief = ?, narrative_prompt = ?, camera_metadata = ?,
              status = ?, error_message = ?,
              image_path = ?, thumbnail_path = ?,
              published_at = ?, updated_at = NOW()
@@ -346,6 +348,7 @@ export class MariaDBRouteRepository implements IRouteRepository {
           this.safeStringify(routePoint.osmData),
           routePoint.researchSummary,
           routePoint.imagePrompt,
+          this.safeStringify(routePoint.visualBrief),
           routePoint.narrativePrompt,
           this.safeStringify(routePoint.cameraMetadata),
           routePoint.status,
@@ -398,6 +401,7 @@ export class MariaDBRouteRepository implements IRouteRepository {
       row.osm_data ? this.safeJsonParse(row.osm_data) : null,
       row.research_summary,
       row.image_prompt,
+      row.visual_brief ? this.safeJsonParse(row.visual_brief) : null,
       row.narrative_prompt,
       row.camera_metadata ? this.safeJsonParse(row.camera_metadata) : null,
       row.status as RouteStatus,

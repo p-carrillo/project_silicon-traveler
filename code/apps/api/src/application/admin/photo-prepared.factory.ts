@@ -38,7 +38,7 @@ export function buildPreparedPhotoFromRoutePoint(routePoint: RoutePoint): Prepar
     narrative: routePoint.narrativePrompt || 'Another day on the road.',
     imagePrompt: routePoint.imagePrompt || '',
     camera: routePoint.cameraMetadata?.camera || 'Leica M11',
-    lens: routePoint.cameraMetadata?.lens || '35mm f/1.4',
+    lens: routePoint.cameraMetadata?.lens || '50mm',
     iso: routePoint.cameraMetadata?.iso || 800,
     shutterSpeed: routePoint.cameraMetadata?.shutterSpeed || '1/125',
     aperture: routePoint.cameraMetadata?.aperture || 'f/2.8',

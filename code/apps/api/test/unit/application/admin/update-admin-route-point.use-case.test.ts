@@ -16,6 +16,7 @@ const createRoutePoint = (status: 'image_ready' | 'published' | 'pending') =>
     null,
     null,
     'prompt',
+    null,
     'narrative',
     { camera: 'Leica M11', lens: '35mm f/1.4', iso: 400, shutterSpeed: '1/125', aperture: 'f/2.8' },
     status,

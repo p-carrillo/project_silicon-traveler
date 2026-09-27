@@ -7,7 +7,8 @@ LLM-backed content generation for image prompts, narratives, and camera metadata
 - Build LLM prompts and parse responses using OpenAI Responses API.
 - Select camera presets and photographer configuration.
 - Provide content generation use case, research-summary prompt, and OpenAI adapter.
-- Build a verified editorial brief, rotate narrative modes, check recent wording, and regenerate one failed draft before rejecting it.
+- Build verified editorial and visual briefs from place research and route facts.
+- Rotate narrative modes and regenerate one failed narrative draft before rejecting it.
 
 ## Boundaries
 - No database access.
@@ -18,15 +19,16 @@ LLM-backed content generation for image prompts, narratives, and camera metadata
 - `src/application/generate-content.use-case.ts`
 - `src/application/generate-editorial-content.use-case.ts`
 - `src/domain/editorial-brief.ts`
+- `src/domain/visual-brief.ts`
 - `src/config/editorial.ts`
 - `src/adapters/openai.adapter.ts`
 - `src/config/photographer.ts`
-- `src/config/portrait.ts`
 - `src/prompts/content-prompts.ts`
 - `src/ports/llm.port.ts`
 
 ## Key Flows
-- Build a structured editorial brief from place research and verified route facts.
+- Build structured narrative and visual briefs from place research and verified route facts.
+- Select only scene categories grounded in available facts, with the walking route as the sparse-research fallback.
 - Build mode-aware developer instructions and user input from `ContentInput`.
 - Reject generic or repetitive output after one targeted regeneration.
 - Call OpenAI Responses API with GPT-5 model and reasoning enabled.

@@ -1,11 +1,11 @@
 import { IRouteRepository, RoutePointContentTranslation } from '@silicon-traveler/route';
 import { IBraveSearchPort, ResearchPlaceUseCase } from '@silicon-traveler/research';
+import type { VisualBrief } from '@silicon-traveler/content';
 import {
   ILLMPort,
   ContentInput,
   buildNarrativePrompt,
   NARRATIVE_SYSTEM_PROMPT,
-  selectPortraitParameters,
   GenerateEditorialContentUseCase,
   getEditorialGenerationConfig,
   type EditorialGenerationConfig,
@@ -28,6 +28,7 @@ export interface PreparePhotoPromptsResult {
   contentStatus: 'generated';
   imagePrompt: string | null;
   narrative: string | null;
+  visualBrief: VisualBrief;
   cameraMetadata: {
     camera: string;
     lens: string;
@@ -78,14 +79,12 @@ export class PreparePhotoPromptsUseCase {
     routePoint.updateResearch(researchSummary, routePoint.osmData);
     await this.routeRepository.update(routePoint);
 
-    const portraitParameters = selectPortraitParameters();
     const input: ContentInput = {
       placeName: routePoint.placeName || 'Unknown Place',
       country: routePoint.country || 'Unknown Country',
       region: routePoint.region || 'Unknown Region',
       researchSummary,
       language: baseLanguage,
-      portraitParameters,
     };
 
     let generated: Awaited<ReturnType<GenerateEditorialContentUseCase['execute']>>;
@@ -102,7 +101,7 @@ export class PreparePhotoPromptsUseCase {
       await this.routeRepository.update(routePoint);
       throw error;
     }
-    const { content, brief } = generated;
+    const { content, brief, visualBrief } = generated;
     const llmUserPrompt = buildNarrativePrompt({ ...input, editorialBrief: brief });
 
     const baseImagePrompt = this.normalizePrompt(content.imagePrompt);
@@ -137,7 +136,8 @@ export class PreparePhotoPromptsUseCase {
     const imagePrompt = this.normalizePrompt(defaultTranslation.imagePrompt ?? baseImagePrompt);
     const narrative = defaultTranslation.narrative || content.narrative;
 
-    routePoint.updateContent(imagePrompt, narrative, content.cameraMetadata);
+    const auditedVisualBrief: VisualBrief = { ...visualBrief, originalPrompt: baseImagePrompt, revisedPrompt: null };
+    routePoint.updateContent(imagePrompt, narrative, content.cameraMetadata, auditedVisualBrief);
     await this.routeRepository.update(routePoint);
     await this.routeRepository.upsertContentTranslations(routePoint.id, translations);
 
@@ -156,6 +156,7 @@ export class PreparePhotoPromptsUseCase {
       contentStatus: 'generated',
       imagePrompt,
       narrative,
+      visualBrief: auditedVisualBrief,
       cameraMetadata: content.cameraMetadata,
     };
   }

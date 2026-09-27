@@ -24,6 +24,7 @@ export interface AdminRoutePoint {
   coordinates: { lat: number; lng: number };
   status: AdminRouteStatus;
   image_prompt: string | null;
+  visual_brief: unknown | null;
   narrative_prompt: string | null;
   image_path: string | null;
   thumbnail_path: string | null;

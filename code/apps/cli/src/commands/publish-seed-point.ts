@@ -33,8 +33,8 @@ const LOREM_SNIPPETS = [
 ];
 
 const CAMERA_PRESETS = [
-  { camera: 'Leica M11', lens: '35mm f/1.4', iso: 400, shutterSpeed: '1/250', aperture: 'f/2.8' },
-  { camera: 'Nikon F3', lens: '50mm f/1.8', iso: 200, shutterSpeed: '1/125', aperture: 'f/4' },
+  { camera: 'Leica M11', lens: '50mm', iso: 400, shutterSpeed: '1/250', aperture: 'f/2.8' },
+  { camera: 'Nikon F3', lens: '50mm', iso: 200, shutterSpeed: '1/125', aperture: 'f/4' },
   { camera: 'Pentax K1000', lens: '28mm f/2.8', iso: 400, shutterSpeed: '1/500', aperture: 'f/5.6' },
   { camera: 'Canon AE-1', lens: '85mm f/1.8', iso: 800, shutterSpeed: '1/250', aperture: 'f/2' },
 ];

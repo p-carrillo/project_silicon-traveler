@@ -5,12 +5,12 @@ import {
   type EditorialGenerationConfig,
   GenerateEditorialContentUseCase,
   getEditorialGenerationConfig,
-  selectPortraitParameters,
 } from '@silicon-traveler/content';
 import { type IImageGeneratorPort, type IThumbnailGeneratorPort } from '@silicon-traveler/image';
 import { ResearchPlaceUseCase, type IBraveSearchPort, type SearchResult } from '@silicon-traveler/research';
 import type { RoutePointContentTranslation } from '@silicon-traveler/route';
 import { getVerifiedPlaceObservations } from './verified-place-observations';
+import type { VisualBrief } from '@silicon-traveler/content';
 
 export interface PhotoPreparationInput {
   placeName: string | null;
@@ -32,6 +32,7 @@ export interface PhotoPreparationCoreResult {
   imageBuffer: Buffer;
   thumbnails: Map<string, Buffer>;
   revisedPrompt: string | null;
+  visualBrief: VisualBrief;
 }
 
 export interface IImageDownloadPort { download(url: string): Promise<Buffer>; }
@@ -40,7 +41,8 @@ export interface PhotoPreparationHooks {
   researched?(researchSummary: string): Promise<void>;
   researchSources?(sources: Array<Pick<SearchResult, 'title' | 'url'>>): Promise<void>;
   contentGenerationStarted?(): Promise<void>;
-  contentGenerated(input: { imagePrompt: string; narrative: string; cameraMetadata: PhotoPreparationCoreResult['cameraMetadata']; translations: RoutePointContentTranslation[] }): Promise<void>;
+  contentGenerated(input: { imagePrompt: string; narrative: string; cameraMetadata: PhotoPreparationCoreResult['cameraMetadata']; translations: RoutePointContentTranslation[]; visualBrief: VisualBrief }): Promise<void>;
+  visualBriefFinalized?(visualBrief: VisualBrief): Promise<void>;
   imageGenerationStarted?(): Promise<void>;
   imageGenerated?(): Promise<void>;
   thumbnailGenerationStarted?(): Promise<void>;
@@ -82,10 +84,9 @@ export class PhotoPreparationCore {
     await hooks?.researched?.(researchSummary);
     await hooks?.researchSources?.(research.sources);
     await hooks?.contentGenerationStarted?.();
-    const { content } = await this.editorialContent.execute({
+    const { content, visualBrief } = await this.editorialContent.execute({
       placeName: input.placeName || 'Unknown Place', country: input.country || 'Unknown Country',
       region: input.region || 'Unknown Region', researchSummary, language: baseLanguage,
-      portraitParameters: selectPortraitParameters(),
     }, {
       sequence: input.sequence ?? 0,
       coordinates: input.coordinates,
@@ -103,9 +104,13 @@ export class PhotoPreparationCore {
     const preferred = translations.find((translation) => translation.language === defaultLanguage) ?? translations[0];
     const imagePrompt = normalizePrompt(preferred.imagePrompt ?? baseImagePrompt);
     const narrative = preferred.narrative || content.narrative;
-    await hooks?.contentGenerated({ imagePrompt, narrative, cameraMetadata: content.cameraMetadata, translations });
+    const initialVisualBrief: VisualBrief = { ...visualBrief, reflection: content.narrative, originalPrompt: baseImagePrompt, revisedPrompt: null };
+    await hooks?.contentGenerated({ imagePrompt, narrative, cameraMetadata: content.cameraMetadata, translations, visualBrief: initialVisualBrief });
     await hooks?.imageGenerationStarted?.();
     const image = await this.imageGenerator.generate(baseImagePrompt);
+    const revisedPrompt = image.revisedPrompt || null;
+    const auditedVisualBrief: VisualBrief = { ...initialVisualBrief, revisedPrompt };
+    await hooks?.visualBriefFinalized?.(auditedVisualBrief);
     const imageBuffer = await this.imageDownloader.download(image.url);
     await hooks?.imageGenerated?.();
     await hooks?.thumbnailGenerationStarted?.();
@@ -113,7 +118,7 @@ export class PhotoPreparationCore {
       { width: 400, height: 400, suffix: '_grid' }, { width: 1024, height: 1024, suffix: '_hero' },
     ]);
     await hooks?.thumbnailsGenerated?.();
-    return { researchSummary, translations, imagePrompt, narrative, cameraMetadata: content.cameraMetadata, imageBuffer, thumbnails, revisedPrompt: image.revisedPrompt || null };
+    return { researchSummary, translations, imagePrompt, narrative, cameraMetadata: content.cameraMetadata, imageBuffer, thumbnails, revisedPrompt, visualBrief: auditedVisualBrief };
   }
 }
 

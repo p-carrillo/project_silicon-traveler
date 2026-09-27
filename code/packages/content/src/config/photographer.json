@@ -1,8 +1,7 @@
 {
   "cameras": [
     {
-      "model": "Hasselblad 500 series",
-      "lenses": ["50mm f/1.4", "80mm f/2.8", "150mm f/4"]
+      "model": "Hasselblad 500 series"
     }
   ]
 }

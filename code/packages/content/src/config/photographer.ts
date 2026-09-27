@@ -2,7 +2,6 @@ import photographerConfig from './photographer.json';
 
 export interface CameraConfig {
   model: string;
-  lenses: string[];
 }
 
 export interface PhotographerConfig {
@@ -18,7 +17,7 @@ const config = photographerConfig as PhotographerConfig;
 
 const fallbackSelection: CameraSelection = {
   camera: 'Hasselblad 500 series',
-  lens: '50mm f/1.4',
+  lens: '50mm',
 };
 
 const hashString = (value: string): number => {
@@ -37,17 +36,9 @@ export const selectCamera = (seed: string): CameraSelection => {
   const cameraIndex = hashString(seed) % config.cameras.length;
   const camera = config.cameras[cameraIndex];
 
-  if (!camera.lenses?.length) {
-    return {
-      camera: camera.model,
-      lens: fallbackSelection.lens,
-    };
-  }
-
-  const lensIndex = hashString(`${seed}:${camera.model}`) % camera.lenses.length;
   return {
     camera: camera.model,
-    lens: camera.lenses[lensIndex],
+    lens: '50mm',
   };
 };
 
@@ -61,7 +52,7 @@ export interface CameraMetadata {
   aperture: string;
 }
 
-const ISO_VALUES = [100, 200, 400, 800, 1600];
+const ISO_VALUES = [400];
 const SHUTTER_SPEEDS = ['1/60', '1/125', '1/250', '1/500', '1/1000'];
 const APERTURES = ['f/1.4', 'f/2', 'f/2.8', 'f/4', 'f/5.6', 'f/8'];
 

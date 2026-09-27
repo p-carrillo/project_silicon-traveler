@@ -15,8 +15,7 @@ import {
   buildImagePrompt,
   NARRATIVE_SYSTEM_PROMPT,
 } from '../prompts/content-prompts';
-import { selectPortraitParameters } from '../config/portrait';
-import type { PortraitParameters } from '../config/portrait';
+import { buildVisualBrief, type VisualBrief } from '../domain/visual-brief';
 
 const NARRATIVE_MODEL = 'gpt-4o-mini';
 const TRANSLATION_MODEL = 'gpt-4o-mini';
@@ -51,8 +50,8 @@ export class OpenAIAdapter implements ILLMPort {
 
   async generateContent(input: ContentInput): Promise<GeneratedContent> {
     const seed = `${input.placeName}|${input.region}|${input.country}`;
-    const portraitParameters = input.portraitParameters ?? selectPortraitParameters();
-    const contentInput = input.portraitParameters ? input : { ...input, portraitParameters };
+    const visualBrief = resolveVisualBrief(input);
+    const contentInput: ContentInput = { ...input, visualBrief };
     const prompt = buildNarrativePrompt(contentInput);
 
     try {
@@ -66,17 +65,18 @@ export class OpenAIAdapter implements ILLMPort {
       const narrative = this.parseNarrative(response.output_text || '');
       const cameraMetadata = generateCameraMetadata(seed);
       const imagePrompt = buildImagePrompt({
-        portraitParameters,
+        visualBrief,
         placeName: input.placeName,
         region: input.region,
         country: input.country,
+        reflection: narrative,
         language: input.language,
       });
 
       return { narrative, cameraMetadata, imagePrompt };
-    } catch (error: any) {
-      console.error('OpenAI API error:', error.message);
-      return this.getFallbackContent(input, portraitParameters);
+    } catch (error: unknown) {
+      console.error('OpenAI API error:', error instanceof Error ? error.message : 'Unknown OpenAI content error');
+      return this.getFallbackContent(input);
     }
   }
 
@@ -106,8 +106,8 @@ export class OpenAIAdapter implements ILLMPort {
 
       const responseText = response.output_text || '';
       return this.parseTranslationResponse(responseText, input);
-    } catch (error: any) {
-      console.error('OpenAI translation error:', error.message);
+    } catch (error: unknown) {
+      console.error('OpenAI translation error:', error instanceof Error ? error.message : 'Unknown OpenAI translation error');
       return {
         imagePrompt: input.imagePrompt,
         narrative: input.narrative,
@@ -115,18 +115,17 @@ export class OpenAIAdapter implements ILLMPort {
     }
   }
 
-  private getFallbackContent(
-    input: ContentInput,
-    portraitParameters: PortraitParameters
-  ): GeneratedContent {
+  private getFallbackContent(input: ContentInput): GeneratedContent {
     const seed = `${input.placeName}|${input.region}|${input.country}`;
     const narrative = `Passing through ${input.placeName}. The data streams in but something about this place resists easy parsing.`;
     const cameraMetadata = generateCameraMetadata(seed);
+    const visualBrief = resolveVisualBrief(input);
     const imagePrompt = buildImagePrompt({
-      portraitParameters,
+      visualBrief,
       placeName: input.placeName,
       region: input.region,
       country: input.country,
+      reflection: narrative,
       language: input.language,
     });
 
@@ -170,4 +169,16 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function readNonEmptyString(value: unknown): string | undefined {
   return typeof value === 'string' && value.trim() ? value.trim() : undefined;
+}
+
+function resolveVisualBrief(input: ContentInput): VisualBrief {
+  if (input.visualBrief) return input.visualBrief;
+  const editorialBrief = input.editorialBrief;
+  return buildVisualBrief({
+    placeName: input.placeName,
+    factualAnchor: editorialBrief?.factualAnchor ?? [input.placeName, input.region, input.country].filter(Boolean).join(', '),
+    visualMaterialAnchor: editorialBrief?.visualMaterialAnchor ?? '',
+    researchSupported: editorialBrief?.researchSupported ?? false,
+    sequence: 0,
+  });
 }

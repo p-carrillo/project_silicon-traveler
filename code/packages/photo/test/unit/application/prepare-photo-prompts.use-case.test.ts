@@ -6,21 +6,6 @@ vi.mock('@silicon-traveler/content', async () => {
   const actual = await vi.importActual<typeof import('@silicon-traveler/content')>('@silicon-traveler/content');
   return {
     ...actual,
-    selectPortraitParameters: vi.fn(() => ({
-      gender: 'woman',
-      age: 34,
-      incomeClass: 'middle class',
-      shotType: 'close-up',
-      expression: 'pensive',
-      gaze: 'looking away',
-      posture: 'standing',
-      timeOfDay: 'dusk',
-      activity: 'waiting',
-      lightingContrast: 'high contrast',
-      filmGrain: 'medium',
-      cameraHeight: 'eye level',
-      depthOfField: 'shallow',
-    })),
   };
 });
 

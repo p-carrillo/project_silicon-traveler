@@ -13,11 +13,12 @@ export class RoutePoint {
     public country: string | null,
     public region: string | null,
     public readonly distanceFromPrevious: number | null,
-    public osmData: any | null,
+    public osmData: unknown | null,
     public researchSummary: string | null,
     public imagePrompt: string | null,
+    public visualBrief: unknown | null,
     public narrativePrompt: string | null,
-    public cameraMetadata: any | null,
+    public cameraMetadata: unknown | null,
     public status: RouteStatus,
     public errorMessage: string | null,
     public imagePath: string | null,
@@ -33,18 +34,24 @@ export class RoutePoint {
     this.updatedAt = new Date();
   }
 
-  updateResearch(summary: string, osmData: any): void {
+  updateResearch(summary: string, osmData: unknown): void {
     this.researchSummary = summary;
     this.osmData = osmData;
     this.status = 'researched';
     this.updatedAt = new Date();
   }
 
-  updateContent(imagePrompt: string, narrativePrompt: string, cameraMetadata: any): void {
+  updateContent(imagePrompt: string, narrativePrompt: string, cameraMetadata: unknown, visualBrief: unknown | null = null): void {
     this.imagePrompt = imagePrompt;
     this.narrativePrompt = narrativePrompt;
     this.cameraMetadata = cameraMetadata;
+    this.visualBrief = visualBrief;
     this.status = 'content_generated';
+    this.updatedAt = new Date();
+  }
+
+  updateVisualBrief(visualBrief: unknown): void {
+    this.visualBrief = visualBrief;
     this.updatedAt = new Date();
   }
 
@@ -78,6 +85,7 @@ export class RoutePoint {
       osmData: null,
       researchSummary: null,
       imagePrompt: null,
+      visualBrief: null,
       narrativePrompt: null,
       cameraMetadata: null,
       status: 'pending',
