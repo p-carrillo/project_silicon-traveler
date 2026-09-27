@@ -3,6 +3,27 @@ import axios from 'axios';
 import { MariaDBRouteRepository } from '@silicon-traveler/route';
 import { MariaDBPhotoRepository, PublishPhotoUseCase } from '@silicon-traveler/photo';
 
+interface CameraMetadata {
+  camera: string;
+  lens: string;
+  iso: number;
+  shutterSpeed: string;
+  aperture: string;
+}
+
+function isCameraMetadata(value: unknown): value is CameraMetadata {
+  if (typeof value !== 'object' || value === null) return false;
+
+  const metadata = value as Record<string, unknown>;
+  return (
+    typeof metadata.camera === 'string' &&
+    typeof metadata.lens === 'string' &&
+    typeof metadata.iso === 'number' &&
+    typeof metadata.shutterSpeed === 'string' &&
+    typeof metadata.aperture === 'string'
+  );
+}
+
 export class PublisherJob {
   private isRunning = false;
   private readonly apiUrl = process.env.API_URL || 'http://api:3000';
@@ -32,6 +53,7 @@ export class PublisherJob {
       }
 
       const routePoint = readyPoints[0];
+      const cameraMetadata = isCameraMetadata(routePoint.cameraMetadata) ? routePoint.cameraMetadata : null;
       console.log(`[Publisher] Publishing route point ${routePoint.id}: ${routePoint.placeName || 'Unknown'}`);
 
       // Extract prepared data from route point
@@ -41,11 +63,11 @@ export class PublisherJob {
         heroThumbnailUrl: routePoint.thumbnailPath?.replace('_grid', '_hero') || '/images/default_hero.jpg',
         narrative: routePoint.narrativePrompt || 'Another day on the road.',
         imagePrompt: routePoint.imagePrompt || '',
-        camera: routePoint.cameraMetadata?.camera || 'Leica M11',
-        lens: routePoint.cameraMetadata?.lens || '50mm',
-        iso: routePoint.cameraMetadata?.iso || 800,
-        shutterSpeed: routePoint.cameraMetadata?.shutterSpeed || '1/125',
-        aperture: routePoint.cameraMetadata?.aperture || 'f/2.8',
+        camera: cameraMetadata?.camera || 'Leica M11',
+        lens: cameraMetadata?.lens || '50mm',
+        iso: cameraMetadata?.iso || 800,
+        shutterSpeed: cameraMetadata?.shutterSpeed || '1/125',
+        aperture: cameraMetadata?.aperture || 'f/2.8',
         revisedPrompt: null,
       };
 
