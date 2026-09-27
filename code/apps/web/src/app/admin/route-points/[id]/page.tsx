@@ -2,9 +2,6 @@ import Image from 'next/image';
 import { redirect } from 'next/navigation';
 import AdminDeleteRoutePointButton from '@/components/admin/AdminDeleteRoutePointButton';
 import AdminLocationFields from '@/components/admin/AdminLocationFields';
-import AdminLogoutButton from '@/components/admin/AdminLogoutButton';
-import PageContainer from '@/components/layout/PageContainer';
-import SectionTopBar from '@/components/layout/SectionTopBar';
 import {
   deleteAdminRoutePoint,
   getAdminRoutePoint,
@@ -102,19 +99,11 @@ export default async function EditRoutePointPage({
   const uploadPhotoPath = `/admin/api/route-points/${id}/photo`;
 
   return (
-    <div className="min-h-screen bg-zinc-100 text-zinc-900">
-      <SectionTopBar
-        title={t.admin.edit.title}
-        theme="light"
-        activeHref="/"
-        className="border-b border-zinc-200 bg-zinc-100/95"
-        navLabels={t.nav}
-      />
-      <PageContainer className="py-6 md:py-10">
-        <div className="flex flex-col gap-6">
-          <div className="flex justify-end">
-            <AdminLogoutButton label={t.admin.actions.logout} />
-          </div>
+    <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
+      <header>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-600">{t.admin.title}</p>
+        <h1 className="mt-1 text-3xl font-bold tracking-tight text-zinc-950">{t.admin.edit.title}</h1>
+      </header>
 
           {error ? (
             <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-800">
@@ -240,8 +229,6 @@ export default async function EditRoutePointPage({
               </div>
             </form>
           </div>
-        </div>
-      </PageContainer>
     </div>
   );
 }

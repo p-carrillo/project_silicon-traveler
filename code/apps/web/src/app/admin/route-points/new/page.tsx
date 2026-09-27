@@ -1,8 +1,5 @@
 import { redirect } from 'next/navigation';
 import AdminLocationFields from '@/components/admin/AdminLocationFields';
-import AdminLogoutButton from '@/components/admin/AdminLogoutButton';
-import PageContainer from '@/components/layout/PageContainer';
-import SectionTopBar from '@/components/layout/SectionTopBar';
 import { createAdminRoutePoint, geocodeAdminPlace } from '@/lib/admin-api';
 import { normalizeOptionalString, parseCoordinateInput } from '@/lib/admin-form';
 import { getServerLocale } from '@/lib/i18n/server';
@@ -74,19 +71,12 @@ export default function NewRoutePointPage({
   }
 
   return (
-    <div className="min-h-screen bg-zinc-100 text-zinc-900">
-      <SectionTopBar
-        title={t.admin.new.title}
-        theme="light"
-        activeHref="/"
-        className="border-b border-zinc-200 bg-zinc-100/95"
-        navLabels={t.nav}
-      />
-      <PageContainer className="py-6 md:py-10">
-        <div className="mb-4 flex justify-end">
-          <AdminLogoutButton label={t.admin.actions.logout} />
-        </div>
-        <form action={createAction} className="max-w-2xl rounded-lg border border-zinc-200 bg-white p-6">
+    <div className="mx-auto w-full max-w-7xl">
+      <header className="mb-6">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-600">{t.admin.title}</p>
+        <h1 className="mt-1 text-3xl font-bold tracking-tight text-zinc-950">{t.admin.new.title}</h1>
+      </header>
+      <form action={createAction} className="max-w-2xl rounded-lg border border-zinc-200 bg-white p-6">
           {error ? (
             <div className="mb-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-800">
               {error === 'invalid_coordinates' ? t.admin.errors.invalidCoordinates : t.admin.errors.saveFailed}
@@ -119,8 +109,7 @@ export default function NewRoutePointPage({
               {t.admin.actions.cancel}
             </a>
           </div>
-        </form>
-      </PageContainer>
+      </form>
     </div>
   );
 }

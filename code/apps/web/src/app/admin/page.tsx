@@ -1,8 +1,5 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import AdminLogoutButton from '@/components/admin/AdminLogoutButton';
-import PageContainer from '@/components/layout/PageContainer';
-import SectionTopBar from '@/components/layout/SectionTopBar';
 import { getAdminRoutePoints } from '@/lib/admin-api';
 import {
   buildAdminListHref,
@@ -88,23 +85,22 @@ export default async function AdminPage({
   const visiblePages = buildAdminVisiblePages(pagination.page, pagination.totalPages);
 
   return (
-    <div className="min-h-screen bg-zinc-100 text-zinc-900">
-      <SectionTopBar
-        title={t.admin.title}
-        theme="light"
-        activeHref="/"
-        className="border-b border-zinc-200 bg-zinc-100/95"
-        navLabels={t.nav}
-      />
-      <PageContainer className="py-6 md:py-10">
-        <div className="flex flex-col gap-6">
+    <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
+      <header>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-600">
+          {t.admin.title}
+        </p>
+        <h1 className="mt-1 text-3xl font-bold tracking-tight text-zinc-950">
+          {t.admin.shell.dashboard}
+        </h1>
+      </header>
           {deleted ? (
             <div className="rounded-md border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
               {t.admin.success.deleted}
             </div>
           ) : null}
           <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-            <form className="flex items-end gap-3" method="get" action="/admin">
+            <form className="flex flex-col gap-3 sm:flex-row sm:items-end" method="get" action="/admin">
               <label className="flex flex-col gap-1 text-xs uppercase tracking-[0.2em] text-zinc-600">
                 {t.admin.filters.status}
                 <select
@@ -158,7 +154,6 @@ export default async function AdminPage({
               >
                 {t.admin.actions.addRoutePoint}
               </Link>
-              <AdminLogoutButton label={t.admin.actions.logout} />
             </div>
           </div>
 
@@ -244,7 +239,7 @@ export default async function AdminPage({
                 pagination.totalPages
               )}
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               {pagination.hasPrev ? (
                 <Link
                   href={prevHref}
@@ -299,8 +294,6 @@ export default async function AdminPage({
               )}
             </div>
           </div>
-        </div>
-      </PageContainer>
     </div>
   );
 }

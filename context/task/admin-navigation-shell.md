@@ -1,8 +1,8 @@
 # Navegación lateral del panel de administración
 
-- **Monotask ID:** Pending approval for synchronization
+- **Monotask ID:** `fc8824d0-f126-4081-ae01-f0c670f4c467`
 - **Priority:** Medium
-- **Status:** To do — local definition, not synchronized
+- **Status:** Done — definition synchronized
 - **Category:** General
 - **Depends on:** `admin-e2e-execution-foundation.md` only for the E2E destination
 

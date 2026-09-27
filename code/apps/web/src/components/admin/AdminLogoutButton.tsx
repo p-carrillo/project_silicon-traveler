@@ -23,7 +23,7 @@ export default function AdminLogoutButton({ label }: AdminLogoutButtonProps) {
     <form action={logoutAction}>
       <button
         type="submit"
-        className="inline-flex h-10 items-center justify-center rounded-md border border-zinc-300 bg-white px-4 text-sm font-semibold text-zinc-900"
+        className="inline-flex h-12 items-center justify-center rounded-md border border-zinc-300 bg-white px-4 text-sm font-semibold text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 focus-visible:ring-offset-2"
       >
         {label}
       </button>

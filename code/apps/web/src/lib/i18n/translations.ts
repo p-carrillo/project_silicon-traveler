@@ -80,6 +80,13 @@ const translations = {
     },
     admin: {
       title: 'Admin',
+      shell: {
+        brandLabel: 'Silicon Traveler',
+        product: 'Administration',
+        navigationLabel: 'Admin navigation',
+        dashboard: 'Dashboard',
+        createRoutePoint: 'Create route point',
+      },
       empty: 'No route points found.',
       filters: {
         status: 'Status',
@@ -368,6 +375,13 @@ const translations = {
     },
     admin: {
       title: 'Admin',
+      shell: {
+        brandLabel: 'Silicon Traveler',
+        product: 'Administración',
+        navigationLabel: 'Navegación de administración',
+        dashboard: 'Panel',
+        createRoutePoint: 'Crear punto de ruta',
+      },
       empty: 'No se encontraron puntos de ruta.',
       filters: {
         status: 'Estado',

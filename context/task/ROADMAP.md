@@ -11,7 +11,7 @@ This roadmap is an implementation-order guide, not a Monotask task and not a sta
 
 ## Recommended order
 
-1. [Navegación lateral del panel de administración](admin-navigation-shell.md) — creates the common Admin workspace for dashboard, point creation, and diagnostic tools.
+1. ✅ [Navegación lateral del panel de administración](admin-navigation-shell.md) — completed; provides the common Admin workspace for dashboard and point creation.
 2. [Base de ejecuciones E2E efímeras para Admin](admin-e2e-execution-foundation.md) — provides development-only, shared-flow diagnostics without persistent data.
 3. [Comando E2E de diez fotografías globales en Admin](admin-e2e-photo-batch.md) — makes the editorial pipeline observable through a bounded real batch.
 4. [Destination-led journey route planner](path-finder.md) — establishes the production itinerary and the shared operation inspected by the route diagnostic.
