@@ -4,7 +4,7 @@ This directory contains the non-deployable context used to guide AI-assisted wor
 
 | Path | Purpose | Read when |
 | --- | --- | --- |
-| `standards/` | Mandatory engineering, testing, architecture, database, frontend, SEO, and commit rules. | Before changing application code. |
+| `standards/` | Engineering, testing, architecture, database, frontend, SEO, and commit references. | When routed by `skills/project-foundations/` because they affect the task. |
 | `skills/` | Repeatable workflows such as project orientation, SEO, and Docker security reviews. | A task matches a documented workflow. |
 | `agents/` | Review criteria for specialised code-review roles. | Running or defining a review. |
 | `commands/` | Review orchestration instructions independent of a specific IDE. | Performing a documented review workflow. |

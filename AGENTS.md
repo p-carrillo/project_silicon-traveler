@@ -10,13 +10,9 @@ Run all application commands from `code/`.
 
 ## Required context
 
-Read the applicable files in `context/standards/` before changing code:
+For code, orientation, or review work, use `context/skills/project-foundations/SKILL.md`. It is the mandatory, compact entry point and routes to detailed references only when they affect the task.
 
-- Always: `coding.md`, `test.md`, and `commit.md`.
-- Backend work (`code/apps/api`, `code/apps/cli`, `code/apps/scheduler`, `code/packages`): also `architecture.md` and `database.md`.
-- Frontend work (`code/apps/web`): also `frontend.md` and `seo.md`.
-
-For repository orientation and review work, use `context/skills/project-foundations/SKILL.md`.
+Do not load standards, task files, product flows, designs, or operational guides merely because they exist. Read the active task file when implementing or refining that task; read `task/ROADMAP.md` only when prioritising work.
 
 ## Non-negotiable rules
 
