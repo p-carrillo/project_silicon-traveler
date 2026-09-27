@@ -8,9 +8,7 @@ export interface AdminNavigationItem {
   label: string;
 }
 
-export function getAdminNavigationItems(
-  labels: AdminNavigationLabels
-): AdminNavigationItem[] {
+export function getAdminNavigationItems(labels: AdminNavigationLabels): AdminNavigationItem[] {
   return [
     { href: '/admin', label: labels.dashboard },
     { href: '/admin/route-points/new', label: labels.createRoutePoint },

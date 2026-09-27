@@ -86,8 +86,13 @@ const translations = {
         navigationLabel: 'Admin navigation',
         dashboard: 'Dashboard',
         createRoutePoint: 'Create route point',
+        e2eTests: 'E2E tests',
       },
       empty: 'No route points found.',
+      e2e: {
+        title: 'E2E tests',
+        empty: 'No E2E commands are available yet.',
+      },
       filters: {
         status: 'Status',
         city: 'City',
@@ -381,8 +386,13 @@ const translations = {
         navigationLabel: 'Navegación de administración',
         dashboard: 'Panel',
         createRoutePoint: 'Crear punto de ruta',
+        e2eTests: 'Pruebas E2E',
       },
       empty: 'No se encontraron puntos de ruta.',
+      e2e: {
+        title: 'Pruebas E2E',
+        empty: 'Todavía no hay comandos E2E disponibles.',
+      },
       filters: {
         status: 'Estado',
         city: 'Ciudad',

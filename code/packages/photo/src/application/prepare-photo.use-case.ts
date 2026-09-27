@@ -42,12 +42,17 @@ export class PreparePhotoUseCase {
     }
 
     try {
-      const prepared = await this.core.execute(routePoint);
-      routePoint.updateResearch(prepared.researchSummary, routePoint.osmData);
-      await this.routeRepository.update(routePoint);
-      routePoint.updateContent(prepared.imagePrompt, prepared.narrative, prepared.cameraMetadata);
-      await this.routeRepository.update(routePoint);
-      await this.routeRepository.upsertContentTranslations(routePoint.id, prepared.translations);
+      const prepared = await this.core.execute(routePoint, {
+        researched: async (researchSummary) => {
+          routePoint.updateResearch(researchSummary, routePoint.osmData);
+          await this.routeRepository.update(routePoint);
+        },
+        contentGenerated: async ({ imagePrompt, narrative, cameraMetadata, translations }) => {
+          routePoint.updateContent(imagePrompt, narrative, cameraMetadata);
+          await this.routeRepository.update(routePoint);
+          await this.routeRepository.upsertContentTranslations(routePoint.id, translations);
+        },
+      });
 
       // 9. Save to storage
       const date = await this.resolveStorageDate(routePoint.journeyId, routePoint.sequence);

@@ -27,8 +27,10 @@ import {
 import { DeleteAdminRoutePointUseCase } from '../application/admin/delete-admin-route-point.use-case';
 import { deriveThumbnailPath } from '../application/admin/photo-prepared.factory';
 import { UpdateAdminRoutePointUseCase } from '../application/admin/update-admin-route-point.use-case';
+import { adminE2ERouter } from './admin-e2e.routes';
 
 export const adminRouter: Router = Router();
+adminRouter.use('/e2e', adminE2ERouter);
 
 const JOURNEY_ID = 1;
 

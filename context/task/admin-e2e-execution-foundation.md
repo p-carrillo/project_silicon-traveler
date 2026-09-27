@@ -2,7 +2,7 @@
 
 - **Monotask ID:** `0d5e5e38-b6b2-4b79-b345-767975f3230d`
 - **Priority:** High
-- **Status:** To do — definition synchronized
+- **Status:** Done — implementation complete; synchronization pending approval
 - **Category:** General
 
 ## Source description
@@ -20,8 +20,9 @@ Provide a reusable development-only execution layer that can run production pipe
 - Keep the scheduler and CLI on that same extracted operation. This task must not replace, redesign, or introduce a new path-finding algorithm.
 - Extract the reusable core of photo preparation so production persistence and ephemeral E2E execution share research, LLM content generation, translations, image generation, image download, and thumbnail generation.
 - Introduce ephemeral implementations for route-point state and generated assets. They may use process memory only for the active browser session and must not write to MariaDB, `/app/images`, or another durable store.
+- Define an internal test-only photo command composition that proves the coordinator, ephemeral state, shared photo core and temporary asset store work end-to-end; it is never registered as an Admin-visible command.
 - Expose development-only streamed execution endpoints under the API Admin namespace and authenticated web proxies under `/admin/api/e2e`.
-- Add `/admin/e2e` as the single Admin entry point for current and future commands. The Admin home exposes one `Pruebas E2E` menu action only in development.
+- Keep `/admin/e2e` as the shared technical host for current and future commands, without a generic Admin menu entry. Each command task adds its own development-only menu action.
 
 ## Functional contract
 
@@ -30,7 +31,7 @@ Provide a reusable development-only execution layer that can run production pipe
 - Streaming uses an HTTP `text/event-stream` response consumed with `fetch`; it supports progressive results from a POST request.
 - Temporary image assets are addressed through authenticated E2E asset URLs backed by in-memory buffers. They are removed when the run ends, is abandoned, or reaches a short bounded TTL. Reloading the page does not restore an E2E run.
 - Each browser session may have one active E2E run. Starting a second run while one is active returns a clear conflict error rather than invoking paid providers concurrently.
-- The web page, its proxy routes, the API endpoints, and temporary asset endpoints return `404` unless `NODE_ENV === 'development'`. Production must neither reveal the menu nor leave a callable endpoint.
+- The web page, its proxy routes, the API endpoints, and temporary asset endpoints return `404` unless `NODE_ENV === 'development'`. Production must neither reveal command menu actions nor leave a callable endpoint.
 
 ## Acceptance criteria
 
@@ -46,18 +47,18 @@ Provide a reusable development-only execution layer that can run production pipe
 1. Identify the persistence boundaries currently embedded in `PrepareNextPhotoUseCase` and `PreparePhotoUseCase`; extract stable application services that accept ports rather than database-bound entities.
 2. Make scheduler and CLI composition instantiate those services with the current MariaDB, storage, research, LLM, image, thumbnail, and geocoding adapters.
 3. Implement in-memory route and asset adapters exclusively for the E2E orchestration service, with cleanup and bounded resource limits.
-4. Define event DTOs and the run coordinator, including sequential execution, error isolation, cancellation on client disconnect, and the one-active-run rule.
+4. Define event DTOs and the run coordinator, including sequential execution, error isolation, cancellation on client disconnect, and the one-active-run rule. Preserve production persistence timing through photo-core phase callbacks while mapping the same phases to E2E progress events.
 5. Add the API stream and temporary asset handlers, followed by same-origin Next.js Admin proxy handlers so browser clients never receive internal credentials.
 6. Add the development guard in one shared location and apply it to menu rendering, page rendering, web proxies, API handlers, and asset handlers.
-7. Create the empty tab shell at `/admin/e2e`; subsequent command tasks populate it.
+7. Create the empty tab shell at `/admin/e2e`; subsequent command tasks populate it and add their own direct Admin navigation item.
 
 ## Test plan
 
 - Unit-test the extracted next-stop and photo-generation cores with fake ports.
 - Assert that production composition and E2E composition invoke the same application services.
-- Test event order, partial failure continuation, single-active-run conflict, in-memory asset cleanup, and the absence of persistence-port calls.
+- Integration-test the internal-only photo composition end-to-end: SSE event order, partial failure continuation, single-active-run conflict, session-scoped asset access, TTL cleanup, and the absence of persistence-port calls.
 - Test `404` behavior for every E2E page and endpoint outside development.
-- Test that the Admin menu link is rendered only in development.
+- Test that each future command menu link is rendered only in development.
 
 ## Risks and decisions resolved
 

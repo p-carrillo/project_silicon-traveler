@@ -24,6 +24,10 @@ export interface PhotoPreparationCoreResult {
 }
 
 export interface IImageDownloadPort { download(url: string): Promise<Buffer>; }
+export interface PhotoPreparationHooks {
+  researched?(researchSummary: string): Promise<void>;
+  contentGenerated(input: { imagePrompt: string; narrative: string; cameraMetadata: PhotoPreparationCoreResult['cameraMetadata']; translations: RoutePointContentTranslation[] }): Promise<void>;
+}
 
 export class AxiosImageDownloadAdapter implements IImageDownloadPort {
   async download(url: string): Promise<Buffer> {
@@ -42,10 +46,11 @@ export class PhotoPreparationCore {
     private readonly imageDownloader: IImageDownloadPort = new AxiosImageDownloadAdapter()
   ) {}
 
-  async execute(input: PhotoPreparationInput): Promise<PhotoPreparationCoreResult> {
+  async execute(input: PhotoPreparationInput, hooks?: PhotoPreparationHooks): Promise<PhotoPreparationCoreResult> {
     const query = `${input.placeName || 'Unknown'} ${input.country || ''} history culture tourism`;
     const searchResults = await this.braveSearch.search(query, 3);
     const researchSummary = searchResults.map((result: SearchResult) => result.description).join(' ');
+    await hooks?.researched?.(researchSummary);
     const { supportedLanguages, defaultLanguage, contentBaseLanguage } = getI18nConfig();
     const baseLanguage = contentBaseLanguage || defaultLanguage;
     const content = await this.llm.generateContent({
@@ -63,6 +68,7 @@ export class PhotoPreparationCore {
     const preferred = translations.find((translation) => translation.language === defaultLanguage) ?? translations[0];
     const imagePrompt = normalizePrompt(preferred.imagePrompt ?? baseImagePrompt);
     const narrative = preferred.narrative || content.narrative;
+    await hooks?.contentGenerated({ imagePrompt, narrative, cameraMetadata: content.cameraMetadata, translations });
     const image = await this.imageGenerator.generate(baseImagePrompt);
     const imageBuffer = await this.imageDownloader.download(image.url);
     const thumbnails = await this.thumbnailGenerator.generate(imageBuffer, [
