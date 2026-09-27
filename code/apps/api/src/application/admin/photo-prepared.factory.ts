@@ -14,6 +14,27 @@ export interface PreparedPhotoFromRoutePoint {
   revisedPrompt: null;
 }
 
+interface CameraMetadata {
+  camera: string;
+  lens: string;
+  iso: number;
+  shutterSpeed: string;
+  aperture: string;
+}
+
+function isCameraMetadata(value: unknown): value is CameraMetadata {
+  if (typeof value !== 'object' || value === null) return false;
+
+  const metadata = value as Record<string, unknown>;
+  return (
+    typeof metadata.camera === 'string' &&
+    typeof metadata.lens === 'string' &&
+    typeof metadata.iso === 'number' &&
+    typeof metadata.shutterSpeed === 'string' &&
+    typeof metadata.aperture === 'string'
+  );
+}
+
 export function deriveThumbnailPath(relativeImagePath: string, suffix: string): string {
   const lastDot = relativeImagePath.lastIndexOf('.');
   if (lastDot === -1) {
@@ -24,6 +45,7 @@ export function deriveThumbnailPath(relativeImagePath: string, suffix: string): 
 }
 
 export function buildPreparedPhotoFromRoutePoint(routePoint: RoutePoint): PreparedPhotoFromRoutePoint {
+  const cameraMetadata = isCameraMetadata(routePoint.cameraMetadata) ? routePoint.cameraMetadata : null;
   const heroThumbnailUrl =
     routePoint.thumbnailPath && routePoint.thumbnailPath.includes('_grid')
       ? routePoint.thumbnailPath.replace('_grid', '_hero')
@@ -37,11 +59,11 @@ export function buildPreparedPhotoFromRoutePoint(routePoint: RoutePoint): Prepar
     heroThumbnailUrl,
     narrative: routePoint.narrativePrompt || 'Another day on the road.',
     imagePrompt: routePoint.imagePrompt || '',
-    camera: routePoint.cameraMetadata?.camera || 'Leica M11',
-    lens: routePoint.cameraMetadata?.lens || '50mm',
-    iso: routePoint.cameraMetadata?.iso || 800,
-    shutterSpeed: routePoint.cameraMetadata?.shutterSpeed || '1/125',
-    aperture: routePoint.cameraMetadata?.aperture || 'f/2.8',
+    camera: cameraMetadata?.camera || 'Leica M11',
+    lens: cameraMetadata?.lens || '50mm',
+    iso: cameraMetadata?.iso || 800,
+    shutterSpeed: cameraMetadata?.shutterSpeed || '1/125',
+    aperture: cameraMetadata?.aperture || 'f/2.8',
     revisedPrompt: null,
   };
 }
